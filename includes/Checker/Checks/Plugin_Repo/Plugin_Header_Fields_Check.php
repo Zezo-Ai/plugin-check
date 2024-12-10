@@ -97,6 +97,25 @@ class Plugin_Header_Fields_Check implements Static_Check {
 					'',
 					6
 				);
+			} else {
+				$potential_slug = sanitize_title_with_dashes( str_replace( '_', '-', preg_replace( '/[^a-z0-9 _.-]/i', '', remove_accents( $plugin_header['Name'] ) ) ) );
+
+				if ( empty( $potential_slug ) ) {
+					$this->add_result_error_for_file(
+						$result,
+						sprintf(
+							/* translators: %s: plugin header field */
+							__( 'The "%s" header in the plugin file is not valid. It may only contain latin letters (A-z), numbers, spaces, and hyphens.', 'plugin-check' ),
+							esc_html( $labels['Name'] )
+						),
+						'plugin_header_unsupported_plugin_name',
+						$plugin_main_file,
+						0,
+						0,
+						'https://developer.wordpress.org/plugins/plugin-basics/header-requirements/#header-fields',
+						7
+					);
+				}
 			}
 		}
 
