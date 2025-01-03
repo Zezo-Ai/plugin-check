@@ -55,7 +55,7 @@ final class LocalhostSniff extends Sniff {
 					'Do not use Localhost/127.0.0.1 in your code. Found: %s',
 					$this->find_token_in_multiline_string( $stackPtr, $content, $match[1] ),
 					'Found',
-					[ $match[0] ]
+					array( $match[0] )
 				);
 			}
 		}

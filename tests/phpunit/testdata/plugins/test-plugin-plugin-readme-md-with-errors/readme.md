@@ -9,5 +9,6 @@ Stable tag:        trunk
 License:           Oculus VR Inc. Software Development Kit License
 License URI:       https://www.gnu.org/licenses/gpl-2.0.html
 Tags:              performance, testing, security
+Donate link:       not-a-valid-url
 
 Here is a short description of the plugin.

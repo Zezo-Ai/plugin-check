@@ -6,7 +6,7 @@
   "require": {
     "php": ">=7.4",
     "ext-json": "*",
-    "afragen/wordpress-plugin-readme-parser": "dev-master#67fba498d0b112acf84386b95e4905c539a33f0b",
+    "afragen/wordpress-plugin-readme-parser": "dev-master#c3758599348148be684b3c4ad1105d09b6230d51",
     "automattic/vipwpcs": "^3.0.0",
     "composer/installers": "^2.2",
     "dealerdirect/phpcodesniffer-composer-installer": "^1.0.0",
@@ -25,7 +25,9 @@
     "wp-cli/wp-cli-tests": "^4.2.9",
     "wp-cli/language-command": "^2.0",
     "wp-cli/i18n-command": "^2.6",
-    "wp-cli/entity-command": "^2.8"
+    "wp-cli/entity-command": "^2.8",
+    "wp-phpunit/wp-phpunit": "^6.3",
+    "yoast/phpunit-polyfills": "^1.0"
   },
   "repositories": [
     {

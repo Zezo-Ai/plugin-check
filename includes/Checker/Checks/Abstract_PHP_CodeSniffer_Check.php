@@ -100,7 +100,7 @@ abstract class Abstract_PHP_CodeSniffer_Check implements Static_Check {
 
 		// Override installed_paths to load custom sniffs.
 		if ( isset( $args['installed_paths'] ) && is_array( $args['installed_paths'] ) ) {
-			Config::setConfigData( 'installed_paths', implode( ',', $args['installed_paths'] ) );
+			Config::setConfigData( 'installed_paths', implode( ',', $args['installed_paths'] ), true );
 		}
 
 		// Create the default arguments for PHPCS.
@@ -121,7 +121,7 @@ abstract class Abstract_PHP_CodeSniffer_Check implements Static_Check {
 		}
 
 		// Reset installed_paths.
-		Config::setConfigData( 'installed_paths', $installed_paths );
+		Config::setConfigData( 'installed_paths', $installed_paths, true );
 
 		// Restore original arguments.
 		$_SERVER['argv'] = $orig_cmd_args;
@@ -142,7 +142,7 @@ abstract class Abstract_PHP_CodeSniffer_Check implements Static_Check {
 				$this->add_result_message_for_file(
 					$result,
 					strtoupper( $file_message['type'] ) === 'ERROR',
-					$file_message['message'],
+					esc_html( $file_message['message'] ),
 					$file_message['source'],
 					$file_name,
 					$file_message['line'],

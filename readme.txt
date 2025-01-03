@@ -1,8 +1,8 @@
 === Plugin Check (PCP) ===
 
 Contributors:      wordpressdotorg
-Tested up to:      6.6
-Stable tag:        1.2.0
+Tested up to:      6.7
+Stable tag:        1.3.1
 License:           GPLv2 or later
 License URI:       https://www.gnu.org/licenses/gpl-2.0.html
 Tags:              plugin best practices, testing, accessibility, performance, security
@@ -67,6 +67,45 @@ To be approved in the WordPress.org plugin directory, a plugin must typically pa
 In any case, passing the checks in this tool likely helps to achieve a smooth plugin review process, but is no guarantee that a plugin will be approved in the WordPress.org plugin directory.
 
 == Changelog ==
+
+= 1.3.1 =
+
+* Enhancement - Add version utilities.
+* Fix - Escape error messages.
+* Fix - Renamed error type to ERROR_LOW_SEVERITY and WARNING_LOW_SEVERITY.
+* Fix - Fix PHPCS checks on unwritable filesystems.
+
+= 1.3.0 =
+
+* Enhancement - Update disallowed domains for Plugin URI check.
+* Enhancement - Added new checks for Plugin Header fields: missing plugin description, missing plugin version and invalid plugin version.
+* Enhancement - New check for validation of donate link in the readme file.
+* Enhancement - Increased severity for wrong Plugin Requires.
+* Enhancement - Added check Restrict parse_str() without second argument.
+* Enhancement - New check for Disallow usage of HEREDOC and NOWDOC.
+* Enhancement - Added acronyms allowed in Trademark checks.
+* Enhancement - Added option in CLI to add low severity errors and warnings.
+* Enhancement - Change error type for License check error codes.
+* Enhancement - Always use prefixed tables during runtime check requests.
+* Enhancement - Created a new class for checking licenses.
+* Enhancement - Added support for MPL-2.0 license.
+* Enhancement - Implement gherkin linter in GH action.
+* Enhancement - Update check for Contributors in markdown readme files.
+* Enhancement - CLI: Fix confusing runtime environment setup order.
+* Enhancement - Allow custom checks to provide installed_paths.
+* Enhancement - Improved the use of localhost URLs in the Plugin.
+* Enhancement - Documented checks in the plugin.
+* Enhancement - Increased severity for Code obfuscation checks.
+* Enhancement - Diffentiate between no existent readme and default readme file.
+* Enhancement - Encourage developers to use native functions for loading images in templates.
+* Enhancement - Added a check for not allowing include libraries already in WordPress core.
+* Enhancement - Warning for usage of query_posts() in favor of WP_Query.
+* Fix - Fix for the local environment is set up before testing.
+* Fix - Fix addon checks not being executed when running runtime checks.
+* Fix - Allow `default` as a text domain in the text domain check.
+* Fix - Allow GitHub URLs in the Plugin URI field.
+* Fix - Don't flag Apache license. It's allowed in the WordPress.org plugin repository.
+* Fix - Removes the path before the plugin, so it won't affect to badly named files.
 
 = 1.2.0 =
 

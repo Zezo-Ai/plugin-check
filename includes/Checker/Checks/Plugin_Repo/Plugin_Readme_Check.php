@@ -104,6 +104,9 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 		// Check the readme file for warnings.
 		$this->check_for_warnings( $result, $readme_file, $parser );
 
+		// Check the readme file for donate link.
+		$this->check_for_donate_link( $result, $readme_file, $parser );
+
 		// Check the readme file for contributors.
 		$this->check_for_contributors( $result, $readme_file );
 	}
@@ -210,7 +213,7 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 							$result,
 							sprintf(
 								/* translators: 1: currently used version, 2: latest stable WordPress version, 3: 'Tested up to' */
-								__( '<strong>Tested up to: %1$s < %2$s.</strong><br>The "%3$s" value in your plugin is not set to the current version of WordPress. This means your plugin will not show up in searches, as we require plugins to be compatible and documented as tested up to the most recent version of WordPress.', 'plugin-check' ),
+								__( '<strong>Tested up to: %1$s &lt; %2$s.</strong><br>The "%3$s" value in your plugin is not set to the current version of WordPress. This means your plugin will not show up in searches, as we require plugins to be compatible and documented as tested up to the most recent version of WordPress.', 'plugin-check' ),
 								$parser->{$field_key},
 								$latest_wordpress_version,
 								'Tested up to'
@@ -244,15 +247,15 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 						$this->add_result_error_for_file(
 							$result,
 							sprintf(
-								/* translators: %s: plugin header tag */
-								__( '<strong>Your readme is either missing or incomplete.</strong><br>The "%s" field is missing. Your readme has to have headers as well as a proper description and documentation as to how it works and how one can use it.', 'plugin-check' ),
+								/* translators: %s: readme header field */
+								__( 'The "%s" header is missing in the readme file.', 'plugin-check' ),
 								$field['label']
 							),
-							'missing_readme_header',
+							'missing_readme_header_' . $field_key,
 							$readme_file,
 							0,
 							0,
-							'https://developer.wordpress.org/plugins/wordpress-org/common-issues/#incomplete-readme'
+							'https://developer.wordpress.org/plugins/wordpress-org/how-your-readme-txt-works/#readme-header-information'
 						);
 					}
 				}
@@ -310,7 +313,11 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 		if ( empty( $license ) ) {
 			$this->add_result_error_for_file(
 				$result,
-				__( '<strong>Your plugin has no license declared.</strong><br>Please update your readme with a GPLv2 (or later) compatible license. It is necessary to declare the license of this plugin. You can do this by using the fields available both in the plugin readme and in the plugin headers.', 'plugin-check' ),
+				sprintf(
+					/* translators: %s: readme header field */
+					__( '<strong>Missing "%s".</strong><br>Please update your readme with a valid GPLv2 (or later) compatible license.', 'plugin-check' ),
+					'License'
+				),
 				'no_license',
 				$readme_file,
 				0,
@@ -377,7 +384,12 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 		if ( empty( $stable_tag ) ) {
 			$this->add_result_error_for_file(
 				$result,
-				__( "<strong>Incorrect Stable Tag.</strong><br>Your Stable Tag is meant to be the stable version of your plugin, not of WordPress. For your plugin to be properly downloaded from WordPress.org, those values need to be the same. If they're out of sync, your users won't get the right version of your code.", 'plugin-check' ),
+				sprintf(
+					/* translators: 1: readme header tag, 2: plugin header tag */
+					__( '<strong>Invalid or missing %1$s.</strong><br>Your %1$s is meant to be the stable version of your plugin and it needs to be exactly the same with the %2$s in your main plugin file\'s header. Any mismatch can prevent users from downloading the correct plugin files from WordPress.org.', 'plugin-check' ),
+					'Stable Tag',
+					'Version'
+				),
 				'no_stable_tag',
 				$readme_file,
 				0,
@@ -392,7 +404,13 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 		if ( 'trunk' === $stable_tag ) {
 			$this->add_result_error_for_file(
 				$result,
-				__( "<strong>Incorrect Stable Tag.</strong><br>It's recommended not to use 'Stable Tag: trunk'. Your Stable Tag is meant to be the stable version of your plugin, not of WordPress. For your plugin to be properly downloaded from WordPress.org, those values need to be the same. If they're out of sync, your users won't get the right version of your code.", 'plugin-check' ),
+				sprintf(
+					/* translators: 1: readme header tag, 2: example tag, 3: plugin header tag */
+					__( '<strong>Incorrect %1$s.</strong><br>It\'s recommended not to use "%2$s". Your %1$s is meant to be the stable version of your plugin and it needs to be exactly the same with the %3$s in your main plugin file\'s header. Any mismatch can prevent users from downloading the correct plugin files from WordPress.org.', 'plugin-check' ),
+					'Stable Tag',
+					'Stable Tag: trunk',
+					'Version'
+				),
 				'trunk_stable_tag',
 				$readme_file,
 				0,
@@ -414,9 +432,11 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 			$this->add_result_error_for_file(
 				$result,
 				sprintf(
-					/* translators: %s: versions comparison */
-					__( "<strong>Mismatched Stable Tag: %s.</strong><br>The Stable Tag in your readme file does not match the version in your main plugin file. Your Stable Tag is meant to be the stable version of your plugin, not of WordPress. For your plugin to be properly downloaded from WordPress.org, those values need to be the same. If they're out of sync, your users won't get the right version of your code.", 'plugin-check' ),
-					esc_html( $stable_tag ) . ' != ' . esc_html( $plugin_data['Version'] )
+					/* translators: 1: readme header tag, 2: versions comparison, 3: plugin header tag */
+					__( '<strong>Mismatched %1$s: %2$s.</strong><br>Your %1$s is meant to be the stable version of your plugin and it needs to be exactly the same with the %3$s in your main plugin file\'s header. Any mismatch can prevent users from downloading the correct plugin files from WordPress.org.', 'plugin-check' ),
+					'Stable Tag',
+					esc_html( $stable_tag ) . ' != ' . esc_html( $plugin_data['Version'] ),
+					'Version'
 				),
 				'stable_tag_mismatch',
 				$readme_file,
@@ -478,6 +498,11 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 
 		// This should be ERROR rather than WARNING. So ignoring here to handle separately.
 		unset( $warnings['invalid_plugin_name_header'] );
+
+		// We handle license check in our own way.
+		unset( $warnings['license_missing'] );
+		unset( $warnings['invalid_license'] );
+		unset( $warnings['unknown_license'] );
 
 		$warning_keys = array_keys( $warnings );
 
@@ -602,12 +627,49 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 	}
 
 	/**
+	 * Checks the readme file for donate link.
+	 *
+	 * @since 1.3.0
+	 *
+	 * @param Check_Result $result      The Check Result to amend.
+	 * @param string       $readme_file Readme file.
+	 * @param Parser       $parser      The Parser object.
+	 */
+	private function check_for_donate_link( Check_Result $result, string $readme_file, Parser $parser ) {
+		$donate_link = $parser->donate_link;
+
+		// Bail if empty donate link.
+		if ( empty( $donate_link ) ) {
+			return;
+		}
+
+		if ( ! ( filter_var( $donate_link, FILTER_VALIDATE_URL ) === $donate_link && str_starts_with( $donate_link, 'http' ) ) ) {
+			$this->add_result_warning_for_file(
+				$result,
+				sprintf(
+					/* translators: %s: plugin header field */
+					__( 'The "%s" header in the readme file must be a valid URL.', 'plugin-check' ),
+					'Donate link'
+				),
+				'readme_invalid_donate_link',
+				$readme_file,
+				0,
+				0,
+				'https://developer.wordpress.org/plugins/wordpress-org/how-your-readme-txt-works/#readme-header-information',
+				6
+			);
+		}
+	}
+
+	/**
 	 * Checks the readme file for contributors.
 	 *
 	 * @since 1.2.0
 	 *
 	 * @param Check_Result $result      The Check Result to amend.
 	 * @param string       $readme_file Readme file.
+	 *
+	 * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
 	 */
 	private function check_for_contributors( Check_Result $result, string $readme_file ) {
 		$regex = '/Contributors\s?:(?:\*\*|\s)?(.*?)\R/';
@@ -623,7 +685,7 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 
 		$usernames = explode( ',', $matches[1] );
 
-		$usernames = array_map( 'trim', $usernames );
+		$usernames = array_unique( array_map( 'trim', $usernames ) );
 
 		$valid = true;
 
@@ -649,6 +711,72 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 				'',
 				6
 			);
+
+			return;
+		}
+
+		$restricted_contributors = $this->get_restricted_contributors();
+
+		$disallowed_contributors = array_keys(
+			array_filter(
+				$restricted_contributors,
+				function ( $value ) {
+					return 'error' === strtolower( $value );
+				}
+			)
+		);
+
+		if ( ! empty( $disallowed_contributors ) ) {
+			$disallowed_usernames = array_intersect( $usernames, $disallowed_contributors );
+
+			if ( ! empty( $disallowed_usernames ) ) {
+				$this->add_result_error_for_file(
+					$result,
+					sprintf(
+						/* translators: 1: plugin header field, 2: usernames */
+						__( 'The "%1$s" header in the readme file contains restricted username(s). Found: %2$s', 'plugin-check' ),
+						'Contributors',
+						'"' . implode( '", "', $disallowed_usernames ) . '"'
+					),
+					'readme_restricted_contributors',
+					$readme_file,
+					0,
+					0,
+					'https://developer.wordpress.org/plugins/wordpress-org/how-your-readme-txt-works/#readme-header-information',
+					7
+				);
+			}
+		}
+
+		$reserved_contributors = array_keys(
+			array_filter(
+				$restricted_contributors,
+				function ( $value ) {
+					return 'warning' === strtolower( $value );
+				}
+			)
+		);
+
+		if ( ! empty( $reserved_contributors ) ) {
+			$reserved_usernames = array_intersect( $usernames, $reserved_contributors );
+
+			if ( ! empty( $reserved_usernames ) ) {
+				$this->add_result_warning_for_file(
+					$result,
+					sprintf(
+						/* translators: 1: plugin header field, 2: usernames */
+						__( 'The "%1$s" header in the readme file contains reserved username(s). Found: %2$s', 'plugin-check' ),
+						'Contributors',
+						'"' . implode( '", "', $reserved_usernames ) . '"'
+					),
+					'readme_reserved_contributors',
+					$readme_file,
+					0,
+					0,
+					'https://developer.wordpress.org/plugins/wordpress-org/how-your-readme-txt-works/#readme-header-information',
+					6
+				);
+			}
 		}
 	}
 
@@ -717,6 +845,37 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 		$ignored_warnings = (array) apply_filters( 'wp_plugin_check_ignored_readme_warnings', $ignored_warnings, $parser );
 
 		return $ignored_warnings;
+	}
+
+	/**
+	 * Returns restricted contributors.
+	 *
+	 * @since 1.4.0
+	 *
+	 * @return array Restricted contributors.
+	 */
+	private function get_restricted_contributors() {
+		$restricted_contributors = array(
+			'username'                => 'error',
+			'your-name'               => 'error',
+			'your-username'           => 'error',
+			'your-wordpress-username' => 'error',
+			'your_wordpress_username' => 'error',
+			'yourusername'            => 'error',
+			'yourwordpressusername'   => 'error',
+			'wordpressdotorg'         => 'warning',
+		);
+
+		/**
+		 * Filter the list of restricted contributors.
+		 *
+		 * @since 1.4.0
+		 *
+		 * @param array $restricted_contributors Array of restricted contributors with error type.
+		 */
+		$restricted_contributors = (array) apply_filters( 'wp_plugin_check_restricted_contributors', $restricted_contributors );
+
+		return $restricted_contributors;
 	}
 
 	/**

@@ -51,11 +51,12 @@ jobs:
         - '7.4'
         - '8.0'
         - '8.1'
+        - '8.2'
         wordpress: [ 'latest' ]
         include:
           - php: '7.4'
             wordpress: '6.3'
-          - php: '8.2'
+          - php: '8.3'
             wordpress: 'latest'
             coverage: true
           - php: '8.3'
@@ -70,6 +71,11 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
+
+      - name: Install PHP dependencies
+        uses: ramsey/composer-install@57532f8be5bda426838819c5ee9afb8af389d51a
+        with:
+          composer-options: '--prefer-dist'
 
       - name: Setup Node.js (.nvmrc)
         uses: actions/setup-node@v4
@@ -100,7 +106,7 @@ jobs:
 
       - name: Upload code coverage report
         if: ${{ matrix.coverage }}
-        uses: codecov/codecov-action@5c47607acb93fed5485fdbf7232e8a31425f672a
+        uses: codecov/codecov-action@1e68e06f1dbfde0e4cefc87efeba9e4643565303
         with:
           file: build/logs/*.xml
           flags: unit
@@ -146,7 +152,7 @@ jobs:
 
       - name: Upload code coverage report
         if: ${{ matrix.coverage }}
-        uses: codecov/codecov-action@5c47607acb93fed5485fdbf7232e8a31425f672a
+        uses: codecov/codecov-action@1e68e06f1dbfde0e4cefc87efeba9e4643565303
         with:
           file: build/logs/*.xml
           flags: phpcs-sniffs

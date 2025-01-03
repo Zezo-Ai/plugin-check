@@ -719,3 +719,84 @@ Feature: Test that the WP-CLI command works.
 	    """
 	    readme_invalid_contributors
 	    """
+
+  Scenario: Check duplicated error messages for hidden files and application files
+    Given a WP install with the Plugin Check plugin
+    And a wp-content/plugins/foo-sample/foo-sample.php file:
+      """
+      <?php
+      /**
+       * Plugin Name: Foo Sample
+       * Plugin URI: https://foo-sample.com
+       * Description: Custom plugin.
+       * Version: 0.1.0
+       * Author: WordPress Performance Team
+       * Author URI: https://make.wordpress.org/performance/
+       * License: GPL-2.0+
+       * License URI: http://www.gnu.org/licenses/gpl-2.0.txt
+       */
+
+      """
+    And a wp-content/plugins/foo-sample/.DS_Store file:
+      """
+      """
+
+    When I run the WP-CLI command `plugin check foo-sample --checks=file_type`
+    Then STDOUT should contain:
+	    """
+	    hidden_files
+	    """
+    And STDOUT should not contain:
+	    """
+	    application_detected
+	    """
+
+  Scenario: Check for i18n severity
+    Given a WP install with the Plugin Check plugin
+    And a wp-content/plugins/foo-sample/foo-sample.php file:
+      """
+      <?php
+      /**
+       * Plugin Name: Foo Sample
+       * Plugin URI: https://foo-sample.com
+       * Description: Custom plugin.
+       * Version: 0.1.0
+       * Author: WordPress Performance Team
+       * Author URI: https://make.wordpress.org/performance/
+       * License: GPL-2.0+
+       * License URI: http://www.gnu.org/licenses/gpl-2.0.txt
+       */
+
+      esc_html_e( 'Hello world', "${var}" );
+      esc_html_e( domain: 'foo-sample' );
+      esc_html_e( '%s', 'foo-sample' );
+      echo esc_html_x( 'Hello world', $var, 'foo-sample' );
+      esc_html_e( 'Hello world', $var );
+      esc_html_e( 'Hello world', 'foo-sample', 'too-many-args' );
+      """
+
+    When I run the WP-CLI command `plugin check foo-sample --checks=i18n_usage --fields=line,type,code,severity --format=csv`
+    Then STDOUT should contain:
+	    """
+	    13,ERROR,WordPress.WP.I18n.InterpolatedVariableDomain,7
+	    """
+    And STDOUT should contain:
+	    """
+	    14,ERROR,WordPress.WP.I18n.MissingArgText,7
+	    """
+    And STDOUT should contain:
+	    """
+	    15,ERROR,WordPress.WP.I18n.NoEmptyStrings,7
+	    """
+    And STDOUT should contain:
+	    """
+	    16,ERROR,WordPress.WP.I18n.NonSingularStringLiteralContext,7
+	    """
+    And STDOUT should contain:
+	    """
+	    17,ERROR,WordPress.WP.I18n.NonSingularStringLiteralDomain,7
+	    """
+    And STDOUT should contain:
+	    """
+	    18,ERROR,WordPress.WP.I18n.TooManyFunctionArgs,7
+	    """

@@ -99,7 +99,7 @@ class I18n_Usage_Check extends Abstract_PHP_CodeSniffer_Check {
 	 */
 	protected function add_result_message_for_file( Check_Result $result, $error, $message, $code, $file, $line = 0, $column = 0, string $docs = '', $severity = 5 ) {
 		// Downgrade errors about usage of the 'default' text domain from WordPress Core to warnings.
-		if ( $error && str_ends_with( $message, " but got 'default'." ) ) {
+		if ( $error && str_ends_with( $message, ' but got &#039;default&#039;.' ) ) {
 			$error = false;
 		}
 
@@ -125,6 +125,21 @@ class I18n_Usage_Check extends Abstract_PHP_CodeSniffer_Check {
 
 			default:
 				$docs = __( 'https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/', 'plugin-check' );
+				break;
+		}
+
+		// Update severity.
+		switch ( $code ) {
+			case 'WordPress.WP.I18n.InterpolatedVariableDomain':
+			case 'WordPress.WP.I18n.MissingArgText':
+			case 'WordPress.WP.I18n.NoEmptyStrings':
+			case 'WordPress.WP.I18n.NonSingularStringLiteralContext':
+			case 'WordPress.WP.I18n.NonSingularStringLiteralDomain':
+			case 'WordPress.WP.I18n.TooManyFunctionArgs':
+				$severity = 7;
+				break;
+
+			default:
 				break;
 		}
 
