@@ -297,10 +297,34 @@ class File_Type_Check extends Abstract_File_Check {
 			}
 		}
 
-		// Duplicated names.
-		$files            = array_map( 'basename', $files );
-		$files            = array_map( 'strtolower', $files );
-		$duplicated_files = array_unique( array_diff_assoc( $files, array_unique( $files ) ) );
+		// Duplicated names in different folders.
+		$folders = array();
+		foreach ( $files as $file ) {
+			$folder = str_replace( basename( $file ), '', $file );
+			if ( empty( $folder ) ) {
+				continue;
+			}
+			$folders[] = $folder;
+		}
+		$folders            = array_unique( $folders );
+		$folders_lowercase  = array_map( 'strtolower', $folders );
+		$duplicated_folders = array_unique( array_diff_assoc( $folders_lowercase, array_unique( $folders_lowercase ) ) );
+		if ( ! empty( $duplicated_folders ) ) {
+			$this->add_result_error_for_file(
+				$result,
+				__( 'Duplicated folders names are not permitted.', 'plugin-check' ),
+				'duplicated_folders',
+				implode( ', ', $duplicated_folders ),
+				0,
+				0,
+				'',
+				8
+			);
+		}
+
+		// Duplicated names in same folder.
+		$files_lowercase  = array_map( 'strtolower', $files );
+		$duplicated_files = array_unique( array_diff_assoc( $files_lowercase, array_unique( $files_lowercase ) ) );
 
 		if ( ! empty( $duplicated_files ) ) {
 			$this->add_result_error_for_file(

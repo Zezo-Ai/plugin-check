@@ -156,6 +156,18 @@ class File_Type_Check_Tests extends WP_UnitTestCase {
 		$errors = $check_result->get_errors();
 
 		$this->assertCount( 1, wp_list_filter( $errors['custom-file.php'][0][0], array( 'code' => 'duplicated_files' ) ) );
+
+		// Define the custom file list with duplicate folder names as they would appear in a plugin directory.
+		$custom_files = array(
+			UNIT_TESTS_PLUGIN_DIR . 'test-plugin-file-type-badly-named-files-errors/sub directory/file-1.php',
+			UNIT_TESTS_PLUGIN_DIR . 'test-plugin-file-type-badly-named-files-errors/Sub Directory/file-2.php',
+		);
+
+		// Invoke method with the Check_Result instance and custom file list.
+		$result = $check_files_method->invoke( $check, $check_result, $custom_files );
+		$errors = $check_result->get_errors();
+
+		$this->assertCount( 1, wp_list_filter( $errors['sub directory/'][0][0], array( 'code' => 'duplicated_folders' ) ) );
 	}
 
 	public function test_run_with_library_core_errors() {
