@@ -315,6 +315,7 @@ class File_Type_Check extends Abstract_File_Check {
 		$folders            = array_unique( $folders );
 		$folders_lowercase  = array_map( 'strtolower', $folders );
 		$duplicated_folders = array_unique( array_diff_assoc( $folders_lowercase, array_unique( $folders_lowercase ) ) );
+
 		if ( ! empty( $duplicated_folders ) ) {
 			$this->add_result_error_for_file(
 				$result,
