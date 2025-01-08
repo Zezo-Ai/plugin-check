@@ -207,14 +207,20 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 			if ( ! in_array( $field['ignore_key'], $ignored_warnings, true ) && ! isset( $parser_warnings[ $field['ignore_key'] ] ) ) {
 
 				if ( ! empty( $parser->{$field_key} ) && 'tested' === $field_key ) {
+					list( $tested_upto, ) = explode( '-', $parser->{$field_key} );
+
+					if ( preg_match( '#^\d.\d#', $tested_upto, $matches ) ) {
+						$tested_upto = $matches[0];
+					}
+
 					$latest_wordpress_version = $this->get_wordpress_stable_version();
-					if ( version_compare( $parser->{$field_key}, $latest_wordpress_version, '<' ) ) {
+					if ( version_compare( $tested_upto, $latest_wordpress_version, '<' ) ) {
 						$this->add_result_error_for_file(
 							$result,
 							sprintf(
 								/* translators: 1: currently used version, 2: latest stable WordPress version, 3: 'Tested up to' */
 								__( '<strong>Tested up to: %1$s &lt; %2$s.</strong><br>The "%3$s" value in your plugin is not set to the current version of WordPress. This means your plugin will not show up in searches, as we require plugins to be compatible and documented as tested up to the most recent version of WordPress.', 'plugin-check' ),
-								$parser->{$field_key},
+								$tested_upto,
 								$latest_wordpress_version,
 								'Tested up to'
 							),
@@ -225,13 +231,13 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 							'https://developer.wordpress.org/plugins/wordpress-org/how-your-readme-txt-works/#readme-header-information',
 							7
 						);
-					} elseif ( version_compare( $parser->{$field_key}, number_format( (float) $latest_wordpress_version + 0.1, 1 ), '>' ) ) {
+					} elseif ( version_compare( $tested_upto, number_format( (float) $latest_wordpress_version + 0.1, 1 ), '>' ) ) {
 						$this->add_result_error_for_file(
 							$result,
 							sprintf(
 								/* translators: 1: currently used version, 2: 'Tested up to' */
 								__( '<strong>Tested up to: %1$s.</strong><br>The "%2$s" value in your plugin is not valid. This version of WordPress does not exist (yet).', 'plugin-check' ),
-								$parser->{$field_key},
+								$tested_upto,
 								'Tested up to'
 							),
 							'nonexistent_tested_upto_header',
