@@ -312,16 +312,16 @@ class File_Type_Check extends Abstract_File_Check {
 			}
 			$folders[] = $folder;
 		}
-		$folders            = array_unique( $folders );
-		$folders_lowercase  = array_map( 'strtolower', $folders );
-		$duplicated_folders = array_unique( array_diff_assoc( $folders_lowercase, array_unique( $folders_lowercase ) ) );
+		$folders                = array_unique( $folders );
+		$folders_lowercase      = array_map( 'strtolower', $folders );
+		$case_sensitive_folders = array_unique( array_diff_assoc( $folders_lowercase, array_unique( $folders_lowercase ) ) );
 
-		if ( ! empty( $duplicated_folders ) ) {
+		if ( ! empty( $case_sensitive_folders ) ) {
 			$this->add_result_error_for_file(
 				$result,
-				__( 'Duplicated folders names are not permitted.', 'plugin-check' ),
+				__( 'Case-Sensitive folders were found. They\'ll be problematic in different systems.', 'plugin-check' ),
 				'duplicated_folders',
-				implode( ', ', $duplicated_folders ),
+				implode( ', ', $case_sensitive_folders ),
 				0,
 				0,
 				'',
@@ -330,15 +330,15 @@ class File_Type_Check extends Abstract_File_Check {
 		}
 
 		// Duplicated names in same folder.
-		$files_lowercase  = array_map( 'strtolower', $files );
-		$duplicated_files = array_unique( array_diff_assoc( $files_lowercase, array_unique( $files_lowercase ) ) );
+		$files_lowercase      = array_map( 'strtolower', $files );
+		$case_sensitive_files = array_unique( array_diff_assoc( $files_lowercase, array_unique( $files_lowercase ) ) );
 
-		if ( ! empty( $duplicated_files ) ) {
+		if ( ! empty( $case_sensitive_files ) ) {
 			$this->add_result_error_for_file(
 				$result,
-				__( 'Duplicated file names are not permitted.', 'plugin-check' ),
-				'duplicated_files',
-				implode( ', ', $duplicated_files ),
+				__( 'Case-Sensitive files were found. They\'ll be problematic in different systems.', 'plugin-check' ),
+				'case_sensitive_files',
+				implode( ', ', $case_sensitive_files ),
 				0,
 				0,
 				'',
