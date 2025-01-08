@@ -18,11 +18,11 @@ class Image_Functions_Check_Tests extends WP_UnitTestCase {
 
 		$check->run( $check_result );
 
-		$errors = $check_result->get_errors();
+		$warnings = $check_result->get_warnings();
 
-		$this->assertNotEmpty( $errors );
-		$this->assertArrayHasKey( 'load.php', $errors );
-		$this->assertEquals( 2, $check_result->get_error_count() );
+		$this->assertNotEmpty( $warnings );
+		$this->assertArrayHasKey( 'load.php', $warnings );
+		$this->assertEquals( 2, $check_result->get_warning_count() );
 	}
 
 	public function test_run_without_errors() {
@@ -32,9 +32,9 @@ class Image_Functions_Check_Tests extends WP_UnitTestCase {
 
 		$check->run( $check_result );
 
-		$errors = $check_result->get_errors();
+		$warnings = $check_result->get_warnings();
 
-		$this->assertEmpty( $errors );
-		$this->assertEquals( 0, $check_result->get_error_count() );
+		$this->assertEmpty( $warnings );
+		$this->assertEquals( 0, $check_result->get_warning_count() );
 	}
 }

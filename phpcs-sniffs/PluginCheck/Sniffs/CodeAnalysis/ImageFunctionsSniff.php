@@ -59,7 +59,7 @@ final class ImageFunctionsSniff extends Sniff {
 
 		if ( preg_match_all( '#<img[^>]*(?<=src=)#', $content, $matches, \PREG_OFFSET_CAPTURE ) > 0 ) {
 			foreach ( $matches[0] as $match ) {
-				$this->phpcsFile->addError(
+				$this->phpcsFile->addWarning(
 					'Images should be added using wp_get_attachment_image() or similar functions',
 					$this->find_token_in_multiline_string( $stackPtr, $content, $match[1] ),
 					'NonEnqueuedImage'

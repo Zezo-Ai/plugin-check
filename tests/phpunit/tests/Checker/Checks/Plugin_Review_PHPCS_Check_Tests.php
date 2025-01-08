@@ -23,6 +23,7 @@ class Plugin_Review_PHPCS_Check_Tests extends WP_UnitTestCase {
 
 		$this->assertNotEmpty( $errors );
 		$this->assertArrayHasKey( 'load.php', $errors );
+		$this->assertArrayHasKey( 'file-with-bom.php', $errors );
 		$this->assertNotEmpty( $warnings );
 		$this->assertArrayHasKey( 'load.php', $warnings );
 
@@ -32,11 +33,32 @@ class Plugin_Review_PHPCS_Check_Tests extends WP_UnitTestCase {
 		$this->assertArrayHasKey( 'code', $errors['load.php'][6][1][0] );
 		$this->assertEquals( 'Generic.PHP.DisallowShortOpenTag.Found', $errors['load.php'][6][1][0]['code'] );
 
+		// Check for Squiz.PHP.Heredoc.NotAllowed error on Line no 28 and column no at 8.
+		$this->assertEquals( 'Squiz.PHP.Heredoc.NotAllowed', $errors['load.php'][28][8][0]['code'] );
+
 		// Check for WordPress.WP.DeprecatedFunctions.the_author_emailFound error on Line no 12 and column no at 5.
 		$this->assertArrayHasKey( 12, $errors['load.php'] );
 		$this->assertArrayHasKey( 5, $errors['load.php'][12] );
 		$this->assertArrayHasKey( 'code', $errors['load.php'][12][5][0] );
 		$this->assertEquals( 'WordPress.WP.DeprecatedFunctions.the_author_emailFound', $errors['load.php'][12][5][0]['code'] );
+
+		// Check for PluginCheck.CodeAnalysis.RequiredFunctionParameters.parse_str_resultMissing error on Line no 34 and column no at 1.
+		$this->assertSame( 'PluginCheck.CodeAnalysis.RequiredFunctionParameters.parse_str_resultMissing', $errors['load.php'][34][1][0]['code'] );
+
+		// Check for Generic.Functions.CallTimePassByReference.NotAllowed error on Line no 38 and column no 16.
+		$this->assertSame( 'Generic.Functions.CallTimePassByReference.NotAllowed', $errors['load.php'][38][16][0]['code'] );
+
+		// Check for Generic.Files.ByteOrderMark.Found error on Line no 1 and column no 1.
+		$this->assertSame( 'Generic.Files.ByteOrderMark.Found', $errors['file-with-bom.php'][1][1][0]['code'] );
+
+		// There should not be WordPress.WP.AlternativeFunctions.json_encode_json_encode error on Line no 36 and column no at 18.
+		$this->assertCount( 0, wp_list_filter( $errors['load.php'][36][18], array( 'code' => 'WordPress.WP.AlternativeFunctions.json_encode_json_encode' ) ) );
+
+		// There should not be WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents error on Line no 40 and column no 1.
+		$this->assertCount( 0, wp_list_filter( $errors['load.php'][40][1], array( 'code' => 'WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents' ) ) );
+
+		// There should not be WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents error on Line no 41 and column no 1.
+		$this->assertCount( 0, wp_list_filter( $errors['load.php'][41][1], array( 'code' => 'WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents' ) ) );
 
 		// Check for WordPress.Security.ValidatedSanitizedInput warnings on Line no 15 and column no at 27.
 		$this->assertCount( 1, wp_list_filter( $warnings['load.php'][15][27], array( 'code' => 'WordPress.Security.ValidatedSanitizedInput.InputNotValidated' ) ) );

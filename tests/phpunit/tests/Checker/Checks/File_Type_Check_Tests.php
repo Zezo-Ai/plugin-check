@@ -150,4 +150,18 @@ class File_Type_Check_Tests extends WP_UnitTestCase {
 		$this->assertArrayHasKey( 0, $errors['jquery.js'][0] );
 		$this->assertCount( 1, wp_list_filter( $errors['jquery.js'][0][0], array( 'code' => 'library_core_files' ) ) );
 	}
+
+	public function test_run_with_composer_errors() {
+		$check_context = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-file-type-composer-errors/load.php' );
+		$check_result  = new Check_Result( $check_context );
+
+		$check = new File_Type_Check( File_Type_Check::TYPE_COMPOSER );
+		$check->run( $check_result );
+
+		$warnings = $check_result->get_warnings();
+
+		$this->assertNotEmpty( $warnings );
+
+		$this->assertCount( 1, wp_list_filter( $warnings['composer.json'][0][0], array( 'code' => 'missing_composer_json_file' ) ) );
+	}
 }

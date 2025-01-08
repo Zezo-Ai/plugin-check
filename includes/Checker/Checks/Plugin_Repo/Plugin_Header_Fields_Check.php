@@ -12,7 +12,9 @@ use WordPress\Plugin_Check\Checker\Check_Categories;
 use WordPress\Plugin_Check\Checker\Check_Result;
 use WordPress\Plugin_Check\Checker\Static_Check;
 use WordPress\Plugin_Check\Traits\Amend_Check_Result;
+use WordPress\Plugin_Check\Traits\License_Utils;
 use WordPress\Plugin_Check\Traits\Stable_Check;
+use WordPress\Plugin_Check\Traits\Version_Utils;
 
 /**
  * Check for plugin header fields.
@@ -22,7 +24,9 @@ use WordPress\Plugin_Check\Traits\Stable_Check;
 class Plugin_Header_Fields_Check implements Static_Check {
 
 	use Amend_Check_Result;
+	use License_Utils;
 	use Stable_Check;
+	use Version_Utils;
 
 	/**
 	 * Gets the categories for the check.
@@ -67,6 +71,8 @@ class Plugin_Header_Fields_Check implements Static_Check {
 			'RequiresPHP'     => 'Requires PHP',
 			'UpdateURI'       => 'Update URI',
 			'RequiresPlugins' => 'Requires Plugins',
+			'License'         => 'License',
+			'LicenseURI'      => 'License URI',
 		);
 
 		$restricted_labels = array(
@@ -91,6 +97,25 @@ class Plugin_Header_Fields_Check implements Static_Check {
 					'',
 					6
 				);
+			} else {
+				$valid_chars_count = preg_match_all( '/[a-z0-9]/i', $plugin_header['Name'] );
+
+				if ( intval( $valid_chars_count ) < 5 ) {
+					$this->add_result_error_for_file(
+						$result,
+						sprintf(
+							/* translators: %s: plugin header field */
+							__( 'The "%s" header in the plugin file is not valid. It needs to contain at least 5 latin letters (a-Z) and/or numbers. This is necessary because the initial plugin slug is generated from the name.', 'plugin-check' ),
+							esc_html( $labels['Name'] )
+						),
+						'plugin_header_unsupported_plugin_name',
+						$plugin_main_file,
+						0,
+						0,
+						'https://developer.wordpress.org/plugins/plugin-basics/header-requirements/#header-fields',
+						7
+					);
+				}
 			}
 		}
 
@@ -110,25 +135,41 @@ class Plugin_Header_Fields_Check implements Static_Check {
 					'',
 					6
 				);
-			} elseif ( str_contains( $plugin_header['PluginURI'], '//wordpress.org/' ) || str_contains( $plugin_header['PluginURI'], '//example.com/' ) ) {
+			} elseif ( preg_match( '/\/\/(example\.com|example\.net|example\.org)\//', $plugin_header['PluginURI'], $matches ) ) {
 				$this->add_result_warning_for_file(
 					$result,
 					sprintf(
-						/* translators: %s: plugin header field */
-						__( 'The "%s" header in the plugin file is not valid.', 'plugin-check' ),
-						esc_html( $labels['PluginURI'] )
+						/* translators: 1: plugin header field, 2: domain */
+						__( 'The "%1$s" header in the plugin file is not valid. Discouraged domain "%2$s" found. This is the homepage of the plugin, which should be a unique URL, preferably on your own website. ', 'plugin-check' ),
+						esc_html( $labels['PluginURI'] ),
+						esc_html( $matches[1] ),
 					),
 					'plugin_header_invalid_plugin_uri_domain',
 					$plugin_main_file,
 					0,
 					0,
-					'',
+					'https://developer.wordpress.org/plugins/plugin-basics/header-requirements/#header-fields',
 					6
 				);
 			}
 		}
 
-		if ( ! empty( $plugin_header['Description'] ) ) {
+		if ( empty( $plugin_header['Description'] ) ) {
+			$this->add_result_error_for_file(
+				$result,
+				sprintf(
+					/* translators: %s: plugin header field */
+					__( 'The "%s" header is missing in the plugin file.', 'plugin-check' ),
+					esc_html( $labels['Description'] )
+				),
+				'plugin_header_missing_plugin_description',
+				$plugin_main_file,
+				0,
+				0,
+				__( 'https://developer.wordpress.org/plugins/plugin-basics/header-requirements/', 'plugin-check' ),
+				7
+			);
+		} else {
 			if (
 				str_contains( $plugin_header['Description'], 'This is a short description of what the plugin does' )
 				|| str_contains( $plugin_header['Description'], 'Here is a short description of the plugin' )
@@ -147,6 +188,40 @@ class Plugin_Header_Fields_Check implements Static_Check {
 					0,
 					'',
 					6
+				);
+			}
+		}
+
+		if ( empty( $plugin_header['Version'] ) ) {
+			$this->add_result_error_for_file(
+				$result,
+				sprintf(
+					/* translators: %s: plugin header field */
+					__( 'The "%s" header is missing in the plugin file.', 'plugin-check' ),
+					esc_html( $labels['Version'] )
+				),
+				'plugin_header_missing_plugin_version',
+				$plugin_main_file,
+				0,
+				0,
+				__( 'https://developer.wordpress.org/plugins/plugin-basics/header-requirements/', 'plugin-check' ),
+				7
+			);
+		} else {
+			if ( ! preg_match( '/^[a-z0-9.-]+$/i', $plugin_header['Version'] ) ) {
+				$this->add_result_error_for_file(
+					$result,
+					sprintf(
+						/* translators: %s: plugin header field */
+						__( 'The "%s" header in the plugin file should only contain numbers, letters, periods, and hyphens.', 'plugin-check' ),
+						esc_html( $labels['Version'] )
+					),
+					'plugin_header_invalid_plugin_version',
+					$plugin_main_file,
+					0,
+					0,
+					__( 'https://developer.wordpress.org/plugins/plugin-basics/header-requirements/', 'plugin-check' ),
+					7
 				);
 			}
 		}
@@ -191,14 +266,17 @@ class Plugin_Header_Fields_Check implements Static_Check {
 
 		if ( ! empty( $plugin_header['RequiresWP'] ) ) {
 			if ( ! preg_match( '!^\d+\.\d(\.\d+)?$!', $plugin_header['RequiresWP'] ) ) {
+				$latest_wp_version   = $this->get_wordpress_stable_version();
+				$previous_wp_version = $this->get_wordpress_relative_major_version( $latest_wp_version, -1 );
+
 				$this->add_result_error_for_file(
 					$result,
 					sprintf(
-						/* translators: 1: plugin header field; 2: Example version 6.5.1. 3: Example version 6.6. */
+						/* translators: 1: plugin header field, 2: Example version 6.7, 3: Example version 6.6 */
 						__( 'The "%1$s" header in the plugin file should only contain a WordPress version such as "%2$s" or "%3$s".', 'plugin-check' ),
 						esc_html( $labels['RequiresWP'] ),
-						'6.5.1',
-						'6.6'
+						esc_html( $latest_wp_version ),
+						esc_html( $previous_wp_version )
 					),
 					'plugin_header_invalid_requires_wp',
 					$plugin_main_file,
@@ -232,7 +310,7 @@ class Plugin_Header_Fields_Check implements Static_Check {
 
 		if ( ! empty( $plugin_header['RequiresPlugins'] ) ) {
 			if ( ! preg_match( '/^[a-z0-9-]+(?:,\s*[a-z0-9-]+)*$/', $plugin_header['RequiresPlugins'] ) ) {
-				$this->add_result_warning_for_file(
+				$this->add_result_error_for_file(
 					$result,
 					sprintf(
 						/* translators: %s: plugin header field */
@@ -244,7 +322,43 @@ class Plugin_Header_Fields_Check implements Static_Check {
 					0,
 					0,
 					'',
-					6
+					7
+				);
+			}
+		}
+
+		if ( empty( $plugin_header['License'] ) ) {
+			$this->add_result_error_for_file(
+				$result,
+				sprintf(
+					/* translators: %s: plugin header field */
+					__( '<strong>Missing "%s" in Plugin Header.</strong><br>Please update your Plugin Header with a valid GPLv2 (or later) compatible license.', 'plugin-check' ),
+					esc_html( $labels['License'] )
+				),
+				'plugin_header_no_license',
+				$plugin_main_file,
+				0,
+				0,
+				'https://developer.wordpress.org/plugins/wordpress-org/common-issues/#no-gpl-compatible-license-declared',
+				9
+			);
+		} else {
+			$plugin_license = $this->get_normalized_license( $plugin_header['License'] );
+			if ( ! $this->is_license_gpl_compatible( $plugin_license ) ) {
+				$this->add_result_error_for_file(
+					$result,
+					sprintf(
+						/* translators: 1: plugin header field, 2: license */
+						__( '<strong>Invalid %1$s: %2$s.</strong><br>Please update your Plugin Header with a valid GPLv2 (or later) compatible license.', 'plugin-check' ),
+						esc_html( $labels['License'] ),
+						esc_html( $plugin_header['License'] )
+					),
+					'plugin_header_invalid_license',
+					$plugin_main_file,
+					0,
+					0,
+					'https://developer.wordpress.org/plugins/wordpress-org/common-issues/#no-gpl-compatible-license-declared',
+					9
 				);
 			}
 		}
