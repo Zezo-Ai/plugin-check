@@ -98,9 +98,9 @@ class Plugin_Header_Fields_Check implements Static_Check {
 					6
 				);
 			} else {
-				$potential_slug = sanitize_title_with_dashes( str_replace( '_', '-', preg_replace( '/[^a-z0-9 _.-]/i', '', remove_accents( $plugin_header['Name'] ) ) ) );
+				$valid_chars_count = preg_match_all( '/[a-z0-9-]/i', $plugin_header['Name'] );
 
-				if ( empty( $potential_slug ) ) {
+				if ( intval( $valid_chars_count ) < 5 ) {
 					$this->add_result_error_for_file(
 						$result,
 						sprintf(
