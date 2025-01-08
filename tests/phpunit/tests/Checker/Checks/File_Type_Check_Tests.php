@@ -128,7 +128,7 @@ class File_Type_Check_Tests extends WP_UnitTestCase {
 		$this->assertCount( 1, wp_list_filter( $errors['badly|file%name!@#$%^&*()+=[]{};:"\'<>,?|`~.php'][0][0], array( 'code' => 'badly_named_files' ) ) );
 	}
 
-	public function test_run_with_duplicated_named_errors() {
+	public function test_run_with_case_sensitive_named_errors() {
 		// Initialize the Check_Context with a plugin path that mimics the directory structure.
 		$check_context = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-file-type-badly-named-files-errors/load.php' );
 
@@ -155,7 +155,7 @@ class File_Type_Check_Tests extends WP_UnitTestCase {
 
 		$errors = $check_result->get_errors();
 
-		$this->assertCount( 1, wp_list_filter( $errors['custom-file.php'][0][0], array( 'code' => 'duplicated_files' ) ) );
+		$this->assertCount( 1, wp_list_filter( $errors['custom-file.php'][0][0], array( 'code' => 'case_sensitive_files' ) ) );
 
 		// Define the custom file list with duplicate folder names as they would appear in a plugin directory.
 		$custom_files = array(
@@ -167,7 +167,7 @@ class File_Type_Check_Tests extends WP_UnitTestCase {
 		$result = $check_files_method->invoke( $check, $check_result, $custom_files );
 		$errors = $check_result->get_errors();
 
-		$this->assertCount( 1, wp_list_filter( $errors['sub directory/'][0][0], array( 'code' => 'duplicated_folders' ) ) );
+		$this->assertCount( 1, wp_list_filter( $errors['sub directory/'][0][0], array( 'code' => 'case_sensitive_folders' ) ) );
 	}
 
 	public function test_run_with_library_core_errors() {

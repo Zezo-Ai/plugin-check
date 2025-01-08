@@ -320,7 +320,7 @@ class File_Type_Check extends Abstract_File_Check {
 			$this->add_result_error_for_file(
 				$result,
 				__( 'Case-Sensitive duplicated folders were found. They\'ll be problematic in different systems.', 'plugin-check' ),
-				'duplicated_folders',
+				'case_sensitive_folders',
 				implode( ', ', $case_sensitive_folders ),
 				0,
 				0,
