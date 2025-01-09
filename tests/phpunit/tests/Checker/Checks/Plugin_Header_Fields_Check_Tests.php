@@ -110,4 +110,61 @@ class Plugin_Header_Fields_Check_Tests extends WP_UnitTestCase {
 		$this->assertCount( 1, wp_list_filter( $errors['load.php'][0][0], array( 'code' => 'plugin_header_missing_plugin_description' ) ) );
 		$this->assertCount( 1, wp_list_filter( $errors['load.php'][0][0], array( 'code' => 'plugin_header_invalid_plugin_version' ) ) );
 	}
+
+	public function test_run_with_errors_requires_at_least_latest_plus_two_version() {
+		// Target plugin has "6.0" in plugin header.
+		set_transient( 'wp_plugin_check_latest_version_info', array( 'current' => '5.8.1' ) );
+
+		$readme_check  = new Plugin_Header_Fields_Check();
+		$check_context = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-localhost-with-errors/load.php' );
+		$check_result  = new Check_Result( $check_context );
+
+		$readme_check->run( $check_result );
+
+		$errors = $check_result->get_errors();
+
+		$this->assertNotEmpty( $errors );
+
+		$filtered_items = wp_list_filter( $errors['load.php'][0][0], array( 'code' => 'plugin_header_nonexistent_requires_wp' ) );
+
+		$this->assertCount( 1, $filtered_items );
+		$this->assertStringContainsString( 'Requires at least: 6.0', $filtered_items[0]['message'] );
+		$this->assertStringContainsString( 'This version of WordPress does not exist (yet).', $filtered_items[0]['message'] );
+
+		delete_transient( 'wp_plugin_check_latest_version_info' );
+	}
+
+	public function test_run_with_errors_requires_at_least_latest_plus_one_version() {
+		// Target plugin has "6.0" in plugin header.
+		set_transient( 'wp_plugin_check_latest_version_info', array( 'current' => '5.9.1' ) );
+
+		$readme_check  = new Plugin_Header_Fields_Check();
+		$check_context = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-localhost-with-errors/load.php' );
+		$check_result  = new Check_Result( $check_context );
+
+		$readme_check->run( $check_result );
+
+		$errors = $check_result->get_errors();
+
+		$this->assertEmpty( $errors );
+
+		delete_transient( 'wp_plugin_check_latest_version_info' );
+	}
+
+	public function test_run_with_errors_requires_at_least_latest_version() {
+		// Target plugin has "6.0" in plugin header.
+		set_transient( 'wp_plugin_check_latest_version_info', array( 'current' => '6.0.1' ) );
+
+		$readme_check  = new Plugin_Header_Fields_Check();
+		$check_context = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-localhost-with-errors/load.php' );
+		$check_result  = new Check_Result( $check_context );
+
+		$readme_check->run( $check_result );
+
+		$errors = $check_result->get_errors();
+
+		$this->assertEmpty( $errors );
+
+		delete_transient( 'wp_plugin_check_latest_version_info' );
+	}
 }
