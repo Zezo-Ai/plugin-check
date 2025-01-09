@@ -265,8 +265,9 @@ class Plugin_Header_Fields_Check implements Static_Check {
 		}
 
 		if ( ! empty( $plugin_header['RequiresWP'] ) ) {
+			$latest_wp_version = $this->get_wordpress_stable_version();
+
 			if ( ! preg_match( '!^\d+\.\d(\.\d+)?$!', $plugin_header['RequiresWP'] ) ) {
-				$latest_wp_version   = $this->get_wordpress_stable_version();
 				$previous_wp_version = $this->get_wordpress_relative_major_version( $latest_wp_version, -1 );
 
 				$this->add_result_error_for_file(
@@ -285,6 +286,26 @@ class Plugin_Header_Fields_Check implements Static_Check {
 					'',
 					7
 				);
+			} else {
+				$acceptable_min_wp_version = $this->get_wordpress_relative_major_version( $latest_wp_version, 1 );
+
+				if ( version_compare( $plugin_header['RequiresWP'], $acceptable_min_wp_version, '>' ) ) {
+					$this->add_result_error_for_file(
+						$result,
+						sprintf(
+							/* translators: 1: plugin header field, 2: currently used version */
+							__( '<strong>%1$s: %2$s.</strong><br>The "%1$s" value in your plugin header is not valid. This version of WordPress does not exist (yet).', 'plugin-check' ),
+							esc_html( $labels['RequiresWP'] ),
+							esc_html( $plugin_header['RequiresWP'] )
+						),
+						'plugin_header_nonexistent_requires_wp',
+						$plugin_main_file,
+						0,
+						0,
+						'https://developer.wordpress.org/plugins/plugin-basics/header-requirements/#header-fields',
+						7
+					);
+				}
 			}
 		}
 		if ( ! empty( $plugin_header['RequiresPHP'] ) ) {
