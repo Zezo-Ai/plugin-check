@@ -319,7 +319,7 @@ class File_Type_Check extends Abstract_File_Check {
 		if ( ! empty( $case_sensitive_folders ) ) {
 			$this->add_result_error_for_file(
 				$result,
-				__( 'Case-Sensitive duplicated folders were found. They\'ll be problematic in different systems.', 'plugin-check' ),
+				__( 'Multiple folders with the same name but different case were found. This can be problematic on certain file systems.', 'plugin-check' ),
 				'case_sensitive_folders',
 				implode( ', ', $case_sensitive_folders ),
 				0,
