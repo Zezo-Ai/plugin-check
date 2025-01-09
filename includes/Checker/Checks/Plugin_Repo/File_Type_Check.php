@@ -336,7 +336,7 @@ class File_Type_Check extends Abstract_File_Check {
 		if ( ! empty( $case_sensitive_files ) ) {
 			$this->add_result_error_for_file(
 				$result,
-				__( 'Multiple files with the same name but different case were found. This can be problematic on certain file systems.' ),
+				__( 'Multiple files with the same name but different case were found. This can be problematic on certain file systems.', 'plugin-check' ),
 				'case_sensitive_files',
 				implode( ', ', $case_sensitive_files ),
 				0,
