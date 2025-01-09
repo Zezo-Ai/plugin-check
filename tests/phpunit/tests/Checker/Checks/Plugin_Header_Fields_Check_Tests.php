@@ -123,6 +123,8 @@ class Plugin_Header_Fields_Check_Tests extends WP_UnitTestCase {
 
 		$errors = $check_result->get_errors();
 
+		delete_transient( 'wp_plugin_check_latest_version_info' );
+
 		$this->assertNotEmpty( $errors );
 
 		$filtered_items = wp_list_filter( $errors['load.php'][0][0], array( 'code' => 'plugin_header_nonexistent_requires_wp' ) );
@@ -130,11 +132,9 @@ class Plugin_Header_Fields_Check_Tests extends WP_UnitTestCase {
 		$this->assertCount( 1, $filtered_items );
 		$this->assertStringContainsString( 'Requires at least: 6.0', $filtered_items[0]['message'] );
 		$this->assertStringContainsString( 'This version of WordPress does not exist (yet).', $filtered_items[0]['message'] );
-
-		delete_transient( 'wp_plugin_check_latest_version_info' );
 	}
 
-	public function test_run_with_errors_requires_at_least_latest_plus_one_version() {
+	public function test_run_without_errors_requires_at_least_latest_plus_one_version() {
 		// Target plugin has "6.0" in plugin header.
 		set_transient( 'wp_plugin_check_latest_version_info', array( 'current' => '5.9.1' ) );
 
@@ -146,12 +146,12 @@ class Plugin_Header_Fields_Check_Tests extends WP_UnitTestCase {
 
 		$errors = $check_result->get_errors();
 
-		$this->assertEmpty( $errors );
-
 		delete_transient( 'wp_plugin_check_latest_version_info' );
+
+		$this->assertEmpty( $errors );
 	}
 
-	public function test_run_with_errors_requires_at_least_latest_version() {
+	public function test_run_without_errors_requires_at_least_latest_version() {
 		// Target plugin has "6.0" in plugin header.
 		set_transient( 'wp_plugin_check_latest_version_info', array( 'current' => '6.0.1' ) );
 
@@ -163,8 +163,8 @@ class Plugin_Header_Fields_Check_Tests extends WP_UnitTestCase {
 
 		$errors = $check_result->get_errors();
 
-		$this->assertEmpty( $errors );
-
 		delete_transient( 'wp_plugin_check_latest_version_info' );
+
+		$this->assertEmpty( $errors );
 	}
 }
