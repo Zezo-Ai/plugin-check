@@ -52,14 +52,14 @@ class Plugin_Header_Fields_Check_Tests extends WP_UnitTestCase {
 
 		$errors = $check_result->get_errors();
 
+		delete_transient( 'wp_plugin_check_latest_version_info' );
+
 		$this->assertNotEmpty( $errors );
 
 		$error_items = wp_list_filter( $errors['load.php'][0][0], array( 'code' => 'plugin_header_invalid_requires_wp' ) );
 
 		$this->assertCount( 1, $error_items );
 		$this->assertStringContainsString( 'such as "6.5" or "6.4"', reset( $error_items )['message'] );
-
-		delete_transient( 'wp_plugin_check_latest_version_info' );
 	}
 
 	public function test_run_with_valid_requires_plugins_header() {
