@@ -349,6 +349,8 @@ class Plugin_Readme_Check_Tests extends WP_UnitTestCase {
 
 		$warnings = $check_result->get_warnings();
 
+		delete_transient( 'wp_plugin_check_latest_wp_version' );
+
 		$this->assertNotEmpty( $warnings );
 		$this->assertArrayHasKey( 'readme.txt', $warnings );
 
@@ -359,8 +361,6 @@ class Plugin_Readme_Check_Tests extends WP_UnitTestCase {
 		$filtered_items = array_values( $filtered_items );
 
 		$this->assertStringContainsString( 'The "Tested up to" field was ignored. This field should only contain a valid WordPress version such as "' . $version . '"', $filtered_items[0]['message'] );
-
-		delete_transient( 'wp_plugin_check_latest_wp_version' );
 	}
 
 	public function test_run_with_errors_multiple_parser_warnings_and_empty_ignored_array() {
@@ -375,6 +375,8 @@ class Plugin_Readme_Check_Tests extends WP_UnitTestCase {
 		$errors   = $check_result->get_errors();
 		$warnings = $check_result->get_warnings();
 
+		remove_filter( 'wp_plugin_check_ignored_readme_warnings', '__return_empty_array' );
+
 		$this->assertNotEmpty( $warnings );
 		$this->assertArrayHasKey( 'readme.txt', $warnings );
 
@@ -385,8 +387,6 @@ class Plugin_Readme_Check_Tests extends WP_UnitTestCase {
 		$this->assertEquals( 8, $check_result->get_warning_count() );
 		$this->assertEmpty( $errors );
 		$this->assertEquals( 0, $check_result->get_error_count() );
-
-		remove_filter( 'wp_plugin_check_ignored_readme_warnings', '__return_empty_array' );
 	}
 
 	public function test_filter_readme_warnings_ignored() {
@@ -406,8 +406,6 @@ class Plugin_Readme_Check_Tests extends WP_UnitTestCase {
 
 		$result = apply_filters( $filter_name, array() );
 
-		$this->assertEquals( $custom_ignores, $result );
-
 		// Remove the filter to avoid interfering with other tests.
 		remove_filter(
 			$filter_name,
@@ -415,6 +413,8 @@ class Plugin_Readme_Check_Tests extends WP_UnitTestCase {
 				return $custom_ignores;
 			}
 		);
+
+		$this->assertEquals( $custom_ignores, $result );
 	}
 
 	public function test_filter_wp_plugin_check_ignored_readme_warnings_will_return_no_error() {
@@ -442,11 +442,6 @@ class Plugin_Readme_Check_Tests extends WP_UnitTestCase {
 		$errors   = $check_result->get_errors();
 		$warnings = $check_result->get_warnings();
 
-		$this->assertEmpty( $errors );
-		$this->assertEmpty( $warnings );
-		$this->assertSame( 0, $check_result->get_error_count() );
-		$this->assertSame( 0, $check_result->get_warning_count() );
-
 		// Remove the filter to avoid interfering with other tests.
 		remove_filter(
 			$filter_name,
@@ -454,6 +449,11 @@ class Plugin_Readme_Check_Tests extends WP_UnitTestCase {
 				return $custom_ignores;
 			}
 		);
+
+		$this->assertEmpty( $errors );
+		$this->assertEmpty( $warnings );
+		$this->assertSame( 0, $check_result->get_error_count() );
+		$this->assertSame( 0, $check_result->get_warning_count() );
 	}
 
 	public function test_run_with_errors_upgrade_notice() {
@@ -485,6 +485,8 @@ class Plugin_Readme_Check_Tests extends WP_UnitTestCase {
 
 		$errors = $check_result->get_errors();
 
+		delete_transient( 'wp_plugin_check_latest_wp_version' );
+
 		$this->assertNotEmpty( $errors );
 
 		$filtered_items = wp_list_filter( $errors['readme.md'][0][0], array( 'code' => 'nonexistent_tested_upto_header' ) );
@@ -492,11 +494,9 @@ class Plugin_Readme_Check_Tests extends WP_UnitTestCase {
 		$this->assertCount( 1, $filtered_items );
 		$this->assertStringContainsString( 'Tested up to: 6.1', $filtered_items[0]['message'] );
 		$this->assertStringContainsString( 'This version of WordPress does not exist (yet).', $filtered_items[0]['message'] );
-
-		delete_transient( 'wp_plugin_check_latest_wp_version' );
 	}
 
-	public function test_run_with_errors_tested_up_to_latest_plus_one_version() {
+	public function test_run_without_errors_tested_up_to_latest_plus_one_version() {
 		$version = '6.0'; // Target plugin has "6.1" is readme.
 
 		set_transient( 'wp_plugin_check_latest_wp_version', $version );
@@ -509,12 +509,12 @@ class Plugin_Readme_Check_Tests extends WP_UnitTestCase {
 
 		$errors = $check_result->get_errors();
 
-		$this->assertCount( 0, wp_list_filter( $errors['readme.md'][0][0], array( 'code' => 'nonexistent_tested_upto_header' ) ) );
-
 		delete_transient( 'wp_plugin_check_latest_wp_version' );
+
+		$this->assertCount( 0, wp_list_filter( $errors['readme.md'][0][0], array( 'code' => 'nonexistent_tested_upto_header' ) ) );
 	}
 
-	public function test_run_with_errors_tested_up_to_latest_stable_version() {
+	public function test_run_without_errors_tested_up_to_latest_stable_version() {
 		$version = '6.1'; // Target plugin has "6.1" is readme.
 
 		set_transient( 'wp_plugin_check_latest_wp_version', $version );
@@ -527,9 +527,9 @@ class Plugin_Readme_Check_Tests extends WP_UnitTestCase {
 
 		$errors = $check_result->get_errors();
 
-		$this->assertCount( 0, wp_list_filter( $errors['readme.md'][0][0], array( 'code' => 'nonexistent_tested_upto_header' ) ) );
-
 		delete_transient( 'wp_plugin_check_latest_wp_version' );
+
+		$this->assertCount( 0, wp_list_filter( $errors['readme.md'][0][0], array( 'code' => 'nonexistent_tested_upto_header' ) ) );
 	}
 
 	public function test_run_without_errors_readme_contributors_warning() {
