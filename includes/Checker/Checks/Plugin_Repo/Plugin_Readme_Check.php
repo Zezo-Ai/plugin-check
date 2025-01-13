@@ -14,6 +14,7 @@ use WordPress\Plugin_Check\Traits\Amend_Check_Result;
 use WordPress\Plugin_Check\Traits\Find_Readme;
 use WordPress\Plugin_Check\Traits\License_Utils;
 use WordPress\Plugin_Check\Traits\Stable_Check;
+use WordPress\Plugin_Check\Traits\Version_Utils;
 use WordPressdotorg\Plugin_Directory\Readme\Parser;
 
 /**
@@ -29,6 +30,7 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 	use Find_Readme;
 	use Stable_Check;
 	use License_Utils;
+	use Version_Utils;
 
 	/**
 	 * Gets the categories for the check.
@@ -784,47 +786,6 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 				);
 			}
 		}
-	}
-
-	/**
-	 * Returns current major WordPress version.
-	 *
-	 * @since 1.0.0
-	 *
-	 * @return string Stable WordPress version.
-	 */
-	private function get_wordpress_stable_version() {
-		$version = get_transient( 'wp_plugin_check_latest_wp_version' );
-
-		if ( false === $version ) {
-			$response = wp_remote_get( 'https://api.wordpress.org/core/version-check/1.7/' );
-
-			if ( ! is_wp_error( $response ) && 200 === wp_remote_retrieve_response_code( $response ) ) {
-				$body = json_decode( wp_remote_retrieve_body( $response ), true );
-
-				if ( isset( $body['offers'] ) && ! empty( $body['offers'] ) ) {
-					$latest_release = reset( $body['offers'] );
-
-					$version = $latest_release['current'];
-
-					set_transient( 'wp_plugin_check_latest_wp_version', $version, DAY_IN_SECONDS );
-				}
-			}
-		}
-
-		// If $version is still false at this point, use current installed WordPress version.
-		if ( false === $version ) {
-			$version = get_bloginfo( 'version' );
-
-			// Strip off any -alpha, -RC, -beta suffixes.
-			list( $version, ) = explode( '-', $version );
-		}
-
-		if ( preg_match( '#^\d.\d#', $version, $matches ) ) {
-			$version = $matches[0];
-		}
-
-		return $version;
 	}
 
 	/**
