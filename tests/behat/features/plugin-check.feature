@@ -119,6 +119,36 @@ Feature: Test that the WP-CLI command works.
       WordPress.Security.EscapeOutput.OutputNotEscaped
       """
 
+    When I run the WP-CLI command `plugin check foo-single.php --exclude-codes=WordPress.WP.AlternativeFunctions.rand_mt_rand`
+    Then STDOUT should not contain:
+      """
+      WordPress.WP.AlternativeFunctions.rand_mt_rand
+      """
+    And STDOUT should contain:
+      """
+      WordPress.Security.EscapeOutput.OutputNotEscaped
+      """
+
+    When I run the WP-CLI command `plugin check foo-single.php --exclude-codes=WordPress.Security.EscapeOutput.OutputNotEscaped`
+    Then STDOUT should not contain:
+      """
+      WordPress.Security.EscapeOutput.OutputNotEscaped
+      """
+    And STDOUT should contain:
+      """
+      WordPress.WP.AlternativeFunctions.rand_mt_rand
+      """
+
+    When I run the WP-CLI command `plugin check foo-single.php --exclude-codes="WordPress.WP.AlternativeFunctions.rand_mt_rand,WordPress.Security.EscapeOutput.OutputNotEscaped"`
+    Then STDOUT should not contain:
+      """
+      WordPress.Security.EscapeOutput.OutputNotEscaped
+      """
+    And STDOUT should not contain:
+      """
+      WordPress.WP.AlternativeFunctions.rand_mt_rand
+      """
+
   Scenario: Check plugin with special chars in plugin name
     Given a WP install with the Plugin Check plugin
     And a wp-content/plugins/johns-post-counter/johns-post-counter.php file:
