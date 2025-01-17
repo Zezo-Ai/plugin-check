@@ -70,6 +70,9 @@ final class Plugin_Check_Command {
 	 * : Exclude checks provided as an argument in comma-separated values, e.g. i18n_usage, late_escaping.
 	 * Applies after evaluating `--checks`.
 	 *
+	 * [--ignore-codes=<codes>]
+	 * : Ignore error codes provided as an argument in comma-separated values.
+	 *
 	 * [--format=<format>]
 	 * : Format to display the results. Options are table, csv, and json. The default will be a table.
 	 * ---
@@ -155,12 +158,16 @@ final class Plugin_Check_Command {
 				'include-low-severity-errors'   => false,
 				'include-low-severity-warnings' => false,
 				'slug'                          => '',
+				'ignore-codes'                  => '',
 			)
 		);
 
 		// Create the plugin and checks array from CLI arguments.
 		$plugin = isset( $args[0] ) ? $args[0] : '';
 		$checks = wp_parse_list( $options['checks'] );
+
+		// Ignore codes.
+		$ignore_codes = isset( $options['ignore-codes'] ) ? wp_parse_list( $options['ignore-codes'] ) : array();
 
 		// Create the categories array from CLI arguments.
 		$categories = isset( $options['categories'] ) ? wp_parse_list( $options['categories'] ) : array();
@@ -258,6 +265,10 @@ final class Plugin_Check_Command {
 			}
 			$file_results = $this->flatten_file_results( $file_errors, $file_warnings );
 
+			if ( ! empty( $ignore_codes ) ) {
+				$file_results = $this->get_filtered_results_by_ignore_codes( $file_results, $ignore_codes );
+			}
+
 			if ( '' !== $error_severity || '' !== $warning_severity ) {
 				$file_results = $this->get_filtered_results_by_severity( $file_results, intval( $error_severity ), intval( $warning_severity ), $include_low_severity_errors, $include_low_severity_warnings );
 			}
@@ -270,6 +281,10 @@ final class Plugin_Check_Command {
 		// If there are any files left with only warnings, print those next.
 		foreach ( $warnings as $file_name => $file_warnings ) {
 			$file_results = $this->flatten_file_results( array(), $file_warnings );
+
+			if ( ! empty( $ignore_codes ) ) {
+				$file_results = $this->get_filtered_results_by_ignore_codes( $file_results, $ignore_codes );
+			}
 
 			if ( '' !== $error_severity || '' !== $warning_severity ) {
 				$file_results = $this->get_filtered_results_by_severity( $file_results, intval( $error_severity ), intval( $warning_severity ), $include_low_severity_errors, $include_low_severity_warnings );
@@ -665,5 +680,23 @@ final class Plugin_Check_Command {
 		}
 
 		return array_merge( $errors, $warnings );
+	}
+
+	/**
+	 * Returns check results filtered by ignore codes.
+	 *
+	 * @since 1.4.0
+	 *
+	 * @param array $results      Check results.
+	 * @param array $ignore_codes Array of error codes to be ignored.
+	 * @return array Filtered results.
+	 */
+	private function get_filtered_results_by_ignore_codes( $results, $ignore_codes ) {
+		return array_filter(
+			$results,
+			static function ( $result ) use ( $ignore_codes ) {
+				return ! in_array( $result['code'], $ignore_codes, true );
+			}
+		);
 	}
 }
