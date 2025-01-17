@@ -158,7 +158,7 @@ final class Plugin_Check_Command {
 				'include-low-severity-errors'   => false,
 				'include-low-severity-warnings' => false,
 				'slug'                          => '',
-				'exclude-codes'                 => '',
+				'ignore-codes'                  => '',
 			)
 		);
 
@@ -166,8 +166,8 @@ final class Plugin_Check_Command {
 		$plugin = isset( $args[0] ) ? $args[0] : '';
 		$checks = wp_parse_list( $options['checks'] );
 
-		// Exclude codes.
-		$exclude_codes = isset( $options['exclude-codes'] ) ? wp_parse_list( $options['exclude-codes'] ) : array();
+		// Ignore codes.
+		$ignore_codes = isset( $options['ignore-codes'] ) ? wp_parse_list( $options['ignore-codes'] ) : array();
 
 		// Create the categories array from CLI arguments.
 		$categories = isset( $options['categories'] ) ? wp_parse_list( $options['categories'] ) : array();
@@ -265,8 +265,8 @@ final class Plugin_Check_Command {
 			}
 			$file_results = $this->flatten_file_results( $file_errors, $file_warnings );
 
-			if ( ! empty( $exclude_codes ) ) {
-				$file_results = $this->get_filtered_results_by_exclude_codes( $file_results, $exclude_codes );
+			if ( ! empty( $ignore_codes ) ) {
+				$file_results = $this->get_filtered_results_by_ignore_codes( $file_results, $ignore_codes );
 			}
 
 			if ( '' !== $error_severity || '' !== $warning_severity ) {
@@ -282,8 +282,8 @@ final class Plugin_Check_Command {
 		foreach ( $warnings as $file_name => $file_warnings ) {
 			$file_results = $this->flatten_file_results( array(), $file_warnings );
 
-			if ( ! empty( $exclude_codes ) ) {
-				$file_results = $this->get_filtered_results_by_exclude_codes( $file_results, $exclude_codes );
+			if ( ! empty( $ignore_codes ) ) {
+				$file_results = $this->get_filtered_results_by_ignore_codes( $file_results, $ignore_codes );
 			}
 
 			if ( '' !== $error_severity || '' !== $warning_severity ) {
@@ -683,19 +683,19 @@ final class Plugin_Check_Command {
 	}
 
 	/**
-	 * Returns check results filtered by exclude codes.
+	 * Returns check results filtered by ignore codes.
 	 *
 	 * @since 1.4.0
 	 *
 	 * @param array $results       Check results.
-	 * @param array $exclude_codes Array of error codes to be excludes.
+	 * @param array $ignore_codes Array of error codes to be ignored.
 	 * @return array Filtered results.
 	 */
-	private function get_filtered_results_by_exclude_codes( $results, $exclude_codes ) {
+	private function get_filtered_results_by_ignore_codes( $results, $ignore_codes ) {
 		return array_filter(
 			$results,
-			static function ( $result ) use ( $exclude_codes ) {
-				return ! in_array( $result['code'], $exclude_codes, true );
+			static function ( $result ) use ( $ignore_codes ) {
+				return ! in_array( $result['code'], $ignore_codes, true );
 			}
 		);
 	}
