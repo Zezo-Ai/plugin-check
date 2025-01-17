@@ -70,8 +70,8 @@ final class Plugin_Check_Command {
 	 * : Exclude checks provided as an argument in comma-separated values, e.g. i18n_usage, late_escaping.
 	 * Applies after evaluating `--checks`.
 	 *
-	 * [--exclude-codes=<checks>]
-	 * : Exclude error codes provided as an argument in comma-separated values.
+	 * [--ignore-codes=<checks>]
+	 * : Ignore error codes provided as an argument in comma-separated values.
 	 *
 	 * [--format=<format>]
 	 * : Format to display the results. Options are table, csv, and json. The default will be a table.

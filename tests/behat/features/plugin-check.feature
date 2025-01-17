@@ -119,7 +119,7 @@ Feature: Test that the WP-CLI command works.
       WordPress.Security.EscapeOutput.OutputNotEscaped
       """
 
-    When I run the WP-CLI command `plugin check foo-single.php --exclude-codes=WordPress.WP.AlternativeFunctions.rand_mt_rand`
+    When I run the WP-CLI command `plugin check foo-single.php --ignore-codes=WordPress.WP.AlternativeFunctions.rand_mt_rand`
     Then STDOUT should not contain:
       """
       WordPress.WP.AlternativeFunctions.rand_mt_rand
@@ -129,7 +129,7 @@ Feature: Test that the WP-CLI command works.
       WordPress.Security.EscapeOutput.OutputNotEscaped
       """
 
-    When I run the WP-CLI command `plugin check foo-single.php --exclude-codes=WordPress.Security.EscapeOutput.OutputNotEscaped`
+    When I run the WP-CLI command `plugin check foo-single.php --ignore-codes=WordPress.Security.EscapeOutput.OutputNotEscaped`
     Then STDOUT should not contain:
       """
       WordPress.Security.EscapeOutput.OutputNotEscaped
@@ -139,7 +139,7 @@ Feature: Test that the WP-CLI command works.
       WordPress.WP.AlternativeFunctions.rand_mt_rand
       """
 
-    When I run the WP-CLI command `plugin check foo-single.php --exclude-codes="WordPress.WP.AlternativeFunctions.rand_mt_rand,WordPress.Security.EscapeOutput.OutputNotEscaped"`
+    When I run the WP-CLI command `plugin check foo-single.php --ignore-codes="WordPress.WP.AlternativeFunctions.rand_mt_rand,WordPress.Security.EscapeOutput.OutputNotEscaped"`
     Then STDOUT should not contain:
       """
       WordPress.Security.EscapeOutput.OutputNotEscaped
