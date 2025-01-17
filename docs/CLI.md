@@ -16,7 +16,7 @@ Runs plugin check.
 : Exclude checks provided as an argument in comma-separated values, e.g. i18n_usage, late_escaping.
 Applies after evaluating `--checks`.
 
-[--ignore-codes=<checks>]
+[--ignore-codes=<codes>]
 : Ignore error codes provided as an argument in comma-separated values.
 
 [--format=<format>]
