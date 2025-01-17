@@ -16,6 +16,9 @@ Runs plugin check.
 : Exclude checks provided as an argument in comma-separated values, e.g. i18n_usage, late_escaping.
 Applies after evaluating `--checks`.
 
+[--ignore-codes=<checks>]
+: Ignore error codes provided as an argument in comma-separated values.
+
 [--format=<format>]
 : Format to display the results. Options are table, csv, and json. The default will be a table.
 ---
@@ -56,6 +59,12 @@ By default, `.git`, `vendor` and `node_modules` directories are excluded.
 
 [--warning-severity=<warning-severity>]
 : Warning severity level.
+
+[--include-low-severity-errors]
+: Include errors with lower severity than the threshold as other type.
+
+[--include-low-severity-warnings]
+: Include warnings with lower severity than the threshold as other type.
 
 [--slug=<slug>]
 : Slug to override the default.
