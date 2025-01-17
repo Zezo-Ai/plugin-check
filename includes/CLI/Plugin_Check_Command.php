@@ -687,7 +687,7 @@ final class Plugin_Check_Command {
 	 *
 	 * @since 1.4.0
 	 *
-	 * @param array $results       Check results.
+	 * @param array $results      Check results.
 	 * @param array $ignore_codes Array of error codes to be ignored.
 	 * @return array Filtered results.
 	 */
