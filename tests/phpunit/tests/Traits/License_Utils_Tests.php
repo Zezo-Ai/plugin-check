@@ -104,6 +104,7 @@ class License_Utils_Tests extends WP_UnitTestCase {
 			array( 'BSD 3 Clause', true ),
 			array( 'OpenLDAP', true ),
 			array( 'Expat', true ),
+			array( 'ISC', true ),
 
 			array( 'EPL', false ),
 			array( 'EUPL', false ),
