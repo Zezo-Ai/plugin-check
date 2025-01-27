@@ -78,7 +78,7 @@ In any case, passing the checks in this tool likely helps to achieve a smooth pl
 * Enhancement - Provide more detailed information about checks when the README does not include a tested version or a list of contributors.
 * Enhancement - Added rules from WPCS to prevent issues with content being sent before headers and warn about the use of Call-time pass-by-reference.
 * Enhancement - Give more context in the error of check wrong named files.
-* Enhancement - Simplified PHPUnit setup. Now it does not depend of running insided a WordPress installation.
+* Enhancement - Simplified PHPUnit setup. Now it does not depend of running inside a WordPress installation.
 * Enhancement - Added new check for restricted contributors.
 * Fix - Delete transients in unit tests to avoid false positives.
 * Fix - Incorrect Tested up to version comparison will make error for two major versions up.
