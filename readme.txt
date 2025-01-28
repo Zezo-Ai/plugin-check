@@ -2,7 +2,7 @@
 
 Contributors:      wordpressdotorg
 Tested up to:      6.7
-Stable tag:        1.3.1
+Stable tag:        1.4.0
 License:           GPLv2 or later
 License URI:       https://www.gnu.org/licenses/gpl-2.0.html
 Tags:              plugin best practices, testing, accessibility, performance, security
@@ -67,6 +67,26 @@ To be approved in the WordPress.org plugin directory, a plugin must typically pa
 In any case, passing the checks in this tool likely helps to achieve a smooth plugin review process, but is no guarantee that a plugin will be approved in the WordPress.org plugin directory.
 
 == Changelog ==
+
+= 1.4.0 =
+
+* Enhancement - Allow ISC license in the License check.
+* Enhancement - Added check for use of settings with sanitization callback.
+* Enhancement - Added --ignore-codes in CLI to introduce a mechanism to ignore specific error codes.
+* Enhancement - New utils for fetching necessary version info details.
+* Enhancement - Added check for unsupported plugin name in plugin header field.
+* Enhancement - Segregate the severity of i18n checks. Make sure that is giving errors in the right context.
+* Enhancement - Provide more detailed information about checks when the README does not include a tested version or a list of contributors.
+* Enhancement - Added rules from WPCS to prevent issues with content being sent before headers and warn about the use of Call-time pass-by-reference.
+* Enhancement - Give more context in the error of check wrong named files.
+* Enhancement - Simplified PHPUnit setup. Now it does not depend of running inside a WordPress installation.
+* Enhancement - Added new check for restricted contributors.
+* Fix - Delete transients in unit tests to avoid false positives.
+* Fix - Incorrect Tested up to version comparison will make error for two major versions up.
+* Fix - Excluded the use of functions file_get_contents and file_put_contents in the check to prevent false positives.
+* Fix - Duplicated error message in the check for wrong named files.
+* Fix - Use of Json encode wasn't firing the error message.
+* Fix - Change error type of NonEnqueuedImage in ImageFunctions sniff from ERROR to WARNING.
 
 = 1.3.1 =
 
