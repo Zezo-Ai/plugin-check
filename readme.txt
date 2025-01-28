@@ -71,6 +71,7 @@ In any case, passing the checks in this tool likely helps to achieve a smooth pl
 = 1.4.0 =
 
 * Enhancement - Allow ISC license in the License check.
+* Enhancement - Added check for use of settings with sanitization callback.
 * Enhancement - Added --ignore-codes in CLI to introduce a mechanism to ignore specific error codes.
 * Enhancement - New utils for fetching necessary version info details.
 * Enhancement - Added check for unsupported plugin name in plugin header field.
