@@ -111,6 +111,9 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 
 		// Check the readme file for contributors.
 		$this->check_for_contributors( $result, $readme_file );
+
+		// Check the readme file for requires headers.
+		$this->check_requires_headers( $result, $readme_file, $parser );
 	}
 
 	/**
@@ -778,6 +781,69 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 						'"' . implode( '", "', $reserved_usernames ) . '"'
 					),
 					'readme_reserved_contributors',
+					$readme_file,
+					0,
+					0,
+					'https://developer.wordpress.org/plugins/wordpress-org/how-your-readme-txt-works/#readme-header-information',
+					6
+				);
+			}
+		}
+	}
+
+	/**
+	 * Checks the readme file for requires headers.
+	 *
+	 * @since 1.5.0
+	 *
+	 * @param Check_Result $result      The Check Result to amend.
+	 * @param string       $readme_file Readme file.
+	 * @param Parser       $parser      The Parser object.
+	 */
+	private function check_requires_headers( Check_Result $result, string $readme_file, Parser $parser ) {
+		$ignored_warnings = $this->get_ignored_warnings( $parser );
+
+		$found_warnings = $parser->warnings ? $parser->warnings : array();
+
+		$current_warnings = array_diff( array_keys( $found_warnings ), $ignored_warnings );
+
+		$requires = array(
+			'requires_header_ignored'     => array(
+				'label'        => 'Requires at least',
+				'key'          => 'requires',
+				'header_field' => 'RequiresWP',
+			),
+			'requires_php_header_ignored' => array(
+				'label'        => 'Requires PHP',
+				'key'          => 'requires_php',
+				'header_field' => 'RequiresPHP',
+			),
+		);
+
+		// Find potential requires keys to check.
+		$potential_requires = array_diff( array_keys( $requires ), $current_warnings );
+
+		// Bail if not found.
+		if ( empty( $potential_requires ) ) {
+			return;
+		}
+
+		$plugin_data = get_plugin_data( $result->plugin()->main_file(), false, false );
+
+		foreach ( $potential_requires as $require ) {
+			$readme_value = $parser->{$requires[ $require ]['key']};
+			$plugin_value = $plugin_data[ $requires[ $require ]['header_field'] ];
+
+			if ( $readme_value !== $plugin_value ) {
+				$this->add_result_warning_for_file(
+					$result,
+					sprintf(
+						/* translators: 1: readme header tag, 2: versions comparison */
+						__( '<strong>Mismatched %1$s: %2$s.</strong><br>"%1$s" needs to be exactly the same with that in your main plugin file\'s header.', 'plugin-check' ),
+						esc_html( $requires[ $require ]['label'] ),
+						esc_html( $readme_value ) . ' != ' . esc_html( $plugin_value )
+					),
+					'readme_mismatched_header_' . $requires[ $require ]['key'],
 					$readme_file,
 					0,
 					0,
