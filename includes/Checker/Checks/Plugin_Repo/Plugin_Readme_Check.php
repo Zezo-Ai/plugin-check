@@ -835,7 +835,7 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 			$plugin_value = $plugin_data[ $requires[ $require ]['header_field'] ];
 
 			if ( $readme_value !== $plugin_value ) {
-				$this->add_result_warning_for_file(
+				$this->add_result_error_for_file(
 					$result,
 					sprintf(
 						/* translators: 1: readme header tag, 2: versions comparison */
@@ -847,8 +847,7 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 					$readme_file,
 					0,
 					0,
-					'https://developer.wordpress.org/plugins/wordpress-org/how-your-readme-txt-works/#readme-header-information',
-					6
+					'https://developer.wordpress.org/plugins/wordpress-org/how-your-readme-txt-works/#readme-header-information'
 				);
 			}
 		}
