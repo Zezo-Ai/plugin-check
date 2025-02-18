@@ -112,8 +112,7 @@ final class Admin_AJAX {
 		$checks = is_null( $checks ) ? array() : $checks;
 		$plugin = filter_input( INPUT_POST, 'plugin', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
 
-		$include_experimental = filter_input( INPUT_POST, 'include-experimental', FILTER_VALIDATE_INT );
-		$include_experimental = ( 1 === absint( $include_experimental ) );
+		$include_experimental = 1 === filter_input( INPUT_POST, 'include-experimental', FILTER_VALIDATE_INT );
 
 		try {
 			$runner->set_experimental_flag( $include_experimental );
@@ -192,8 +191,7 @@ final class Admin_AJAX {
 		$checks               = filter_input( INPUT_POST, 'checks', FILTER_DEFAULT, FILTER_FORCE_ARRAY );
 		$checks               = is_null( $checks ) ? array() : $checks;
 		$plugin               = filter_input( INPUT_POST, 'plugin', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
-		$include_experimental = filter_input( INPUT_POST, 'include-experimental', FILTER_VALIDATE_INT );
-		$include_experimental = ( 1 === absint( $include_experimental ) );
+		$include_experimental = 1 === filter_input( INPUT_POST, 'include-experimental', FILTER_VALIDATE_INT );
 		$runner               = Plugin_Request_Utility::get_runner();
 
 		if ( is_null( $runner ) ) {
@@ -262,8 +260,7 @@ final class Admin_AJAX {
 		$checks = is_null( $checks ) ? array() : $checks;
 		$plugin = filter_input( INPUT_POST, 'plugin', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
 
-		$include_experimental = filter_input( INPUT_POST, 'include-experimental', FILTER_VALIDATE_INT );
-		$include_experimental = ( 1 === absint( $include_experimental ) );
+		$include_experimental = 1 === filter_input( INPUT_POST, 'include-experimental', FILTER_VALIDATE_INT );
 
 		try {
 			$runner->set_experimental_flag( $include_experimental );
