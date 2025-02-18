@@ -490,10 +490,12 @@ Feature: Test that the WP-CLI command works.
        */
 
       $text = 'I am bad'; // This should trigger the error.
+
+      $string = 'This is experimental string.';
       """
     And I run the WP-CLI command `plugin activate foo-sample`
 
-    # The two checks from pcp-addon should be available.
+    # The two stable checks from pcp-addon should be available.
     When I run the WP-CLI command `plugin list-checks --fields=slug,category,stability --format=csv`
     Then STDOUT should contain:
       """
@@ -502,6 +504,17 @@ Feature: Test that the WP-CLI command works.
     And STDOUT should contain:
       """
       example_runtime,new_category,stable
+      """
+    And STDOUT should not contain:
+      """
+      example_experimental,new_category,experimental
+      """
+
+    # Experimental checks from pcp-addon should be available.
+    When I run the WP-CLI command `plugin list-checks --fields=slug,category,stability --format=csv --include-experimental`
+    Then STDOUT should contain:
+      """
+      example_experimental,new_category,experimental
       """
 
     # The new check category should therefore also be available.
@@ -523,6 +536,13 @@ Feature: Test that the WP-CLI command works.
     Then STDOUT should contain:
       """
       prohibited_text_detected,ERROR
+      """
+
+    # Running experimental checks, including the one from pcp-addon
+    When I run the WP-CLI command `plugin check foo-sample --fields=code,type --format=csv --include-experimental`
+    Then STDOUT should contain:
+      """
+      experimental_text_detected,ERROR
       """
 
     # Running only the check from pcp-addon
