@@ -834,7 +834,7 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 			$readme_value = $parser->{$requires[ $require ]['key']};
 			$plugin_value = $plugin_data[ $requires[ $require ]['header_field'] ];
 
-			if ( $readme_value !== $plugin_value ) {
+			if ( ! empty( $readme_value ) && ! empty( $plugin_value ) && $readme_value !== $plugin_value ) {
 				$this->add_result_error_for_file(
 					$result,
 					sprintf(
