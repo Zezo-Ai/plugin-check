@@ -286,10 +286,13 @@ final class Admin_Page {
 
 		$check_repo = new Default_Check_Repository();
 
-		$non_experimental_collection = $check_repo->get_checks( Check_Repository::TYPE_ALL );
-		$complete_collection         = $check_repo->get_checks( Check_Repository::TYPE_ALL + Check_Repository::INCLUDE_EXPERIMENTAL );
+		$collection = $check_repo->get_checks( Check_Repository::TYPE_ALL | Check_Repository::INCLUDE_EXPERIMENTAL )->filter(
+			static function ( Check $check ) {
+				return $check->get_stability() === Check::STABILITY_EXPERIMENTAL;
+			}
+		);
 
-		$has_experimental_checks = ( count( $non_experimental_collection ) !== count( $complete_collection ) );
+		$has_experimental_checks = count( $collection ) > 0;
 
 		require WP_PLUGIN_CHECK_PLUGIN_DIR_PATH . 'templates/admin-page.php';
 	}
