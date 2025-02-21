@@ -64,7 +64,7 @@
 				<?php if ( $has_experimental_checks ) { ?>
 					<h4><?php esc_attr_e( 'Other Options', 'plugin-check' ); ?></h4>
 					<p>
-						<input type="checkbox" value="include-experimental" id="plugin-check__include-experimental" /> <?php esc_html_e( 'Include Experimental Checks', 'plugin-check' ); ?>
+						<label><input type="checkbox" value="include-experimental" id="plugin-check__include-experimental" /> <?php esc_html_e( 'Include Experimental Checks', 'plugin-check' ); ?></label>
 					</p>
 				<?php } ?>
 
