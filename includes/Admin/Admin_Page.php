@@ -284,6 +284,16 @@ final class Admin_Page {
 		$user_enabled_categories = get_user_setting( 'plugin_check_category_preferences', implode( '__', $this->get_default_check_categories_to_be_selected() ) );
 		$user_enabled_categories = explode( '__', $user_enabled_categories );
 
+		$check_repo = new Default_Check_Repository();
+
+		$collection = $check_repo->get_checks( Check_Repository::TYPE_ALL | Check_Repository::INCLUDE_EXPERIMENTAL )->filter(
+			static function ( Check $check ) {
+				return $check->get_stability() === Check::STABILITY_EXPERIMENTAL;
+			}
+		);
+
+		$has_experimental_checks = count( $collection ) > 0;
+
 		require WP_PLUGIN_CHECK_PLUGIN_DIR_PATH . 'templates/admin-page.php';
 	}
 
