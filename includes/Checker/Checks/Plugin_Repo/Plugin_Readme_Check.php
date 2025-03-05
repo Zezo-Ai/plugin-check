@@ -214,6 +214,23 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 				if ( ! empty( $parser->{$field_key} ) && 'tested' === $field_key ) {
 					list( $tested_upto, ) = explode( '-', $parser->{$field_key} );
 
+					if ( preg_match( '/^\d+\.\d+\.\d+/', $tested_upto ) ) {
+						$this->add_result_error_for_file(
+							$result,
+							sprintf(
+								/* translators: %s: currently used version */
+								__( '<strong>Tested up to: %s</strong><br>The version number should only include major versions (e.g. 6.7), not minor versions (e.g. 6.7.1).', 'plugin-check' ),
+								$tested_upto
+							),
+							'invalid_tested_upto_minor',
+							$readme_file,
+							0,
+							0,
+							'https://developer.wordpress.org/plugins/wordpress-org/how-your-readme-txt-works/#readme-header-information',
+							7
+						);
+					}
+
 					if ( preg_match( '#^\d.\d#', $tested_upto, $matches ) ) {
 						$tested_upto = $matches[0];
 					}

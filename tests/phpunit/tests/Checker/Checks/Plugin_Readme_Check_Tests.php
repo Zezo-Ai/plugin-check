@@ -232,6 +232,27 @@ class Plugin_Readme_Check_Tests extends WP_UnitTestCase {
 		$this->assertCount( 1, wp_list_filter( $errors['readme.txt'][0][0], array( 'code' => 'outdated_tested_upto_header' ) ) );
 	}
 
+	public function test_run_with_errors_tested_upto_minor() {
+		$readme_check  = new Plugin_Readme_Check();
+		$check_context = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-plugin-readme-errors-tested-upto-minor/load.php' );
+		$check_result  = new Check_Result( $check_context );
+
+		$readme_check->run( $check_result );
+
+		$errors = $check_result->get_errors();
+
+		var_dump( $errors );	
+		ob_flush();
+
+		$this->assertNotEmpty( $errors );
+		$this->assertArrayHasKey( 'readme.txt', $errors );
+
+		// Check for tested upto.
+		$this->assertArrayHasKey( 0, $errors['readme.txt'] );
+		$this->assertArrayHasKey( 0, $errors['readme.txt'][0] );
+		$this->assertCount( 1, wp_list_filter( $errors['readme.txt'][0][0], array( 'code' => 'invalid_tested_upto_minor' ) ) );
+	}
+
 	public function test_run_with_errors_missing_readme_headers() {
 		$readme_check  = new Plugin_Readme_Check();
 		$check_context = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-plugin-readme-errors-upgrade-notice/load.php' );
@@ -488,11 +509,11 @@ class Plugin_Readme_Check_Tests extends WP_UnitTestCase {
 
 		$this->assertNotEmpty( $errors );
 
-		$filtered_items = wp_list_filter( $errors['readme.md'][0][0], array( 'code' => 'nonexistent_tested_upto_header' ) );
+		$filtered_items = wp_list_filter( $errors['readme.md'][0][0], array( 'code' => 'nonexistent_tested_upto_header' ) );å
 
 		$this->assertCount( 1, $filtered_items );
-		$this->assertStringContainsString( 'Tested up to: 6.1', $filtered_items[0]['message'] );
-		$this->assertStringContainsString( 'This version of WordPress does not exist (yet).', $filtered_items[0]['message'] );
+		$this->assertStringContainsString( 'Tested up to: 6.1', $filtered_items[1]['message'] );
+		$this->assertStringContainsString( 'This version of WordPress does not exist (yet).', $filtered_items[1]['message'] );
 	}
 
 	public function test_run_without_errors_tested_up_to_latest_plus_one_version() {
