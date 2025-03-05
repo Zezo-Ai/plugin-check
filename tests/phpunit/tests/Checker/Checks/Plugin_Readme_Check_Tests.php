@@ -241,9 +241,6 @@ class Plugin_Readme_Check_Tests extends WP_UnitTestCase {
 
 		$errors = $check_result->get_errors();
 
-		var_dump( $errors );	
-		ob_flush();
-
 		$this->assertNotEmpty( $errors );
 		$this->assertArrayHasKey( 'readme.txt', $errors );
 
@@ -509,7 +506,7 @@ class Plugin_Readme_Check_Tests extends WP_UnitTestCase {
 
 		$this->assertNotEmpty( $errors );
 
-		$filtered_items = wp_list_filter( $errors['readme.md'][0][0], array( 'code' => 'nonexistent_tested_upto_header' ) );å
+		$filtered_items = wp_list_filter( $errors['readme.md'][0][0], array( 'code' => 'nonexistent_tested_upto_header' ) );
 
 		$this->assertCount( 1, $filtered_items );
 		$this->assertStringContainsString( 'Tested up to: 6.1', $filtered_items[1]['message'] );
