@@ -26,12 +26,6 @@
 		</properties>
 	</rule>
 
-	<rule ref="rulesets/codesize.xml/ExcessiveMethodLength">
-		<properties>
-			<property name="minimum" value="150" />
-		</properties>
-	</rule>
-
 	<rule ref="rulesets/cleancode.xml">
 		<exclude name="ElseExpression" />
 		<exclude name="StaticAccess" />

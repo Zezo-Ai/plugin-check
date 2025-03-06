@@ -191,6 +191,8 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 	 * @param Check_Result $result      The Check Result to amend.
 	 * @param string       $readme_file Readme file.
 	 * @param Parser       $parser      The Parser object.
+	 *
+	 * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
 	 */
 	private function check_headers( Check_Result $result, string $readme_file, Parser $parser ) {
 		$ignored_warnings = $this->get_ignored_warnings( $parser );
