@@ -506,11 +506,11 @@ class Plugin_Readme_Check_Tests extends WP_UnitTestCase {
 
 		$this->assertNotEmpty( $errors );
 
-		$filtered_items = wp_list_filter( $errors['readme.md'][0][0], array( 'code' => 'nonexistent_tested_upto_header' ) );
+		$filtered_items = array_values( wp_list_filter( $errors['readme.md'][0][0], array( 'code' => 'nonexistent_tested_upto_header' ) ) );
 
 		$this->assertCount( 1, $filtered_items );
-		$this->assertStringContainsString( 'Tested up to: 6.1', $filtered_items[1]['message'] );
-		$this->assertStringContainsString( 'This version of WordPress does not exist (yet).', $filtered_items[1]['message'] );
+		$this->assertStringContainsString( 'Tested up to: 6.1', $filtered_items[0]['message'] );
+		$this->assertStringContainsString( 'This version of WordPress does not exist (yet).', $filtered_items[0]['message'] );
 	}
 
 	public function test_run_without_errors_tested_up_to_latest_plus_one_version() {
