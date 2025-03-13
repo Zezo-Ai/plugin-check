@@ -170,6 +170,7 @@ class I18n_Usage_Check extends Abstract_PHP_CodeSniffer_Check {
 			'textdomain',
 			'text-domain',
 			'text_domain',
+			'your-text-domain',
 		);
 
 		/**

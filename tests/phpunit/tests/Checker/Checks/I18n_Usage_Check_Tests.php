@@ -31,6 +31,14 @@ class I18n_Usage_Check_Tests extends WP_UnitTestCase {
 
 		// Check for WordPress.WP.I18n.NonSingularStringLiteralDomain error on Line no 33 and column no at 29.
 		$this->assertCount( 1, wp_list_filter( $errors['load.php'][33][29], array( 'code' => 'WordPress.WP.I18n.NonSingularStringLiteralDomain' ) ) );
+
+		// Restricted textdomain with severity 7.
+		$this->assertCount( 1, wp_list_filter( $errors['load.php'][35][29], array( 'code' => 'WordPress.WP.I18n.TextDomainMismatch' ) ) );
+		$this->assertSame( 7, $errors['load.php'][35][29][0]['severity'] );
+
+		// Mismatched textdomain but not restricted and with severity 5.
+		$this->assertCount( 1, wp_list_filter( $errors['load.php'][36][29], array( 'code' => 'WordPress.WP.I18n.TextDomainMismatch' ) ) );
+		$this->assertSame( 5, $errors['load.php'][36][29][0]['severity'] );
 	}
 
 	public function test_run_without_errors() {
