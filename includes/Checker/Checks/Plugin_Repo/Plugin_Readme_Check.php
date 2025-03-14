@@ -226,9 +226,9 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 							$result,
 							sprintf(
 								/* translators: %s: currently used version */
-								__( '<strong>Tested up to: </strong><br>The version number should only include major versions %1$s, not minor versions %2$s.', 'plugin-check' ),
-								$tested_upto_major,
-								$tested_upto
+								__( '<strong>Tested up to: %1$s</strong><br>The version number should only include major versions %2$s.', 'plugin-check' ),
+								$tested_upto,
+								$tested_upto_major
 							),
 							'invalid_tested_upto_minor',
 							$readme_file,
