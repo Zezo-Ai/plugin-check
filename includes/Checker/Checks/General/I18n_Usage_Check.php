@@ -96,6 +96,8 @@ class I18n_Usage_Check extends Abstract_PHP_CodeSniffer_Check {
 	 * @param int          $column   The column on which the message occurred. Default is 0 (unknown column).
 	 * @param string       $docs     URL for further information about the message.
 	 * @param int          $severity Severity level. Default is 5.
+	 *
+	 * @SuppressWarnings(PHPMD.NPathComplexity)
 	 */
 	protected function add_result_message_for_file( Check_Result $result, $error, $message, $code, $file, $line = 0, $column = 0, string $docs = '', $severity = 5 ) {
 		// Downgrade errors about usage of the 'default' text domain from WordPress Core to warnings.
@@ -143,6 +145,43 @@ class I18n_Usage_Check extends Abstract_PHP_CodeSniffer_Check {
 				break;
 		}
 
+		if ( 'WordPress.WP.I18n.TextDomainMismatch' === $code ) {
+			$restricted_textdomains = $this->get_restricted_textdomains();
+
+			$pattern = '/but\sgot\s&#039;(' . implode( '|', array_map( 'preg_quote', $restricted_textdomains ) ) . ')&#039;\.$/';
+
+			if ( preg_match( $pattern, $message ) ) {
+				$severity = 7;
+			}
+		}
+
 		parent::add_result_message_for_file( $result, $error, $message, $code, $file, $line, $column, $docs, $severity );
+	}
+
+	/**
+	 * Returns restricted textdomains.
+	 *
+	 * @since 1.5.0
+	 *
+	 * @return array Restricted textdomains.
+	 */
+	private function get_restricted_textdomains() {
+		$restricted_textdomains = array(
+			'textdomain',
+			'text-domain',
+			'text_domain',
+			'your-text-domain',
+		);
+
+		/**
+		 * Filter the list of restricted textdomains.
+		 *
+		 * @since 1.5.0
+		 *
+		 * @param array $restricted_textdomains Array of restricted textdomains.
+		 */
+		$restricted_textdomains = (array) apply_filters( 'wp_plugin_check_restricted_textdomains', $restricted_textdomains );
+
+		return $restricted_textdomains;
 	}
 }
