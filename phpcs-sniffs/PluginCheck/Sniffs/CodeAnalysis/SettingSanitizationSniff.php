@@ -80,23 +80,6 @@ final class SettingSanitizationSniff extends AbstractFunctionParameterSniff {
 				$error_code . 'Invalid',
 				array( $matched_content )
 			);
-
-			return;
-		}
-
-		$next_token = $this->phpcsFile->findNext( Tokens::$emptyTokens, $third_param['start'], ( $third_param['end'] + 1 ), true );
-
-		if ( false !== $next_token ) {
-			$next_type = $this->tokens[ $next_token ]['type'];
-
-			if ( in_array( $next_type, array( 'T_ARRAY', 'T_OPEN_SHORT_ARRAY', 'T_VARIABLE', 'T_CALLABLE' ), true ) ) {
-				$this->phpcsFile->addWarning(
-					'Dynamic argument passed in third parameter of %s(). Please ensure proper sanitization.',
-					$stackPtr,
-					$error_code . 'Dynamic',
-					array( $matched_content )
-				);
-			}
 		}
 	}
 }
