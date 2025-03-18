@@ -19,5 +19,3 @@
 register_setting( 'my_options_group', 'option_1' ); // Error.
 register_setting( 'my_options_group', 'option_2', false ); // Error.
 register_setting( 'my_options_group', 'option_3', 'absint' ); // Good.
-$args = array( 'sanitize_callback' => 'absint' );
-register_setting( 'my_options_group', 'option_4', $args ); // Warning.
