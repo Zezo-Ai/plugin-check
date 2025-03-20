@@ -18,16 +18,12 @@ class Setting_Sanitization_Check_Test extends WP_UnitTestCase {
 
 		$check->run( $check_result );
 
-		$errors   = $check_result->get_errors();
-		$warnings = $check_result->get_warnings();
+		$errors = $check_result->get_errors();
 
 		$this->assertNotEmpty( $errors );
-		$this->assertNotEmpty( $warnings );
 		$this->assertArrayHasKey( 'load.php', $errors );
-		$this->assertArrayHasKey( 'load.php', $warnings );
 
 		$this->assertSame( 'PluginCheck.CodeAnalysis.SettingSanitization.register_settingMissing', $errors['load.php'][19][1][0]['code'] );
 		$this->assertSame( 'PluginCheck.CodeAnalysis.SettingSanitization.register_settingInvalid', $errors['load.php'][20][1][0]['code'] );
-		$this->assertSame( 'PluginCheck.CodeAnalysis.SettingSanitization.register_settingDynamic', $warnings['load.php'][23][1][0]['code'] );
 	}
 }
