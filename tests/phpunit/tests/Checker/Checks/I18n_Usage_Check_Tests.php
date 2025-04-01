@@ -39,6 +39,36 @@ class I18n_Usage_Check_Tests extends WP_UnitTestCase {
 		// Mismatched textdomain but not restricted and with severity 5.
 		$this->assertCount( 1, wp_list_filter( $errors['load.php'][36][29], array( 'code' => 'WordPress.WP.I18n.TextDomainMismatch' ) ) );
 		$this->assertSame( 5, $errors['load.php'][36][29][0]['severity'] );
+
+		// Non singular string literal errors.
+		$this->assertCount( 1, wp_list_filter( $errors['load.php'][40][10], array( 'code' => 'WordPress.WP.I18n.NonSingularStringLiteralSingle' ) ) );
+		$this->assertSame( 7, $errors['load.php'][40][10][0]['severity'] );
+		$this->assertCount( 1, wp_list_filter( $errors['load.php'][40][19], array( 'code' => 'WordPress.WP.I18n.NonSingularStringLiteralPlural' ) ) );
+		$this->assertSame( 7, $errors['load.php'][40][19][0]['severity'] );
+		$this->assertCount( 1, wp_list_filter( $errors['load.php'][41][15], array( 'code' => 'WordPress.WP.I18n.NonSingularStringLiteralSingular' ) ) );
+		$this->assertSame( 7, $errors['load.php'][41][15][0]['severity'] );
+		$this->assertCount( 1, wp_list_filter( $errors['load.php'][41][24], array( 'code' => 'WordPress.WP.I18n.NonSingularStringLiteralPlural' ) ) );
+		$this->assertSame( 7, $errors['load.php'][41][24][0]['severity'] );
+		$this->assertCount( 1, wp_list_filter( $errors['load.php'][42][10], array( 'code' => 'WordPress.WP.I18n.NonSingularStringLiteralText' ) ) );
+		$this->assertSame( 7, $errors['load.php'][42][10][0]['severity'] );
+		$this->assertCount( 1, wp_list_filter( $errors['load.php'][42][17], array( 'code' => 'WordPress.WP.I18n.NonSingularStringLiteralContext' ) ) );
+		$this->assertSame( 7, $errors['load.php'][42][17][0]['severity'] );
+
+		// Interpolated variable errors.
+		$this->assertCount( 1, wp_list_filter( $errors['load.php'][45][18], array( 'code' => 'WordPress.WP.I18n.InterpolatedVariableText' ) ) );
+		$this->assertSame( 7, $errors['load.php'][45][18][0]['severity'] );
+		$this->assertCount( 1, wp_list_filter( $errors['load.php'][46][10], array( 'code' => 'WordPress.WP.I18n.InterpolatedVariableSingle' ) ) );
+		$this->assertSame( 7, $errors['load.php'][46][10][0]['severity'] );
+		$this->assertCount( 1, wp_list_filter( $errors['load.php'][46][23], array( 'code' => 'WordPress.WP.I18n.InterpolatedVariablePlural' ) ) );
+		$this->assertSame( 7, $errors['load.php'][46][23][0]['severity'] );
+		$this->assertCount( 1, wp_list_filter( $errors['load.php'][47][15], array( 'code' => 'WordPress.WP.I18n.InterpolatedVariableSingular' ) ) );
+		$this->assertSame( 7, $errors['load.php'][47][15][0]['severity'] );
+		$this->assertCount( 1, wp_list_filter( $errors['load.php'][47][28], array( 'code' => 'WordPress.WP.I18n.InterpolatedVariablePlural' ) ) );
+		$this->assertSame( 7, $errors['load.php'][47][28][0]['severity'] );
+		$this->assertCount( 1, wp_list_filter( $errors['load.php'][48][10], array( 'code' => 'WordPress.WP.I18n.InterpolatedVariableText' ) ) );
+		$this->assertSame( 7, $errors['load.php'][48][10][0]['severity'] );
+		$this->assertCount( 1, wp_list_filter( $errors['load.php'][48][21], array( 'code' => 'WordPress.WP.I18n.InterpolatedVariableContext' ) ) );
+		$this->assertSame( 7, $errors['load.php'][48][21][0]['severity'] );
 	}
 
 	public function test_run_without_errors() {
