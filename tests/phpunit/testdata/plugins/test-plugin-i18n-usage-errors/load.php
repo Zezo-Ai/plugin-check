@@ -34,3 +34,15 @@ esc_html__( 'Hello World!', $text_domain );
 
 esc_html__( 'Hello World!', 'textdomain' ); // Restricted textdomain. Severity should be 7.
 esc_html__( 'Hello World!', 'woocommerce' ); // Severity should be default 5.
+
+// Non singular string literals.
+echo esc_html__( $test, 'test-plugin-i18n-usage-errors' );
+echo _n( $single, $plural, $number, 'test-plugin-i18n-usage-errors' );
+echo _n_noop( $single, $plural, 'test-plugin-i18n-usage-errors' );
+echo _x( $text, $context, 'test-plugin-i18n-usage-errors' );
+
+// Interpolated variables.
+echo esc_html__( "${text}", 'test-plugin-i18n-usage-errors' );
+echo _n( "${single}", "${plural}", $number, 'test-plugin-i18n-usage-errors' );
+echo _n_noop( "${single}", "${plural}", 'test-plugin-i18n-usage-errors' );
+echo _x( "${text}", "${context}", 'test-plugin-i18n-usage-errors' );
