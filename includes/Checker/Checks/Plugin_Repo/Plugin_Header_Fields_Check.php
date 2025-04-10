@@ -485,7 +485,17 @@ class Plugin_Header_Fields_Check implements Static_Check {
 	 * @return bool true if the URL is valid, otherwise false.
 	 */
 	private function is_valid_url( $url ) {
-		return filter_var( $url, FILTER_VALIDATE_URL ) === $url && str_starts_with( $url, 'http' );
+		if ( filter_var( $url, FILTER_VALIDATE_URL ) !== $url || ! str_starts_with( $url, 'http' ) ) {
+			return false;
+		}
+
+		// Detect duplicated protocol (e.g., "https://http://example.com/").
+		$parsed_url = wp_parse_url( $url );
+		if ( isset( $parsed_url['scheme'] ) && str_contains( substr( $url, strlen( $parsed_url['scheme'] ) + 3 ), '://' ) ) {
+			return false;
+		}
+
+		return true;
 	}
 
 	/**
