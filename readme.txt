@@ -1,8 +1,8 @@
 === Plugin Check (PCP) ===
 
 Contributors:      wordpressdotorg
-Tested up to:      6.7
-Stable tag:        1.4.0
+Tested up to:      6.8
+Stable tag:        1.5.0
 License:           GPLv2 or later
 License URI:       https://www.gnu.org/licenses/gpl-2.0.html
 Tags:              plugin best practices, testing, accessibility, performance, security
@@ -67,6 +67,20 @@ To be approved in the WordPress.org plugin directory, a plugin must typically pa
 In any case, passing the checks in this tool likely helps to achieve a smooth plugin review process, but is no guarantee that a plugin will be approved in the WordPress.org plugin directory.
 
 == Changelog ==
+
+= 1.5.0 =
+
+* Enhancement - Improve url validation to check duplicate protocol.
+* Enhancement - Update severity for incorrect textdomains and i18n error codes.
+* Enhancement - Now issues in URL Author check are ERROR instead of WARNING.
+* Enhancement - New check for minor version in Tested up.
+* Enhancement - Make sure headers are not empty in the requires header check.
+* Enhancement - Include experimental option in admin.
+* Enhancement - Add Behat test for experimental checks from addons.
+* Enhancement - Improve license check for Apache.
+* Enhancement - Warn if requires headers are not same in readme and plugin header.
+* Fix - Remove warning for dynamic callback in register_setting check.
+* Fix - Incorrect database tables being referenced on subsites in Multisite.
 
 = 1.4.0 =
 
