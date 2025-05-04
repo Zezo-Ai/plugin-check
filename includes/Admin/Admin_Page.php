@@ -56,9 +56,31 @@ final class Admin_Page {
 	public function add_hooks() {
 		add_action( 'admin_menu', array( $this, 'add_and_initialize_page' ) );
 		add_filter( 'plugin_action_links', array( $this, 'filter_plugin_action_links' ), 10, 4 );
+		add_filter( 'plugin_action_links_' . plugin_basename( WP_PLUGIN_CHECK_MAIN_FILE ), array( $this, 'add_plugins_page_link' ), 10, 2 );
 		add_action( 'admin_enqueue_scripts', array( $this, 'add_jump_to_line_code_editor' ) );
 
 		$this->admin_ajax->add_hooks();
+	}
+
+	/**
+	 * Adds a link to the plugins page.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param array  $links Array of plugin action links.
+	 * @param string $file  Plugin file path.
+	 * @return array Modified array of plugin action links.
+	 */
+	public function add_plugins_page_link( $links, $file ) {
+		if ( plugin_basename( WP_PLUGIN_CHECK_MAIN_FILE ) === $file ) {
+			$links[] = sprintf(
+				'<a href="%1$s">%2$s</a>',
+				esc_url( admin_url( 'tools.php?page=plugin-check' ) ),
+				esc_html__( 'Check a Plugin', 'plugin-check' )
+			);
+		}
+
+		return $links;
 	}
 
 	/**
