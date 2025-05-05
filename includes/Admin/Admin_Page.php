@@ -321,7 +321,7 @@ final class Admin_Page {
 			$actions[] = sprintf(
 				'<a href="%1$s">%2$s</a>',
 				esc_url( admin_url( 'tools.php?page=plugin-check' ) ),
-				esc_html__( 'Check a Plugin', 'plugin-check' )
+				esc_html__( 'Check a plugin', 'plugin-check' )
 			);
 			return $actions;
 		}
