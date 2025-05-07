@@ -220,7 +220,11 @@ class Plugin_Readme_Check_Tests extends WP_UnitTestCase {
 		$this->assertCount( 1, wp_list_filter( $errors['readme.txt'][0][0], array( 'code' => 'outdated_tested_upto_header' ) ) );
 	}
 
-	public function test_run_with_errors_tested_upto_minor() {
+	public function test_run_with_errors_tested_upto_minor_same_major_version() {
+		// Target plugin has "6.1.1" is readme.
+		// Current version is set to 6.1.2.
+		set_transient( 'wp_plugin_check_latest_version_info', array( 'current' => '6.1.2' ) );
+
 		$readme_check  = new Plugin_Readme_Check();
 		$check_context = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-plugin-readme-errors-tested-upto-minor/load.php' );
 		$check_result  = new Check_Result( $check_context );
@@ -229,13 +233,42 @@ class Plugin_Readme_Check_Tests extends WP_UnitTestCase {
 
 		$errors = $check_result->get_errors();
 
+		delete_transient( 'wp_plugin_check_latest_version_info' );
+
 		$this->assertNotEmpty( $errors );
 		$this->assertArrayHasKey( 'readme.txt', $errors );
 
-		// Check for tested upto.
+		// Check for tested upto minor error.
 		$this->assertArrayHasKey( 0, $errors['readme.txt'] );
 		$this->assertArrayHasKey( 0, $errors['readme.txt'][0] );
 		$this->assertCount( 1, wp_list_filter( $errors['readme.txt'][0][0], array( 'code' => 'invalid_tested_upto_minor' ) ) );
+	}
+
+	public function test_run_with_errors_tested_upto_minor_different_major_version() {
+		// Target plugin has "6.1.1" is readme.
+		// Current version is set to 6.2.1.
+		set_transient( 'wp_plugin_check_latest_version_info', array( 'current' => '6.2.1' ) );
+
+		$readme_check  = new Plugin_Readme_Check();
+		$check_context = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-plugin-readme-errors-tested-upto-minor/load.php' );
+		$check_result  = new Check_Result( $check_context );
+
+		$readme_check->run( $check_result );
+
+		$errors = $check_result->get_errors();
+
+		delete_transient( 'wp_plugin_check_latest_version_info' );
+
+		$this->assertNotEmpty( $errors );
+		$this->assertArrayHasKey( 'readme.txt', $errors );
+
+		// Check for tested upto minor error.
+		$this->assertArrayHasKey( 0, $errors['readme.txt'] );
+		$this->assertArrayHasKey( 0, $errors['readme.txt'][0] );
+		$this->assertCount( 0, wp_list_filter( $errors['readme.txt'][0][0], array( 'code' => 'invalid_tested_upto_minor' ) ) );
+
+		// There must be outdated_tested_upto_header error.
+		$this->assertCount( 1, wp_list_filter( $errors['readme.txt'][0][0], array( 'code' => 'outdated_tested_upto_header' ) ) );
 	}
 
 	public function test_run_with_errors_missing_readme_headers() {
