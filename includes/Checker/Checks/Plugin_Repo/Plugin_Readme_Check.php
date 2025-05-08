@@ -216,12 +216,14 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 				if ( ! empty( $parser->{$field_key} ) && 'tested' === $field_key ) {
 					list( $tested_upto, ) = explode( '-', $parser->{$field_key} );
 
+					$latest_wordpress_version = $this->get_wordpress_stable_version();
+
 					$tested_upto_major = $tested_upto;
 					if ( preg_match( '#^\d.\d#', $tested_upto, $matches ) ) {
 						$tested_upto_major = $matches[0];
 					}
 
-					if ( preg_match( '/^\d+\.\d+\.\d+/', $tested_upto ) ) {
+					if ( $tested_upto_major === $latest_wordpress_version && preg_match( '/^\d+\.\d+\.\d+/', $tested_upto ) ) {
 						$this->add_result_error_for_file(
 							$result,
 							sprintf(
@@ -239,7 +241,6 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 						);
 					}
 
-					$latest_wordpress_version = $this->get_wordpress_stable_version();
 					if ( version_compare( $tested_upto_major, $latest_wordpress_version, '<' ) ) {
 						$this->add_result_error_for_file(
 							$result,
