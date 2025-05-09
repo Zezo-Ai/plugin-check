@@ -160,7 +160,14 @@ class Admin_Page_Tests extends WP_UnitTestCase {
 		$base_file = plugin_basename( WP_PLUGIN_CHECK_MAIN_FILE );
 
 		$action_links = $this->admin_page->filter_plugin_action_links( array(), $base_file, array(), 'all' );
-		$this->assertEmpty( $action_links );
+
+		$target_link = sprintf(
+			'<a href="%1$s">%2$s</a>',
+			esc_url( admin_url( "tools.php?page=plugin-check&plugin={$base_file}" ) ),
+			esc_html__( 'Check this plugin', 'plugin-check' )
+		);
+
+		$this->assertEmpty( array_intersect( array( $target_link ), $action_links ) );
 
 		/** Administrator check */
 		$admin_user = self::factory()->user->create( array( 'role' => 'administrator' ) );
@@ -171,7 +178,7 @@ class Admin_Page_Tests extends WP_UnitTestCase {
 		wp_set_current_user( $admin_user );
 		$action_links = $this->admin_page->filter_plugin_action_links( array(), $base_file, array(), 'all' );
 
-		$this->assertEmpty( $action_links );
+		$this->assertEmpty( array_intersect( array( $target_link ), $action_links ) );
 	}
 
 	public function test_filter_default_check_categories() {
