@@ -284,7 +284,9 @@ class Plugin_Readme_Check_Tests extends WP_UnitTestCase {
 		$this->assertArrayHasKey( 'readme.txt', $errors );
 
 		// Check for missing tested upto header.
-		$this->assertCount( 1, wp_list_filter( $errors['readme.txt'][0][0], array( 'code' => 'missing_readme_header_tested' ) ) );
+		$tested_error = wp_list_filter( $errors['readme.txt'][0][0], array( 'code' => 'missing_readme_header_tested' ) );
+		$this->assertCount( 1, $tested_error );
+		$this->assertSame( 7, $tested_error[0]['severity'] );
 	}
 
 	public function test_run_md_with_errors() {
