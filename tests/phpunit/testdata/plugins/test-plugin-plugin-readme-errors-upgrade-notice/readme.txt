@@ -1,6 +1,5 @@
 === Test Plugin with readme ===
 
-Contributors:      plugin-check
 Requires at least: 6.0
 Requires PHP:      5.6
 Stable tag:        1.0.0

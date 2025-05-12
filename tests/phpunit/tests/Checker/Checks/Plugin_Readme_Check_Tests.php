@@ -272,6 +272,8 @@ class Plugin_Readme_Check_Tests extends WP_UnitTestCase {
 	}
 
 	public function test_run_with_errors_missing_readme_headers() {
+		add_filter( 'wp_plugin_check_ignored_readme_warnings', '__return_empty_array' );
+
 		$readme_check  = new Plugin_Readme_Check();
 		$check_context = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-plugin-readme-errors-upgrade-notice/load.php' );
 		$check_result  = new Check_Result( $check_context );
@@ -280,11 +282,20 @@ class Plugin_Readme_Check_Tests extends WP_UnitTestCase {
 
 		$errors = $check_result->get_errors();
 
+		remove_filter( 'wp_plugin_check_ignored_readme_warnings', '__return_empty_array' );
+
 		$this->assertNotEmpty( $errors );
 		$this->assertArrayHasKey( 'readme.txt', $errors );
 
 		// Check for missing tested upto header.
-		$this->assertCount( 1, wp_list_filter( $errors['readme.txt'][0][0], array( 'code' => 'missing_readme_header_tested' ) ) );
+		$tested_upto_error = array_values( wp_list_filter( $errors['readme.txt'][0][0], array( 'code' => 'missing_readme_header_tested' ) ) );
+		$this->assertCount( 1, $tested_upto_error );
+		$this->assertSame( 7, $tested_upto_error[0]['severity'] );
+
+		// Check for missing contributors header.
+		$contributors_error = array_values( wp_list_filter( $errors['readme.txt'][0][0], array( 'code' => 'missing_readme_header_contributors' ) ) );
+		$this->assertCount( 1, $contributors_error );
+		$this->assertSame( 7, $contributors_error[0]['severity'] );
 	}
 
 	public function test_run_md_with_errors() {

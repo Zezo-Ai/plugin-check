@@ -288,7 +288,8 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 							$readme_file,
 							0,
 							0,
-							'https://developer.wordpress.org/plugins/wordpress-org/how-your-readme-txt-works/#readme-header-information'
+							'https://developer.wordpress.org/plugins/wordpress-org/how-your-readme-txt-works/#readme-header-information',
+							7
 						);
 					}
 				}
