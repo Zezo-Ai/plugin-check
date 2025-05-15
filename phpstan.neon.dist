@@ -3,6 +3,8 @@ parameters:
   paths:
     - plugin.php
     - includes/
+  excludePaths:
+    - includes/Lib/
   bootstrapFiles:
     - tests/phpstan/bootstrap.php
   scanFiles:

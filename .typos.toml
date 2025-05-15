@@ -5,5 +5,5 @@ extend-ignore-re = [
 
 [files]
 extend-exclude = [
-	"readme-parser/src/*.php"
+	"includes/Lib/Readme/*.php"
 ]

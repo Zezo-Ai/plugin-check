@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6a489bc35fa64866653212770c2fa38a",
+    "content-hash": "18347aa552b31eca39da8d48e1ffb14a",
     "packages": [
         {
             "name": "automattic/vipwpcs",
@@ -452,7 +452,7 @@
         },
         {
             "name": "plugin-check/phpcs-sniffs",
-            "version": "dev-fix/phpunit",
+            "version": "dev-readme-parser-package",
             "dist": {
                 "type": "path",
                 "url": "./phpcs-sniffs",
@@ -511,41 +511,6 @@
                 "plugin-check",
                 "standards",
                 "static analysis"
-            ],
-            "transport-options": {
-                "symlink": false,
-                "relative": true
-            }
-        },
-        {
-            "name": "plugin-check/readme-parser",
-            "version": "dev-readme-parser-package",
-            "dist": {
-                "type": "path",
-                "url": "./readme-parser",
-                "reference": "9afef9c4de64cfc0563f877465962df0572c855b"
-            },
-            "require": {
-                "php": ">=7.4"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "PluginCheckReadmeParser\\": "src/"
-                }
-            },
-            "license": [
-                "GPL-2.0-or-later"
-            ],
-            "authors": [
-                {
-                    "name": "Contributors",
-                    "homepage": "https://github.com/WordPress/plugin-check/graphs/contributors"
-                }
-            ],
-            "description": "Readme parser for Plugin Check",
-            "keywords": [
-                "plugin-check"
             ],
             "transport-options": {
                 "symlink": false,
@@ -6799,8 +6764,7 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "plugin-check/phpcs-sniffs": 20,
-        "plugin-check/readme-parser": 20
+        "plugin-check/phpcs-sniffs": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,

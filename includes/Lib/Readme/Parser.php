@@ -1,5 +1,5 @@
 <?php
-namespace PluginCheckReadmeParser;
+namespace WordPress\Plugin_Check\Lib\Readme;
 
 use WordPressdotorg\Plugin_Directory\Markdown;
 
@@ -186,8 +186,7 @@ class Parser {
 				&& file_exists( $string )
 			)
 			|| preg_match( '!^https?://!i', $string )
-			|| preg_match( '!^data:text/plain!i', $string) )
-		{
+			|| preg_match( '!^data:text/plain!i', $string ) ) {
 			$this->parse_readme( $string );
 		} elseif ( $string ) {
 			$this->parse_readme_contents( $string );
@@ -199,11 +198,13 @@ class Parser {
 	 * @return bool
 	 */
 	protected function parse_readme( $file_or_url ) {
-		$context = stream_context_create( array(
-			'http' => array(
-				'user_agent' => 'WordPress.org Plugin Readme Parser',
+		$context = stream_context_create(
+			array(
+				'http' => array(
+					'user_agent' => 'WordPress.org Plugin Readme Parser',
+				),
 			)
-		) );
+		);
 
 		$contents = file_get_contents( $file_or_url, false, $context );
 
@@ -368,7 +369,7 @@ class Parser {
 				continue;
 			}
 			if ( ( '=' === $trimmed[0] && isset( $trimmed[1] ) && '=' === $trimmed[1] ) ||
-				 ( '#' === $trimmed[0] && isset( $trimmed[1] ) && '#' === $trimmed[1] )
+				( '#' === $trimmed[0] && isset( $trimmed[1] ) && '#' === $trimmed[1] )
 			) {
 				// Stop after any Markdown heading.
 				array_unshift( $contents, $line );
@@ -394,7 +395,7 @@ class Parser {
 
 			// Stop only after a ## Markdown header, not a ###.
 			if ( ( '=' === $trimmed[0] && isset( $trimmed[1] ) && '=' === $trimmed[1] ) ||
-				 ( '#' === $trimmed[0] && isset( $trimmed[1] ) && '#' === $trimmed[1] && isset( $trimmed[2] ) && '#' !== $trimmed[2] )
+				( '#' === $trimmed[0] && isset( $trimmed[1] ) && '#' === $trimmed[1] && isset( $trimmed[2] ) && '#' !== $trimmed[2] )
 			) {
 
 				if ( ! empty( $section_name ) ) {
@@ -454,7 +455,7 @@ class Parser {
 			$this->sections[ $section ] = $this->trim_length( $content, $max_length, 'words' );
 
 			if ( $content !== $this->sections[ $section ] ) {
-				$this->warnings["trimmed_section_{$section}"] = true;
+				$this->warnings[ "trimmed_section_{$section}" ] = true;
 			}
 		}
 
@@ -471,7 +472,7 @@ class Parser {
 
 		// Use the first line of the description for the short description if not provided.
 		if ( ! $this->short_description && ! empty( $this->sections['description'] ) ) {
-			$this->short_description = array_filter( explode( "\n", $this->sections['description'] ) )[0];
+			$this->short_description                        = array_filter( explode( "\n", $this->sections['description'] ) )[0];
 			$this->warnings['no_short_description_present'] = true;
 		}
 
@@ -624,7 +625,7 @@ class Parser {
 			return false;
 		}
 
-		return [ $key, $value ];
+		return array( $key, $value );
 	}
 
 	/**
@@ -712,7 +713,7 @@ class Parser {
 
 			// In the event that something invalid is used, we'll ignore it (Example: 'Joe Bloggs (Australian Translation)')
 			if ( ! $user ) {
-				$this->warnings['contributor_ignored'] ??= [];
+				$this->warnings['contributor_ignored'] ??= array();
 				$this->warnings['contributor_ignored'][] = $name;
 				unset( $users[ $i ] );
 				continue;
@@ -775,11 +776,11 @@ class Parser {
 		if ( $version ) {
 
 			// Handle the edge-case of 'WordPress 5.0' and 'WP 5.0' for historical purposes.
-			$strip_phrases = [
+			$strip_phrases = array(
 				'WordPress',
 				'WP',
-			];
-			$version = trim( str_ireplace( $strip_phrases, '', $version ) );
+			);
+			$version       = trim( str_ireplace( $strip_phrases, '', $version ) );
 
 			// Strip off any -alpha, -RC, -beta suffixes, as these complicate comparisons and are rarely used.
 			list( $version, ) = explode( '-', $version );
@@ -790,9 +791,9 @@ class Parser {
 				// Allow plugins to mark themselves as compatible with Stable+0.1 (trunk/master) but not higher
 				(
 					defined( 'WP_CORE_STABLE_BRANCH' ) &&
-					version_compare( (float)$version, (float)WP_CORE_STABLE_BRANCH+0.1, '>' )
+					version_compare( (float) $version, (float) WP_CORE_STABLE_BRANCH + 0.1, '>' )
 				)
-			 ) {
+			) {
 				$this->warnings['tested_header_ignored'] = true;
 				// Ignore the readme value.
 				$version = '';
@@ -814,14 +815,14 @@ class Parser {
 		if ( $version ) {
 
 			// Handle the edge-case of 'WordPress 5.0' and 'WP 5.0' for historical purposes.
-			$strip_phrases = [
+			$strip_phrases = array(
 				'WordPress',
 				'WP',
 				'or higher',
 				'and above',
 				'+',
-			];
-			$version = trim( str_ireplace( $strip_phrases, '', $version ) );
+			);
+			$version       = trim( str_ireplace( $strip_phrases, '', $version ) );
 
 			// Strip off any -alpha, -RC, -beta suffixes, as these complicate comparisons and are rarely used.
 			list( $version, ) = explode( '-', $version );
@@ -830,8 +831,8 @@ class Parser {
 				// x.y or x.y.z
 				! preg_match( '!^\d+\.\d(\.\d+)?$!', $version ) ||
 				// Allow plugins to mark themselves as requireing Stable+0.1 (trunk/master) but not higher
-				defined( 'WP_CORE_STABLE_BRANCH' ) && ( (float)$version > (float)WP_CORE_STABLE_BRANCH+0.1 )
-			 ) {
+				defined( 'WP_CORE_STABLE_BRANCH' ) && ( (float) $version > (float) WP_CORE_STABLE_BRANCH + 0.1 )
+			) {
 				$this->warnings['requires_header_ignored'] = true;
 				// Ignore the readme value.
 				$version = '';
@@ -941,38 +942,59 @@ class Parser {
 		 * This is a shortlist of keywords that are expected to be found in a valid license field.
 		 * See https://www.gnu.org/licenses/license-list.en.html for possible compatible licenses.
 		 */
-		$probably_compatible = [
-			'GPL', 'General Public License',
+		$probably_compatible = array(
+			'GPL',
+			'General Public License',
 			// 'GNU 2', 'GNU Public', 'GNU Version 2' explicitely not included, as it's not a specific license.
 			'MIT',
 			'ISC',
 			'Expat',
-			'Apache 2', 'Apache License 2',
-			'X11', 'Modified BSD', 'New BSD', '3 Clause BSD', 'BSD 3',
-			'FreeBSD', 'Simplified BSD', '2 Clause BSD', 'BSD 2',
-			'MPL', 'Mozilla Public License',
-			strrev( 'LPFTW' ), strrev( 'kcuf eht tahw od' ), // To avoid some code scanners..
-			'Public Domain', 'CC0', 'Unlicense',
+			'Apache 2',
+			'Apache License 2',
+			'X11',
+			'Modified BSD',
+			'New BSD',
+			'3 Clause BSD',
+			'BSD 3',
+			'FreeBSD',
+			'Simplified BSD',
+			'2 Clause BSD',
+			'BSD 2',
+			'MPL',
+			'Mozilla Public License',
+			strrev( 'LPFTW' ),
+			strrev( 'kcuf eht tahw od' ), // To avoid some code scanners..
+			'Public Domain',
+			'CC0',
+			'Unlicense',
 			'CC BY', // Note: BY-NC & BY-ND are a no-no. See below.
 			'zlib',
-		];
+		);
 
 		/*
 		 * This is a shortlist of keywords that are likely related to a non-GPL  compatible license.
 		 * See https://www.gnu.org/licenses/license-list.en.html for possible explanations.
 		 */
-		$probably_incompatible = [
-			'4 Clause BSD', 'BSD 4 Clause',
+		$probably_incompatible = array(
+			'4 Clause BSD',
+			'BSD 4 Clause',
 			'Apache 1',
-			'CC BY-NC', 'CC-NC', 'NonCommercial',
-			'CC BY-ND', 'NoDerivative',
+			'CC BY-NC',
+			'CC-NC',
+			'NonCommercial',
+			'CC BY-ND',
+			'NoDerivative',
 			'EUPL',
 			'OSL',
-			'Personal use', 'without permission', 'without prior auth', 'you may not',
-			'Proprietery', 'proprietary',
-		];
+			'Personal use',
+			'without permission',
+			'without prior auth',
+			'you may not',
+			'Proprietery',
+			'proprietary',
+		);
 
-		$sanitize_license = static function( $license ) {
+		$sanitize_license = static function ( $license ) {
 			$license = strtolower( $license );
 
 			// Localised or verbose licences.
@@ -1018,5 +1040,4 @@ class Parser {
 		// If we've made it this far, it's neither likely incompatible, or likely compatible, so unknown.
 		return 'unknown_license';
 	}
-
 }
