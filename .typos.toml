@@ -2,3 +2,8 @@
 extend-ignore-re = [
     "ba",
 ]
+
+[files]
+extend-exclude = [
+	"readme-parser/src/*.php"
+]

@@ -48,4 +48,5 @@
 	<exclude-pattern>*/tests/*</exclude-pattern>
 	<exclude-pattern>*/vendor/*</exclude-pattern>
 	<exclude-pattern>*/phpcs-sniffs/PluginCheck/Sniffs/*</exclude-pattern>
+	<exclude-pattern>*/readme-parser/src/*</exclude-pattern>
 </ruleset>
