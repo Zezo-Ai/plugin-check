@@ -11,10 +11,10 @@ use Exception;
 use WordPress\Plugin_Check\Checker\Check_Categories;
 use WordPress\Plugin_Check\Checker\Check_Result;
 use WordPress\Plugin_Check\Checker\Checks\Abstract_File_Check;
+use WordPress\Plugin_Check\Lib\Readme\Parser;
 use WordPress\Plugin_Check\Traits\Amend_Check_Result;
 use WordPress\Plugin_Check\Traits\Find_Readme;
 use WordPress\Plugin_Check\Traits\Stable_Check;
-use WordPressdotorg\Plugin_Directory\Readme\Parser;
 
 /**
  * Check for trademarks.

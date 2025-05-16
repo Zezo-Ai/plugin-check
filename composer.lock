@@ -4,55 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6a528fe45d6befae68c21eb4b9e43f15",
+    "content-hash": "18347aa552b31eca39da8d48e1ffb14a",
     "packages": [
-        {
-            "name": "afragen/wordpress-plugin-readme-parser",
-            "version": "dev-master",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/afragen/wordpress-plugin-readme-parser.git",
-                "reference": "c3758599348148be684b3c4ad1105d09b6230d51"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/afragen/wordpress-plugin-readme-parser/zipball/c3758599348148be684b3c4ad1105d09b6230d51",
-                "reference": "c3758599348148be684b3c4ad1105d09b6230d51",
-                "shasum": ""
-            },
-            "require": {
-                "erusev/parsedown": "^1.7",
-                "php": ">=5.4"
-            },
-            "default-branch": true,
-            "type": "library",
-            "autoload": {
-                "classmap": [
-                    "class-parser.php"
-                ]
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "WordPress.org",
-                    "homepage": "https://meta.trac.wordpress.org/browser/sites/trunk/wordpress.org/public_html/wp-content/plugins/plugin-directory/readme"
-                }
-            ],
-            "description": "A clone of the current WordPress.org Plugin Readme Parser, class-parser.php",
-            "keywords": [
-                "parser",
-                "readme",
-                "wordpress"
-            ],
-            "support": {
-                "issues": "https://github.com/afragen/wordpress-plugin-readme-parser/issues",
-                "source": "https://github.com/afragen/wordpress-plugin-readme-parser/tree/master"
-            },
-            "time": "2024-04-30T13:39:49+00:00"
-        },
         {
             "name": "automattic/vipwpcs",
             "version": "3.0.1",
@@ -332,56 +285,6 @@
             "time": "2023-01-05T11:28:13+00:00"
         },
         {
-            "name": "erusev/parsedown",
-            "version": "1.7.4",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/erusev/parsedown.git",
-                "reference": "cb17b6477dfff935958ba01325f2e8a2bfa6dab3"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/erusev/parsedown/zipball/cb17b6477dfff935958ba01325f2e8a2bfa6dab3",
-                "reference": "cb17b6477dfff935958ba01325f2e8a2bfa6dab3",
-                "shasum": ""
-            },
-            "require": {
-                "ext-mbstring": "*",
-                "php": ">=5.3.0"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "^4.8.35"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-0": {
-                    "Parsedown": ""
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Emanuil Rusev",
-                    "email": "hello@erusev.com",
-                    "homepage": "http://erusev.com"
-                }
-            ],
-            "description": "Parser for Markdown.",
-            "homepage": "http://parsedown.org",
-            "keywords": [
-                "markdown",
-                "parser"
-            ],
-            "support": {
-                "issues": "https://github.com/erusev/parsedown/issues",
-                "source": "https://github.com/erusev/parsedown/tree/1.7.x"
-            },
-            "time": "2019-12-30T22:54:17+00:00"
-        },
-        {
             "name": "phpcsstandards/phpcsextra",
             "version": "1.2.1",
             "source": {
@@ -549,7 +452,7 @@
         },
         {
             "name": "plugin-check/phpcs-sniffs",
-            "version": "dev-fix/phpunit",
+            "version": "dev-readme-parser-package",
             "dist": {
                 "type": "path",
                 "url": "./phpcs-sniffs",
@@ -6861,7 +6764,6 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "afragen/wordpress-plugin-readme-parser": 20,
         "plugin-check/phpcs-sniffs": 20
     },
     "prefer-stable": false,
@@ -6870,9 +6772,9 @@
         "php": ">=7.4",
         "ext-json": "*"
     },
-    "platform-dev": [],
+    "platform-dev": {},
     "platform-overrides": {
         "php": "7.4"
     },
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.6.0"
 }
