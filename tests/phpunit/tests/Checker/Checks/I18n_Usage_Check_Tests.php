@@ -69,6 +69,16 @@ class I18n_Usage_Check_Tests extends WP_UnitTestCase {
 		$this->assertSame( 7, $errors['load.php'][48][10][0]['severity'] );
 		$this->assertCount( 1, wp_list_filter( $errors['load.php'][48][21], array( 'code' => 'WordPress.WP.I18n.InterpolatedVariableContext' ) ) );
 		$this->assertSame( 7, $errors['load.php'][48][21][0]['severity'] );
+
+		// Restricted characters.
+		$this->assertCount( 1, wp_list_filter( $errors['load.php'][51][29], array( 'code' => 'WordPress.WP.I18n.TextDomainMismatch' ) ) );
+		$this->assertSame( 7, $errors['load.php'][51][29][0]['severity'] );
+		$this->assertCount( 1, wp_list_filter( $errors['load.php'][52][29], array( 'code' => 'WordPress.WP.I18n.TextDomainMismatch' ) ) );
+		$this->assertSame( 7, $errors['load.php'][52][29][0]['severity'] );
+		$this->assertCount( 1, wp_list_filter( $errors['load.php'][53][29], array( 'code' => 'WordPress.WP.I18n.TextDomainMismatch' ) ) );
+		$this->assertSame( 7, $errors['load.php'][53][29][0]['severity'] );
+		$this->assertCount( 1, wp_list_filter( $errors['load.php'][54][29], array( 'code' => 'WordPress.WP.I18n.TextDomainMismatch' ) ) );
+		$this->assertSame( 7, $errors['load.php'][54][29][0]['severity'] );
 	}
 
 	public function test_run_without_errors() {

@@ -46,3 +46,9 @@ echo esc_html__( "${text}", 'test-plugin-i18n-usage-errors' );
 echo _n( "${single}", "${plural}", $number, 'test-plugin-i18n-usage-errors' );
 echo _n_noop( "${single}", "${plural}", 'test-plugin-i18n-usage-errors' );
 echo _x( "${text}", "${context}", 'test-plugin-i18n-usage-errors' );
+
+// Contains restricted characters. Severity should be 7.
+esc_html__( 'Hello World!', 'test_plugin_check_errors' );
+esc_html__( 'Hello World!', 'test plugin check errors' );
+esc_html__( 'Hello World!', 'Test-Plugin-Check_Errors' );
+esc_html__( 'Hello World!', 'test,plugin-check-errors' );
