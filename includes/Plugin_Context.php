@@ -8,8 +8,8 @@
 namespace WordPress\Plugin_Check;
 
 use Exception;
+use WordPress\Plugin_Check\Lib\Readme\Parser;
 use WordPress\Plugin_Check\Traits\Find_Readme;
-use WordPressdotorg\Plugin_Directory\Readme\Parser;
 use function WP_CLI\Utils\normalize_path;
 
 /**
