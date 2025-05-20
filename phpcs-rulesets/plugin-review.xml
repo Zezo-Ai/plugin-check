@@ -175,7 +175,8 @@
 
 	<!-- Check for discouraged load_plugin_textdomain() call. -->
 	<rule ref="PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound">
-		<severity>6</severity>
+		<type>error</type>
+		<severity>7</severity>
 	</rule>
 
 </ruleset>
