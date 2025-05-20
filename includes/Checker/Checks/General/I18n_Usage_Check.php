@@ -153,9 +153,7 @@ class I18n_Usage_Check extends Abstract_PHP_CodeSniffer_Check {
 
 			if ( preg_match( '/but\sgot\s&#039;([^&#039;]+)&#039;\.$/', $message, $matches ) ) {
 				$textdomain = $matches[1];
-				if ( preg_match( '/[^a-z0-9-]/', $textdomain ) ) {
-					$severity = 7;
-				} elseif ( in_array( $textdomain, $restricted_textdomains, true ) ) {
+				if ( preg_match( '/[^a-z0-9-]/', $textdomain ) || in_array( $textdomain, $restricted_textdomains, true ) ) {
 					$severity = 7;
 				}
 			}
