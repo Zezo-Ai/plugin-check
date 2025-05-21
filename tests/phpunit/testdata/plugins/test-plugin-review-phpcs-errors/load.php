@@ -39,3 +39,5 @@ custom_function(&$myvar);
 
 file_get_contents( $url );
 file_put_contents();
+
+load_plugin_textdomain( 'sample-textdomain', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );

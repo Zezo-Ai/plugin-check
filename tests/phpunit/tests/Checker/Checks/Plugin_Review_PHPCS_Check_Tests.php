@@ -60,6 +60,9 @@ class Plugin_Review_PHPCS_Check_Tests extends WP_UnitTestCase {
 		// There should not be WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents error on Line no 41 and column no 1.
 		$this->assertCount( 0, wp_list_filter( $errors['load.php'][41][1], array( 'code' => 'WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents' ) ) );
 
+		// Check for PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound error on Line no 43 and column no at 1.
+		$this->assertSame( 'PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound', $errors['load.php'][43][1][0]['code'] );
+
 		// Check for WordPress.Security.ValidatedSanitizedInput warnings on Line no 15 and column no at 27.
 		$this->assertCount( 1, wp_list_filter( $warnings['load.php'][15][27], array( 'code' => 'WordPress.Security.ValidatedSanitizedInput.InputNotValidated' ) ) );
 		$this->assertCount( 1, wp_list_filter( $warnings['load.php'][15][27], array( 'code' => 'WordPress.Security.ValidatedSanitizedInput.MissingUnslash' ) ) );
