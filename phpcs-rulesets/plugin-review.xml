@@ -173,4 +173,10 @@
 		<severity>7</severity>
 	</rule>
 
+	<!-- Check for discouraged load_plugin_textdomain() call. -->
+	<rule ref="PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound">
+		<type>error</type>
+		<severity>7</severity>
+	</rule>
+
 </ruleset>
