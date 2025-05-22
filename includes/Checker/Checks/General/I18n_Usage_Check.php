@@ -151,10 +151,11 @@ class I18n_Usage_Check extends Abstract_PHP_CodeSniffer_Check {
 		if ( 'WordPress.WP.I18n.TextDomainMismatch' === $code ) {
 			$restricted_textdomains = $this->get_restricted_textdomains();
 
-			$pattern = '/but\sgot\s&#039;(' . implode( '|', array_map( 'preg_quote', $restricted_textdomains ) ) . ')&#039;\.$/';
-
-			if ( preg_match( $pattern, $message ) ) {
-				$severity = 7;
+			if ( preg_match( '/but\sgot\s&#039;([^&#039;]+)&#039;\.$/', $message, $matches ) ) {
+				$textdomain = $matches[1];
+				if ( preg_match( '/[^a-z0-9-]/', $textdomain ) || in_array( $textdomain, $restricted_textdomains, true ) ) {
+					$severity = 7;
+				}
 			}
 		}
 
