@@ -411,25 +411,43 @@ class Plugin_Header_Fields_Check implements Static_Check {
 
 		if ( ! $result->plugin()->is_single_file_plugin() ) {
 			if ( ! empty( $plugin_header['TextDomain'] ) ) {
-				$plugin_slug = $result->plugin()->slug();
-
-				if ( $plugin_slug !== $plugin_header['TextDomain'] ) {
-					$this->add_result_warning_for_file(
+				if ( ! preg_match( '/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $plugin_header['TextDomain'] ) ) {
+					$this->add_result_error_for_file(
 						$result,
 						sprintf(
-							/* translators: 1: plugin header field, 2: plugin header text domain, 3: plugin slug */
-							__( 'The "%1$s" header in the plugin file does not match the slug. Found "%2$s", expected "%3$s".', 'plugin-check' ),
+							/* translators: 1: plugin header field, 2: text domain */
+							__( 'The "%1$s" header in the plugin file should only contain lowercase letters, numbers, and hyphens. Found "%2$s".', 'plugin-check' ),
 							esc_html( $labels['TextDomain'] ),
-							esc_html( $plugin_header['TextDomain'] ),
-							esc_html( $plugin_slug )
+							esc_html( $plugin_header['TextDomain'] )
 						),
-						'textdomain_mismatch',
+						'textdomain_invalid_format',
 						$plugin_main_file,
 						0,
 						0,
-						'https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/',
-						6
+						'https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#text-domains',
+						7
 					);
+				} else {
+					$plugin_slug = $result->plugin()->slug();
+
+					if ( $plugin_slug !== $plugin_header['TextDomain'] ) {
+						$this->add_result_warning_for_file(
+							$result,
+							sprintf(
+								/* translators: 1: plugin header field, 2: plugin header text domain, 3: plugin slug */
+								__( 'The "%1$s" header in the plugin file does not match the slug. Found "%2$s", expected "%3$s".', 'plugin-check' ),
+								esc_html( $labels['TextDomain'] ),
+								esc_html( $plugin_header['TextDomain'] ),
+								esc_html( $plugin_slug )
+							),
+							'textdomain_mismatch',
+							$plugin_main_file,
+							0,
+							0,
+							'https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/',
+							6
+						);
+					}
 				}
 			}
 

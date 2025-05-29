@@ -109,6 +109,7 @@ class Plugin_Header_Fields_Check_Tests extends WP_UnitTestCase {
 
 		$this->assertCount( 1, wp_list_filter( $errors['load.php'][0][0], array( 'code' => 'plugin_header_missing_plugin_description' ) ) );
 		$this->assertCount( 1, wp_list_filter( $errors['load.php'][0][0], array( 'code' => 'plugin_header_invalid_plugin_version' ) ) );
+		$this->assertCount( 1, wp_list_filter( $errors['load.php'][0][0], array( 'code' => 'textdomain_invalid_format' ) ) );
 	}
 
 	public function test_run_with_errors_requires_at_least_latest_plus_two_version() {
