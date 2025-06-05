@@ -56,7 +56,7 @@ class Plugin_Uninstall_Constant_Check extends Abstract_File_Check {
 			foreach ( $plugin_uninstall_file as $file ) {
 				$uninstall_constant = self::file_preg_match( $constant_regex, [ $file ], $matches );
 				if ( ! $uninstall_constant ) {
-					$this->add_result_warning_for_file(
+					$this->add_result_error_for_file(
 						$result,
 						sprintf(
 						/* translators: %s: The match file name. */

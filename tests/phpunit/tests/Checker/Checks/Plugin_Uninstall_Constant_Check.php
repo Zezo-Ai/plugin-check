@@ -21,12 +21,15 @@ class Plugin_Uninstall_Constant_Check_Tests extends WP_UnitTestCase {
 
 		$errors = $check_result->get_errors();
 
+		echo 'in test';
+		echo var_dump( array($test_file, $errors));
+
 		$this->assertNotEmpty( $errors );
-		$this->assertArrayHasKey( $test_file, $errors );
+		$this->assertArrayHasKey( 'uninstall.php', $errors );
 		$this->assertSame( 1, $check_result->get_error_count() );
 
-		$this->assertTrue( isset( $errors[ $test_file ][0][0][0] ) );
-		$this->assertSame( 'uninstall_no_constant_check', $errors[ $test_file ][0][0][0]['code'] );
+		$this->assertTrue( isset( $errors[ 'uninstall.php' ][0][0][0] ) );
+		$this->assertSame( 'uninstall_no_constant_check', $errors[ 'uninstall.php' ][0][0][0]['code'] );
 
 	}
 
