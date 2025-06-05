@@ -283,7 +283,7 @@ abstract class Abstract_File_Check implements Static_Check {
 			$iterator = new RecursiveIteratorIterator( new RecursiveDirectoryIterator( $location ) );
 
 			$directories_to_ignore = Plugin_Request_Utility::get_directories_to_ignore();
-			
+
 			$files_to_ignore = Plugin_Request_Utility::get_files_to_ignore();
 
 			foreach ( $iterator as $file ) {
