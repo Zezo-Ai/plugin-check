@@ -15,7 +15,7 @@ use WordPress\Plugin_Check\Traits\Amend_Check_Result;
 use WordPress\Plugin_Check\Traits\Stable_Check;
 
 /**
- * Check to detect existence of WP_UNINSTALL_PLUGIN constant in uninstall.php, if it exists
+ * Check to detect if a definition check for WP_UNINSTALL_PLUGIN takes place in uninstall.php, if it exists
  *
  * @since 1.0.0
  */
@@ -38,7 +38,7 @@ class Plugin_Uninstall_Constant_Check extends Abstract_File_Check {
 	}
 
 	/**
-	 * Checks the uninstall.php file for the existence of the WP_UNINSTALL_PLUGIN constant
+	 * Checks the uninstall.php file for a definition check of the WP_UNINSTALL_PLUGIN constant
 	 *
 	 * @since 1.0.0
 	 *
@@ -49,7 +49,7 @@ class Plugin_Uninstall_Constant_Check extends Abstract_File_Check {
 	 *                   the check).
 	 */
 	protected function check_files( Check_Result $result, array $files ) {
-		$constant_regex        = '#WP_UNINSTALL_PLUGIN#';
+		$constant_regex        = '#defined\s*\(.*WP_UNINSTALL_PLUGIN.*\)#';
 		$matches               = array();
 		$plugin_uninstall_file = self::filter_files_by_regex( $files, '/uninstall\.php$/' );
 		if ( $plugin_uninstall_file ) {
