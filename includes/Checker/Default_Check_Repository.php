@@ -95,6 +95,7 @@ class Default_Check_Repository extends Empty_Check_Repository {
 				'offloading_files'           => new Checks\Plugin_Repo\Offloading_Files_Check(),
 				'image_functions'            => new Checks\Performance\Image_Functions_Check(),
 				'setting_sanitization'       => new Checks\Plugin_Repo\Setting_Sanitization_Check(),
+				'prefixing'                  => new Checks\Plugin_Repo\Prefixing_Check(),
 			)
 		);
 
