@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: Test Plugin Uninstall Constant without Errors for Plugin Check
+ * Plugin Name: Test Plugin Uninstall Constant Errors
  * Plugin URI: https://github.com/WordPress/plugin-check
  * Description: Some plugin description.
  * Requires at least: 6.0
@@ -10,8 +10,7 @@
  * Author URI: https://make.wordpress.org/performance/
  * License: GPLv2 or later
  * License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- * Text Domain: test-plugin-uninstall-constant-without-errors
- * Update URI: https://wordpress.org/plugins/example-plugin/
+ * Text Domain: test-plugin-uninstall-constant-errors
  *
- * @package test-plugin-uninstall-constant-without-errors
+ * @package test-plugin-uninstall-constant-errors
  */
