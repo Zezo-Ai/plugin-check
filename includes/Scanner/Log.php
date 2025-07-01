@@ -156,7 +156,8 @@ class Log {
 		if ( ! empty( $namespace_obj->name ) ) {
 			$line_text = 'namespace ' . $namespace_obj->name->toCodeString();
 
-			$this->add( $namespace_obj->getStartLine(), $line_text, $logid, $unique );
+			$line_number = method_exists( $namespace_obj, 'getStartLine' ) ? $namespace_obj->getStartLine() : 0;
+			$this->add( $line_number, $line_text, $logid, $unique );
 
 			$log_key = array_key_last( $this->log[ $logid ] );
 
@@ -180,7 +181,8 @@ class Log {
 	public function add_call_expr( $func_call, $argposition, $logid, $unique = false, $accurate = true ) {
 		$func_call->setAttribute( 'comments', null );
 
-		$this->add( $func_call->getStartLine(), $this->parser_object->pretty_printer->prettyPrint( array( $func_call ) ) . ';', $logid, $unique );
+		$line_number = method_exists( $func_call, 'getStartLine' ) ? $func_call->getStartLine() : 0;
+		$this->add( $line_number, $this->parser_object->pretty_printer->prettyPrint( array( $func_call ) ) . ';', $logid, $unique );
 
 		$log_key   = array_key_last( $this->log[ $logid ] );
 		$func_name = $this->parser_object->get_call_name( $func_call );
@@ -210,7 +212,8 @@ class Log {
 	public function add_var_expr( $var_call, $logid, $unique = false, $accurate = true ) {
 		$var_call->setAttribute( 'comments', null );
 
-		$this->add( $var_call->getStartLine(), $this->parser_object->pretty_printer->prettyPrint( array( $var_call ) ) . ';', $logid, $unique );
+		$line_number = method_exists( $var_call, 'getStartLine' ) ? $var_call->getStartLine() : 0;
+		$this->add( $line_number, $this->parser_object->pretty_printer->prettyPrint( array( $var_call ) ) . ';', $logid, $unique );
 
 		$log_key  = array_key_last( $this->log[ $logid ] );
 		$var_name = '';
@@ -273,7 +276,8 @@ class Log {
 				if ( $continue ) { // Ignore anonymous declarations.
 					$line_text = $type . ' ' . $abstract->name->toString();
 
-					$this->add( $abstract->getStartLine(), $line_text, $logid, $unique );
+					$line_number = method_exists( $abstract, 'getStartLine' ) ? $abstract->getStartLine() : 0;
+					$this->add( $line_number, $line_text, $logid, $unique );
 
 					$log_key = array_key_last( $this->log[ $logid ] );
 

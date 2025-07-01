@@ -9,6 +9,10 @@ namespace WordPress\Plugin_Check\Scanner;
 
 use PhpParser\Error;
 use PhpParser\Node;
+use PhpParser\Node\Const_;
+use PhpParser\Node\Expr\AssignOp;
+use PhpParser\Node\Stmt\ClassConst;
+use PhpParser\Node\Stmt\PropertyProperty;
 use PhpParser\NodeFinder;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NodeConnectingVisitor;
@@ -95,7 +99,7 @@ abstract class PHP_Parser {
 	 * The Abstract Syntax Tree (AST) of the current file.
 	 *
 	 * @since 1.6.0
-	 * @var   \PhpParser\Node\Stmt[]|null
+	 * @var \PhpParser\Node[]|null
 	 */
 	public $stmts;
 
@@ -244,7 +248,7 @@ abstract class PHP_Parser {
 	 * @return bool Returns true if the file exists and is successfully initialized, otherwise false.
 	 */
 	public function init_file( $file ) {
-		$this->stmts = '';
+		$this->stmts = null;
 		if ( ! file_exists( $file ) ) {
 			echo 'ERROR: File ' . $file . " can't be read.\n";
 			return false;
@@ -260,7 +264,7 @@ abstract class PHP_Parser {
 	 * @return void
 	 */
 	public function initialize_node_finder() {
-		if ( empty( $this->node_finder ) ) {
+		if ( null === $this->node_finder ) {
 			$this->node_finder = new NodeFinder();
 		}
 	}
@@ -280,13 +284,15 @@ abstract class PHP_Parser {
 			// Options.
 			// Activate ability to get parents. Performance will be degraded.
 			// Get parents using $node->getAttribute('parent').
+			$traverser = null;
 			if ( $this->needs_get_parents ) {
 				$traverser = new NodeTraverser();
 				$traverser->addVisitor( new ParentConnectingVisitor() );
 			}
-
 			if ( $this->needs_get_siblings ) {
-				$traverser = new NodeTraverser();
+				if ( null === $traverser ) {
+					$traverser = new NodeTraverser();
+				}
 				$traverser->addVisitor( new NodeConnectingVisitor() );
 			}
 
@@ -295,7 +301,7 @@ abstract class PHP_Parser {
 			try {
 				$code        = file_get_contents( $file );
 				$this->stmts = $parser->parse( $code );
-				if ( $this->needs_get_parents || $this->needs_get_siblings ) {
+				if ( ( $this->needs_get_parents || $this->needs_get_siblings ) && null !== $traverser && is_array( $this->stmts ) ) {
 					$this->stmts = $traverser->traverse( $this->stmts );
 				}
 			} catch ( Error $error ) {
@@ -317,29 +323,32 @@ abstract class PHP_Parser {
 	 *                    or null if an error occurs or the code is empty.
 	 */
 	public function parse_code( $code ) {
-		$stmts = '';
+		$stmts = null;
 		if ( ! empty( $code ) ) {
 			// Activate ability to get parents. Performance will be degraded.
 			// Get parents using $node->getAttribute('parent').
+			$traverser = null;
 			if ( $this->needs_get_parents ) {
 				$traverser = new NodeTraverser();
 				$traverser->addVisitor( new ParentConnectingVisitor() );
 			}
 
 			if ( $this->needs_get_siblings ) {
-				$traverser = new NodeTraverser();
+				if ( null === $traverser ) {
+					$traverser = new NodeTraverser();
+				}
 				$traverser->addVisitor( new NodeConnectingVisitor() );
 			}
 
 			$parser = ( new ParserFactory() )->create( ParserFactory::PREFER_PHP7 );
 			try {
 				$stmts = $parser->parse( $code );
-				if ( $this->needs_get_parents || $this->needs_get_siblings ) {
+				if ( ( $this->needs_get_parents || $this->needs_get_siblings ) && null !== $traverser && is_array( $stmts ) ) {
 					$stmts = $traverser->traverse( $stmts );
 				}
 			} catch ( Error $error ) {
 				echo "Parse error: {$error->getMessage()}\n";
-				return;
+				return null;
 			}
 		}
 		return $stmts;
@@ -497,29 +506,23 @@ abstract class PHP_Parser {
 	public function get_variable_name( $node ) {
 		$name = '';
 		if ( 'PhpParser\Node\Arg' === get_class( $node ) ) {
-			if ( ! empty( $node->value ) ) {
-				$name = $this->get_variable_name( $node->value );
-			}
+			$name = $this->get_variable_name( $node->value );
 		} elseif ( 'PhpParser\Node\Scalar\String_' === get_class( $node ) ) {
 			$name = $node->value;
 		}
-		if ( ! empty( $node->var ) ) {
-			if ( 'PhpParser\Node\Expr\Variable' === get_class( $node->var ) || // ArrayDimFetch.
-				'PhpParser\Node\Expr\ArrayDimFetch' === get_class( $node->var ) // Multilevel ArrayDimFetch.
-			) {
-				$name = $this->get_variable_name( $node->var );
-			}
+		if ( isset( $node->var ) && ( 'PhpParser\Node\Expr\Variable' === get_class( $node->var ) || 'PhpParser\Node\Expr\ArrayDimFetch' === get_class( $node->var ) ) ) {
+			$name = $this->get_variable_name( $node->var );
 		}
-		if ( ! empty( $node->name ) ) {
-			if ( 'PhpParser\Node\Expr\Variable' === get_class( $node ) ) { // Variable.
+		if ( isset( $node->name ) ) {
+			if ( 'PhpParser\Node\Expr\Variable' === get_class( $node ) ) {
 				$name = $node->name;
-			} elseif ( 'PhpParser\Node\Scalar\String_' === get_class( $node->name ) ) { // PropertyFetch.
+			} elseif ( 'PhpParser\Node\Scalar\String_' === get_class( $node->name ) ) {
 				$name = $node->name->value;
-			} elseif ( 'PhpParser\Node\Identifier' === get_class( $node->name ) ) { // PropertyFetch.
+			} elseif ( 'PhpParser\Node\Identifier' === get_class( $node->name ) ) {
 				$name = $node->name->name;
-			} elseif ( 'PhpParser\Node\VarLikeIdentifier' === get_class( $node->name ) ) { // PropertyFetch-VarLikeIdentifier.
+			} elseif ( 'PhpParser\Node\VarLikeIdentifier' === get_class( $node->name ) ) {
 				$name = $node->name->name;
-			} elseif ( 'PhpParser\Node\Name' === get_class( $node->name ) ) { // ConstFetch.
+			} elseif ( 'PhpParser\Node\Name' === get_class( $node->name ) ) {
 				$name = $node->name->__toString();
 			}
 		}
@@ -534,12 +537,12 @@ abstract class PHP_Parser {
 	 *
 	 * @param object $node The node object from which to retrieve the variable dimension.
 	 *
-	 * @return string The dimension of the variable.
+	 * @return array<int, string> The dimensions of the variable.
 	 */
 	public function extract_dims_values( $node ) {
 		$dims = array();
 		if ( ! empty( $node->var->dim ) ) {
-			$dims = array_merge( $dims, $this->extract_dims_values( $node->var ) );
+			$dims = array_merge( $dims, (array) $this->extract_dims_values( $node->var ) );
 		}
 		if ( ! empty( $node->dim ) ) {
 			if ( 'PhpParser\Node\Scalar\String_' === get_class( $node->dim ) ) {
@@ -559,7 +562,7 @@ abstract class PHP_Parser {
 	public function extract_dims_objects( $node ) {
 		$dims = array();
 		if ( ! empty( $node->var->dim ) ) {
-			$dims = array_merge( $dims, $this->extract_dims_objects( $node->var ) );
+			$dims = array_merge( $dims, (array) $this->extract_dims_objects( $node->var ) );
 		}
 		if ( ! empty( $node->dim ) ) {
 			$dims[] = $node->dim;
@@ -587,8 +590,8 @@ abstract class PHP_Parser {
 			'class'   => '',
 		);
 
-		$element_start_line = $element->getStartLine();
-		$element_end_line   = $element->getEndLine();
+		$element_start_line = method_exists( $element, 'getStartLine' ) ? $element->getStartLine() : 0;
+		$element_end_line   = method_exists( $element, 'getEndLine' ) ? $element->getEndLine() : 0;
 
 		$classes = array(
 			Node\Stmt\ClassMethod::class,
@@ -607,14 +610,23 @@ abstract class PHP_Parser {
 			$functions = $this->node_finder->findInstanceOf( $this->stmts, $class );
 			if ( ! empty( $functions ) ) {
 				foreach ( $functions as $function ) {
-					if ( $function->getStartLine() <= $element_start_line && $function->getEndLine() >= $element_end_line ) {
+					if (
+						method_exists( $function, 'getStartLine' ) &&
+						method_exists( $function, 'getEndLine' ) &&
+						$function->getStartLine() <= $element_start_line &&
+						$function->getEndLine() >= $element_end_line
+					) {
 						if ( empty( $return['context'] ) ) {
-							$is_inside_element_type   = $class;
-							$return['context']        = $function->stmts;
+							$is_inside_element_type = $class;
+							if ( property_exists( $function, 'stmts' ) ) {
+								$return['context'] = $function->stmts;
+							}
 							$return['contextWrapper'] = $function;
 						}
 						if ( empty( $return['class'] ) && Node\Stmt\Class_::class === $class ) {
-							$return['class'] = $function->stmts;
+							if ( property_exists( $function, 'stmts' ) ) {
+								$return['class'] = $function->stmts;
+							}
 						}
 					}
 				}
@@ -678,9 +690,9 @@ abstract class PHP_Parser {
 		if ( ! empty( $stmts ) ) {
 			$assignments['standard']      = $this->node_finder->findInstanceOf( $stmts, Node\Expr\Assign::class );
 			$assignments['concat']        = $this->node_finder->findInstanceOf( $stmts, Node\Expr\AssignOp\Concat::class );
-			$assignments['const']         = $this->node_finder->findInstanceOf( $stmts, PhpParser\Node\Const_::class );
-			$assignments['classProperty'] = $this->node_finder->findInstanceOf( $stmts_class, PhpParser\Node\Stmt\PropertyProperty::class );
-			$assignments['classConst']    = $this->node_finder->findInstanceOf( $stmts_class, PhpParser\Node\Stmt\ClassConst::class );
+			$assignments['const']         = $this->node_finder->findInstanceOf( $stmts, Const_::class );
+			$assignments['classProperty'] = $this->node_finder->findInstanceOf( $stmts_class, PropertyProperty::class );
+			$assignments['classConst']    = $this->node_finder->findInstanceOf( $stmts_class, ClassConst::class );
 		}
 
 		// Process all found assignments.
@@ -703,8 +715,8 @@ abstract class PHP_Parser {
 							$define_assigns[] = $assign;
 						}
 					}
-				} elseif ( $assign->getEndLine() < $element->getEndLine() ) { // Only assigns before the $element.
-					if ( is_a( $assign, 'PhpParser\Node\Const_' ) ) {
+				} elseif ( method_exists( $assign, 'getEndLine' ) && method_exists( $element, 'getEndLine' ) && $assign->getEndLine() < $element->getEndLine() ) { // Only assigns before the $element.
+					if ( is_a( $assign, Const_::class ) ) {
 						if ( is_a( $element, 'PhpParser\Node\Expr\ConstFetch' ) ) {
 							$element_name = $this->get_variable_name( $element );
 							$assign_name  = $this->get_variable_name( $assign );
@@ -712,7 +724,7 @@ abstract class PHP_Parser {
 								$define_consts[] = $assign;
 							}
 						}
-					} elseif ( is_a( $assign, 'PhpParser\Node\Stmt\PropertyProperty' ) ) {
+					} elseif ( is_a( $assign, PropertyProperty::class ) ) {
 						if ( is_a( $element, 'PhpParser\Node\Expr\PropertyFetch' ) ) {
 							$element_name = $this->get_variable_name( $element );
 							$assign_name  = $this->get_variable_name( $assign );
@@ -720,25 +732,23 @@ abstract class PHP_Parser {
 								$define_class_property[] = $assign;
 							}
 						}
-					} elseif ( is_a( $assign, 'PhpParser\Node\Stmt\ClassConst' ) ) {
+					} elseif ( is_a( $assign, ClassConst::class ) ) {
 						// For now is only able to find ClassConsts that are in the same class.
-						if ( is_a( $element, 'PhpParser\Node\Expr\ClassConstFetch' ) ) {
-							if ( ! empty( $element->class ) ) {
-								if ( 'PhpParser\Node\Name' === get_class( $element->class ) ) {
-									if ( 'self' === $element->class->parts[0] ) {
-										$element_name = $this->get_variable_name( $element );
-										$consts       = $assign->consts;
-										foreach ( $consts as $const ) {
-											$assign_name = $this->get_variable_name( $const );
-											if ( $element_name === $assign_name ) {
-												$define_class_consts[] = $const;
-											}
+						if ( isset( $element->class ) ) {
+							if ( 'PhpParser\Node\Name' === get_class( $element->class ) ) {
+								if ( 'self' === $element->class->parts[0] ) {
+									$element_name = $this->get_variable_name( $element );
+									$consts       = $assign->consts;
+									foreach ( $consts as $const ) {
+										$assign_name = $this->get_variable_name( $const );
+										if ( $element_name === $assign_name ) {
+											$define_class_consts[] = $const;
 										}
 									}
 								}
 							}
 						}
-					} elseif ( get_class( $assign->var ) === get_class( $element ) ) {
+					} elseif ( is_object( $assign ) && isset( $assign->var ) && get_class( $assign->var ) === get_class( $element ) ) {
 						$element_name = $this->get_variable_name( $element );
 						$assign_name  = $this->get_variable_name( $assign->var );
 
@@ -763,7 +773,7 @@ abstract class PHP_Parser {
 							}
 							if ( 'PhpParser\Node\Expr\ArrayDimFetch' === get_class( $element ) ) {
 								if ( $element_name === $assign_name ) {
-									if ( $this->extract_dims_values( $element ) === $this->extract_dims_values( $assign->var ) ) {
+									if ( $this->extract_dims_values( $element ) === $this->extract_dims_values( is_object( $assign ) && isset( $assign->var ) ? $assign->var : null ) ) {
 										if ( 'PhpParser\Node\Expr\AssignOp\Concat' === get_class( $assign ) ) {
 											$concat_assigns[] = $assign;
 										} else {
@@ -821,7 +831,7 @@ abstract class PHP_Parser {
 					$skip = false;
 					if ( ! empty( $possible_assigns ) ) {
 						foreach ( $possible_assigns as $possible_assign ) {
-							if ( ! empty( $possible_assign->var ) && 'PhpParser\Node\Expr\PropertyFetch' === get_class( $possible_assign->var ) ) {
+							if ( ! empty( $possible_assign->var ) && is_object( $possible_assign ) && is_object( $possible_assign->var ) && 'PhpParser\Node\Expr\PropertyFetch' === get_class( $possible_assign->var ) ) {
 								if ( $this->get_variable_name( $define_class_property ) && $this->get_variable_name( $possible_assign->var ) ) {
 									$skip = true;
 									break;
@@ -853,12 +863,12 @@ abstract class PHP_Parser {
 				$same_execution_context = false;
 				if ( ! empty( $same_execution_context_lines ) ) {
 					foreach ( $same_execution_context_lines as $same_execution_context_line ) {
-						if ( $same_execution_context_line['startLine'] === $possible_assign->getStartLine() && $same_execution_context_line['endLine'] === $possible_assign->getEndLine() ) {
+						if ( method_exists( $possible_assign, 'getStartLine' ) && method_exists( $possible_assign, 'getEndLine' ) && $same_execution_context_line['startLine'] === $possible_assign->getStartLine() && $same_execution_context_line['endLine'] === $possible_assign->getEndLine() ) {
 							$same_execution_context = true;
 							$concat_assigns         = array_filter(
 								$concat_assigns,
 								function ( $assign ) use ( $possible_assign ) {
-									return $assign->getEndLine() > $possible_assign->getEndLine();
+									return method_exists( $assign, 'getEndLine' ) && method_exists( $possible_assign, 'getEndLine' ) ? $assign->getEndLine() > $possible_assign->getEndLine() : false;
 								}
 							);
 						}
@@ -876,7 +886,7 @@ abstract class PHP_Parser {
 				foreach ( $concat_assigns as $concat_assign ) {
 					$final_assigns[] = array(
 						'expr'        => $concat_assign,
-						'value'       => $concat_assign->expr,
+						'value'       => ( is_object( $concat_assign ) && $concat_assign instanceof AssignOp ) ? $concat_assign->expr : null,
 						'sameContext' => '',
 						'type'        => 'concat',
 						'file'        => '',
@@ -889,7 +899,7 @@ abstract class PHP_Parser {
 				foreach ( $assign_others as $assign_other ) {
 					$final_assigns[] = array(
 						'expr'        => $assign_other,
-						'value'       => $assign_other->expr,
+						'value'       => ( is_object( $assign_other ) && $assign_other instanceof AssignOp ) ? $assign_other->expr : null,
 						'sameContext' => false,
 						'type'        => 'assign',
 						'file'        => '',
@@ -900,7 +910,7 @@ abstract class PHP_Parser {
 			if ( ! empty( $last_assign_same_execution_context ) ) {
 				$final_assigns[] = array(
 					'expr'        => $last_assign_same_execution_context,
-					'value'       => $last_assign_same_execution_context->expr,
+					'value'       => ( is_object( $last_assign_same_execution_context ) && $last_assign_same_execution_context instanceof AssignOp ) ? $last_assign_same_execution_context->expr : null,
 					'sameContext' => true,
 					'type'        => 'assign',
 					'file'        => '',
@@ -910,7 +920,7 @@ abstract class PHP_Parser {
 			foreach ( $concat_assigns as $concat_assign ) {
 				$final_assigns[] = array(
 					'expr'        => $concat_assign,
-					'value'       => $concat_assign->expr,
+					'value'       => ( is_object( $concat_assign ) && $concat_assign instanceof AssignOp ) ? $concat_assign->expr : null,
 					'sameContext' => '',
 					'type'        => 'concat',
 					'file'        => '',
@@ -997,7 +1007,7 @@ abstract class PHP_Parser {
 	 * @return string Returns a hashed string (MD5) representing the cache element ID.
 	 */
 	private function get_cache_element_id( $element, $file ) {
-		$line_id = $file . '_' . $element->getStartLine() . '_' . $element->getEndLine() . '_' . $this->get_variable_name( $element );
+		$line_id = $file . '_' . ( method_exists( $element, 'getStartLine' ) ? $element->getStartLine() : 0 ) . '_' . ( method_exists( $element, 'getEndLine' ) ? $element->getEndLine() : 0 ) . '_' . $this->get_variable_name( $element );
 		return md5( $line_id );
 	}
 
@@ -1020,7 +1030,7 @@ abstract class PHP_Parser {
 
 		switch ( $class ) {
 			case 'PhpParser\Node\Arg':
-				if ( ! empty( $element->value ) ) {
+				if ( isset( $element->value ) ) {
 					return $this->get_possible_string_for_element( $element->value, $found_in_same_line, $accurate, $file );
 				}
 				break;
@@ -1076,7 +1086,7 @@ abstract class PHP_Parser {
 				if ( ! empty( $assigns ) ) {
 					$concat_string = '';
 					foreach ( $assigns as $assign ) {
-						if ( ! $accurate || ( $accurate && $assign['sameContext'] ) ) {
+						if ( ! $accurate || $assign['sameContext'] ) {
 							$string = $this->get_possible_string_for_element( $assign['value'], $found_in_same_line, $accurate, $assign['file'] );
 							if ( ! empty( $string ) ) {
 								$found_in_same_line = false;
@@ -1179,12 +1189,12 @@ abstract class PHP_Parser {
 					break;
 
 				default:
-					if ( $stmt->getStartLine() <= $element->getStartLine() && $stmt->getEndLine() >= $element->getEndLine() ) {
+					if ( method_exists( $stmt, 'getStartLine' ) && method_exists( $element, 'getStartLine' ) && method_exists( $stmt, 'getEndLine' ) && method_exists( $element, 'getEndLine' ) && $stmt->getStartLine() <= $element->getStartLine() && $stmt->getEndLine() >= $element->getEndLine() ) {
 						return true;
 					}
 					$lines_array[] = array(
-						'startLine' => $stmt->getStartLine(),
-						'endLine'   => $stmt->getEndLine(),
+						'startLine' => method_exists( $stmt, 'getStartLine' ) ? $stmt->getStartLine() : 0,
+						'endLine'   => method_exists( $stmt, 'getEndLine' ) ? $stmt->getEndLine() : 0,
 					);
 
 			endswitch;
@@ -1292,8 +1302,7 @@ abstract class PHP_Parser {
 				if ( get_class( $element ) === 'PhpParser\Node\Expr\ConstFetch' ) {
 					$included_const_fetch_name = $element->name->__toString();
 					if ( $define_name === $included_const_fetch_name ) {
-						var_dump( '' );
-						var_dump( 'IS ERROR: Infinite loop detected. Define ' . $define_name . ' at ' . $file . ':' . $function_call->getStartLine() . ' is defined using the value of the same define. Ignoring this define.' );
+						var_dump( 'IS ERROR: Infinite loop detected. Define ' . $define_name . ' at ' . $file . ':' . ( method_exists( $function_call, 'getStartLine' ) ? $function_call->getStartLine() : 0 ) . ' is defined using the value of the same define. Ignoring this define.' );
 						return false;
 					}
 				}
@@ -1311,7 +1320,7 @@ abstract class PHP_Parser {
 	 * @return bool Returns true if the element is a function call to `define`, otherwise false.
 	 */
 	private function is_a_define_call( $element ) {
-		if ( is_a( $element, 'PhpParser\Node\Expr\FuncCall' ) && $this->has_function_name( $element, false ) && 'define' === $this->get_call_name( $element ) ) {
+		if ( is_a( $element, 'PhpParser\Node\Expr\FuncCall' ) && $this->has_function_name( $element ) && 'define' === $this->get_call_name( $element ) ) {
 			return true;
 		}
 		return false;

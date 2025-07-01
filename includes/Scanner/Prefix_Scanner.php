@@ -8,6 +8,7 @@
 namespace WordPress\Plugin_Check\Scanner;
 
 use PhpParser\Node;
+use PhpParser\Node\Const_;
 
 /**
  * Class Prefix_Scanner
@@ -326,7 +327,9 @@ class Prefix_Scanner extends PHP_Parser {
 
 					// WooCommerce add/update metadata (Heuristic since it checks if the variable is called product).
 					if ( str_contains( $varname, 'product' ) && in_array( $methodname, array( 'update_meta_data', 'add_meta_data' ), true ) ) {
-						$this->add_call_expression_to_log( $method_call, $method_call->args[0], array(), 0 );
+						if ( isset( $method_call->args[0] ) ) {
+							$this->add_call_expression_to_log( $method_call, $method_call->args[0], array(), 0 );
+						}
 					}
 				}
 			}
@@ -379,13 +382,13 @@ class Prefix_Scanner extends PHP_Parser {
 		// Find all consts: const EXAMPLE = 'example'.
 		$namespaces = $this->node_finder->findInstanceOf( $this->stmts, Node\Stmt\Namespace_::class );
 		if ( empty( $namespaces ) ) {
-			$consts = $this->node_finder->findInstanceOf( $this->stmts, PhpParser\Node\Const_::class );
+			$consts = $this->node_finder->findInstanceOf( $this->stmts, Const_::class );
 			if ( ! empty( $consts ) ) {
 				foreach ( $consts as $const ) {
 					$is_inside_element_type = null;
 					$contextual_stmts       = $this->get_contextual_STMTS_for_element( $const, $is_inside_element_type )['context'];
 					if ( ! empty( $contextual_stmts ) && ! in_array( $is_inside_element_type, array( 'PhpParser\Node\Stmt\Class_', 'PhpParser\Node\Stmt\Interface_' ), true ) ) { // Ignore const inside a class.
-						if ( ! empty( $const->name->__toString() ) ) {
+						if ( isset( $const->name ) && method_exists( $const->name, '__toString' ) && ! empty( $const->name->__toString() ) ) {
 							$this->log()->add_var_expr( $const, 'prefixes_code', true );
 						}
 					}
