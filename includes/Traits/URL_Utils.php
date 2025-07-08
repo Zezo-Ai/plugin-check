@@ -97,6 +97,7 @@ trait URL_Utils {
 			'example.com',
 			'example.net',
 			'example.org',
+			'yourdomain.com',
 			'yourwebsite.com',
 		);
 
