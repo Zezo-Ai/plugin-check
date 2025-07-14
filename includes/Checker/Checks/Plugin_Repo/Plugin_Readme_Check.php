@@ -312,12 +312,10 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 	private function check_default_text( Check_Result $result, string $readme_file, $parser ) {
 		$short_description = $parser->short_description;
 		$tags              = $parser->tags;
-		$donate_link       = $parser->donate_link;
 
 		if (
 			in_array( 'tag1', $tags, true )
 			|| str_contains( $short_description, 'Here is a short description of the plugin.' )
-			|| str_contains( $donate_link, '//example.com/' )
 		) {
 			$this->add_result_error_for_file(
 				$result,
