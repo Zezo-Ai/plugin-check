@@ -302,7 +302,7 @@ final class Plugin_Check_Command {
 			}
 		}
 
-		if ( ! empty( $assoc_args['strict-format'] ) ) {
+		if ( true === $options['strict-format'] ) {
 			$formatter->display_items( $all_results );
 			return;
 		}

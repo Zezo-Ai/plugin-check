@@ -124,6 +124,19 @@ final class FeatureContext extends WP_CLI_FeatureContext {
 	}
 
 	/**
+	 * @Then /^STDOUT should be valid JSON$/
+	 */
+	public function stdout_should_be_valid_json() {
+		$output = $this->result->stdout;
+
+		json_decode( $output );
+
+		if ( JSON_ERROR_NONE !== json_last_error() ) {
+			throw new Exception( 'STDOUT is not valid JSON: ' . json_last_error_msg() );
+		}
+	}
+
+	/**
 	 * Ensure that a requested directory exists and create it recursively as needed.
 	 *
 	 * @param string $directory Directory to ensure the existence of.

@@ -149,6 +149,19 @@ Feature: Test that the WP-CLI command works.
       WordPress.WP.AlternativeFunctions.rand_mt_rand
       """
 
+    When I run the WP-CLI command `plugin check foo-single.php --format=json --fields=line,column,type,code`
+    Then STDOUT should contain:
+      """
+      FILE:
+      """
+
+    When I run the WP-CLI command `plugin check foo-single.php --format=json --fields=line,column,type,code --strict-format`
+    Then STDOUT should be valid JSON
+    And STDOUT should not contain:
+      """
+      FILE:
+      """
+
   Scenario: Check plugin with special chars in plugin name
     Given a WP install with the Plugin Check plugin
     And a wp-content/plugins/johns-post-counter/johns-post-counter.php file:
