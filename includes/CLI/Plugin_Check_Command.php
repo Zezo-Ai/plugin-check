@@ -83,6 +83,9 @@ final class Plugin_Check_Command {
 	 *   - json
 	 * ---
 	 *
+	 * [--strict-format]
+	 * : Output a single flat list of all results.
+	 *
 	 * [--categories]
 	 * : Limit displayed results to include only specific categories Checks.
 	 *
@@ -159,6 +162,7 @@ final class Plugin_Check_Command {
 				'include-low-severity-warnings' => false,
 				'slug'                          => '',
 				'ignore-codes'                  => '',
+				'strict-format'                 => false,
 			)
 		);
 
@@ -255,8 +259,9 @@ final class Plugin_Check_Command {
 		$include_low_severity_errors   = ! empty( $options['include-low-severity-errors'] ) ? true : false;
 		$include_low_severity_warnings = ! empty( $options['include-low-severity-warnings'] ) ? true : false;
 
-		// Print the formatted results.
-		// Go over all files with errors first and print them, combined with any warnings in the same file.
+		$all_results = array();
+
+		// Collect all errors.
 		foreach ( $errors as $file_name => $file_errors ) {
 			$file_warnings = array();
 			if ( isset( $warnings[ $file_name ] ) ) {
@@ -273,12 +278,13 @@ final class Plugin_Check_Command {
 				$file_results = $this->get_filtered_results_by_severity( $file_results, intval( $error_severity ), intval( $warning_severity ), $include_low_severity_errors, $include_low_severity_warnings );
 			}
 
-			if ( ! empty( $file_results ) ) {
-				$this->display_results( $formatter, $file_name, $file_results );
+			foreach ( $file_results as $item ) {
+				$item['file']  = $file_name;
+				$all_results[] = $item;
 			}
 		}
 
-		// If there are any files left with only warnings, print those next.
+		// Collect remaining warnings.
 		foreach ( $warnings as $file_name => $file_warnings ) {
 			$file_results = $this->flatten_file_results( array(), $file_warnings );
 
@@ -290,9 +296,28 @@ final class Plugin_Check_Command {
 				$file_results = $this->get_filtered_results_by_severity( $file_results, intval( $error_severity ), intval( $warning_severity ), $include_low_severity_errors, $include_low_severity_warnings );
 			}
 
-			if ( ! empty( $file_results ) ) {
-				$this->display_results( $formatter, $file_name, $file_results );
+			foreach ( $file_results as $item ) {
+				$item['file']  = $file_name;
+				$all_results[] = $item;
 			}
+		}
+
+		if ( ! empty( $assoc_args['strict-format'] ) ) {
+			$formatter->display_items( $all_results );
+			return;
+		}
+
+		// Group results by file.
+		$results_by_file = array();
+
+		foreach ( $all_results as $item ) {
+			$file = $item['file'];
+			unset( $item['file'] );
+			$results_by_file[ $file ][] = $item;
+		}
+
+		foreach ( $results_by_file as $file_name => $file_results ) {
+			$this->display_results( $formatter, $file_name, $file_results );
 		}
 	}
 
