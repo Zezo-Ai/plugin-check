@@ -155,7 +155,7 @@ Feature: Test that the WP-CLI command works.
       FILE:
       """
 
-    When I run the WP-CLI command `plugin check foo-single.php --format=json --fields=line,column,type,code --strict-format`
+    When I run the WP-CLI command `plugin check foo-single.php --format=strict-json --fields=line,column,type,code`
     Then STDOUT should be valid JSON
     And STDOUT should not contain:
       """

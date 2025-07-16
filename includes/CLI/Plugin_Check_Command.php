@@ -42,6 +42,9 @@ final class Plugin_Check_Command {
 		'table',
 		'csv',
 		'json',
+		'strict-table',
+		'strict-csv',
+		'strict-json',
 	);
 
 	/**
@@ -74,17 +77,17 @@ final class Plugin_Check_Command {
 	 * : Ignore error codes provided as an argument in comma-separated values.
 	 *
 	 * [--format=<format>]
-	 * : Format to display the results. Options are table, csv, and json. The default will be a table.
+	 * : Format to display the results. Options are table, csv, json, strict-table, strict-csv, and strict-json. The default will be a table.
 	 * ---
 	 * default: table
 	 * options:
 	 *   - table
 	 *   - csv
 	 *   - json
+	 *   - strict-table
+	 *   - strict-csv
+	 *   - strict-json
 	 * ---
-	 *
-	 * [--strict-format]
-	 * : Output a single flat list of all results.
 	 *
 	 * [--categories]
 	 * : Limit displayed results to include only specific categories Checks.
@@ -162,7 +165,6 @@ final class Plugin_Check_Command {
 				'include-low-severity-warnings' => false,
 				'slug'                          => '',
 				'ignore-codes'                  => '',
-				'strict-format'                 => false,
 			)
 		);
 
@@ -302,7 +304,14 @@ final class Plugin_Check_Command {
 			}
 		}
 
-		if ( true === $options['strict-format'] ) {
+		// Handle strict-* formats.
+		if ( str_starts_with( $options['format'], 'strict-' ) ) {
+			$base_format = substr( $options['format'], 7 );
+
+			$formatter_args           = $assoc_args;
+			$formatter_args['format'] = $base_format;
+
+			$formatter = $this->get_formatter( $formatter_args, $default_fields );
 			$formatter->display_items( $all_results );
 			return;
 		}
@@ -311,9 +320,7 @@ final class Plugin_Check_Command {
 		$results_by_file = array();
 
 		foreach ( $all_results as $item ) {
-			$file = $item['file'];
-			unset( $item['file'] );
-			$results_by_file[ $file ][] = $item;
+			$results_by_file[ $item['file'] ][] = $item;
 		}
 
 		foreach ( $results_by_file as $file_name => $file_results ) {
