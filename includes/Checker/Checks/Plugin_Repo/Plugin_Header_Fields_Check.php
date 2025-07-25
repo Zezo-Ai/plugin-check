@@ -291,44 +291,53 @@ class Plugin_Header_Fields_Check implements Static_Check {
 		if ( ! empty( $plugin_header['RequiresWP'] ) ) {
 			$latest_wp_version = $this->get_wordpress_stable_version();
 
-			if ( ! preg_match( '!^\d+\.\d(\.\d+)?$!', $plugin_header['RequiresWP'] ) ) {
-				$previous_wp_version = $this->get_wordpress_relative_major_version( $latest_wp_version, -1 );
+			// Only proceed with WordPress version validation if we got a valid version.
+			if ( ! empty( $latest_wp_version ) ) {
+				if ( ! preg_match( '!^\d+\.\d(\.\d+)?$!', $plugin_header['RequiresWP'] ) ) {
+					$previous_wp_version = $this->get_wordpress_relative_major_version( $latest_wp_version, -1 );
 
-				$this->add_result_error_for_file(
-					$result,
-					sprintf(
-						/* translators: 1: plugin header field, 2: Example version 6.7, 3: Example version 6.6 */
-						__( 'The "%1$s" header in the plugin file should only contain a WordPress version such as "%2$s" or "%3$s".', 'plugin-check' ),
-						esc_html( $labels['RequiresWP'] ),
-						esc_html( $latest_wp_version ),
-						esc_html( $previous_wp_version )
-					),
-					'plugin_header_invalid_requires_wp',
-					$plugin_main_file,
-					0,
-					0,
-					'',
-					7
-				);
-			} else {
-				$acceptable_min_wp_version = $this->get_wordpress_relative_major_version( $latest_wp_version, 1 );
+					// Only add error if we got a valid previous version.
+					if ( ! empty( $previous_wp_version ) ) {
+						$this->add_result_error_for_file(
+							$result,
+							sprintf(
+								/* translators: 1: plugin header field, 2: Example version 6.7, 3: Example version 6.6 */
+								__( 'The "%1$s" header in the plugin file should only contain a WordPress version such as "%2$s" or "%3$s".', 'plugin-check' ),
+								esc_html( $labels['RequiresWP'] ),
+								esc_html( $latest_wp_version ),
+								esc_html( $previous_wp_version )
+							),
+							'plugin_header_invalid_requires_wp',
+							$plugin_main_file,
+							0,
+							0,
+							'',
+							7
+						);
+					}
+				} else {
+					$acceptable_min_wp_version = $this->get_wordpress_relative_major_version( $latest_wp_version, 1 );
 
-				if ( version_compare( $plugin_header['RequiresWP'], $acceptable_min_wp_version, '>' ) ) {
-					$this->add_result_error_for_file(
-						$result,
-						sprintf(
-							/* translators: 1: plugin header field, 2: currently used version */
-							__( '<strong>%1$s: %2$s.</strong><br>The "%1$s" value in your plugin header is not valid. This version of WordPress does not exist (yet).', 'plugin-check' ),
-							esc_html( $labels['RequiresWP'] ),
-							esc_html( $plugin_header['RequiresWP'] )
-						),
-						'plugin_header_nonexistent_requires_wp',
-						$plugin_main_file,
-						0,
-						0,
-						'https://developer.wordpress.org/plugins/plugin-basics/header-requirements/#header-fields',
-						7
-					);
+					// Only add error if we got a valid acceptable minimum version.
+					if ( ! empty( $acceptable_min_wp_version ) ) {
+						if ( version_compare( $plugin_header['RequiresWP'], $acceptable_min_wp_version, '>' ) ) {
+							$this->add_result_error_for_file(
+								$result,
+								sprintf(
+									/* translators: 1: plugin header field, 2: currently used version */
+									__( '<strong>%1$s: %2$s.</strong><br>The "%1$s" value in your plugin header is not valid. This version of WordPress does not exist (yet).', 'plugin-check' ),
+									esc_html( $labels['RequiresWP'] ),
+									esc_html( $plugin_header['RequiresWP'] )
+								),
+								'plugin_header_nonexistent_requires_wp',
+								$plugin_main_file,
+								0,
+								0,
+								'https://developer.wordpress.org/plugins/plugin-basics/header-requirements/#header-fields',
+								7
+							);
+						}
+					}
 				}
 			}
 		}
