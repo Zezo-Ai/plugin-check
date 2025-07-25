@@ -42,6 +42,9 @@ final class Plugin_Check_Command {
 		'table',
 		'csv',
 		'json',
+		'strict-table',
+		'strict-csv',
+		'strict-json',
 	);
 
 	/**
@@ -74,13 +77,16 @@ final class Plugin_Check_Command {
 	 * : Ignore error codes provided as an argument in comma-separated values.
 	 *
 	 * [--format=<format>]
-	 * : Format to display the results. Options are table, csv, and json. The default will be a table.
+	 * : Format to display the results. Options are table, csv, json, strict-table, strict-csv, and strict-json. The default will be a table.
 	 * ---
 	 * default: table
 	 * options:
 	 *   - table
 	 *   - csv
 	 *   - json
+	 *   - strict-table
+	 *   - strict-csv
+	 *   - strict-json
 	 * ---
 	 *
 	 * [--categories]
@@ -255,8 +261,9 @@ final class Plugin_Check_Command {
 		$include_low_severity_errors   = ! empty( $options['include-low-severity-errors'] ) ? true : false;
 		$include_low_severity_warnings = ! empty( $options['include-low-severity-warnings'] ) ? true : false;
 
-		// Print the formatted results.
-		// Go over all files with errors first and print them, combined with any warnings in the same file.
+		$all_results = array();
+
+		// Collect all errors.
 		foreach ( $errors as $file_name => $file_errors ) {
 			$file_warnings = array();
 			if ( isset( $warnings[ $file_name ] ) ) {
@@ -273,12 +280,13 @@ final class Plugin_Check_Command {
 				$file_results = $this->get_filtered_results_by_severity( $file_results, intval( $error_severity ), intval( $warning_severity ), $include_low_severity_errors, $include_low_severity_warnings );
 			}
 
-			if ( ! empty( $file_results ) ) {
-				$this->display_results( $formatter, $file_name, $file_results );
+			foreach ( $file_results as $item ) {
+				$item['file']  = $file_name;
+				$all_results[] = $item;
 			}
 		}
 
-		// If there are any files left with only warnings, print those next.
+		// Collect remaining warnings.
 		foreach ( $warnings as $file_name => $file_warnings ) {
 			$file_results = $this->flatten_file_results( array(), $file_warnings );
 
@@ -290,9 +298,33 @@ final class Plugin_Check_Command {
 				$file_results = $this->get_filtered_results_by_severity( $file_results, intval( $error_severity ), intval( $warning_severity ), $include_low_severity_errors, $include_low_severity_warnings );
 			}
 
-			if ( ! empty( $file_results ) ) {
-				$this->display_results( $formatter, $file_name, $file_results );
+			foreach ( $file_results as $item ) {
+				$item['file']  = $file_name;
+				$all_results[] = $item;
 			}
+		}
+
+		// Handle strict-* formats.
+		if ( str_starts_with( $options['format'], 'strict-' ) ) {
+			$base_format = substr( $options['format'], 7 );
+
+			$formatter_args           = $assoc_args;
+			$formatter_args['format'] = $base_format;
+
+			$formatter = $this->get_formatter( $formatter_args, $default_fields );
+			$formatter->display_items( $all_results );
+			return;
+		}
+
+		// Group results by file.
+		$results_by_file = array();
+
+		foreach ( $all_results as $item ) {
+			$results_by_file[ $item['file'] ][] = $item;
+		}
+
+		foreach ( $results_by_file as $file_name => $file_results ) {
+			$this->display_results( $formatter, $file_name, $file_results );
 		}
 	}
 
