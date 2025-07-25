@@ -315,12 +315,10 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 	private function check_default_text( Check_Result $result, string $readme_file, $parser ) {
 		$short_description = $parser->short_description;
 		$tags              = $parser->tags;
-		$donate_link       = $parser->donate_link;
 
 		if (
 			in_array( 'tag1', $tags, true )
 			|| str_contains( $short_description, 'Here is a short description of the plugin.' )
-			|| str_contains( $donate_link, '//example.com/' )
 		) {
 			$this->add_result_error_for_file(
 				$result,
@@ -685,10 +683,10 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 		}
 
 		if ( ! $this->is_valid_url( $donate_link ) ) {
-			$this->add_result_warning_for_file(
+			$this->add_result_error_for_file(
 				$result,
 				sprintf(
-					/* translators: %s: plugin header field */
+					/* translators: %s: readme header field */
 					__( 'The "%s" header in the readme file must be a valid URL.', 'plugin-check' ),
 					'Donate link'
 				),
@@ -697,7 +695,30 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 				0,
 				0,
 				'https://developer.wordpress.org/plugins/wordpress-org/how-your-readme-txt-works/#readme-header-information',
-				6
+				7
+			);
+
+			return;
+		}
+
+		// Check for discouraged domain.
+		$matched_domain = $this->find_discouraged_domain( $donate_link );
+
+		if ( $matched_domain ) {
+			$this->add_result_error_for_file(
+				$result,
+				sprintf(
+					/* translators: 1: readme header field, 2: domain */
+					__( 'The "%1$s" header in the readme file is not valid. Discouraged domain "%2$s" found. This is the URL for users to support plugin author financially.', 'plugin-check' ),
+					'Donate link',
+					esc_html( $matched_domain )
+				),
+				'readme_invalid_donate_link_domain',
+				$readme_file,
+				0,
+				0,
+				'https://developer.wordpress.org/plugins/wordpress-org/how-your-readme-txt-works/#readme-header-information',
+				7
 			);
 		}
 	}
