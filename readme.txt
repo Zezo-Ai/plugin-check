@@ -68,6 +68,26 @@ In any case, passing the checks in this tool likely helps to achieve a smooth pl
 
 == Changelog ==
 
+= 1.6.0 =
+
+* Enhancement - Support strict output format for CLI commands.
+* Enhancement - Improve check for donate link in readme.
+* Enhancement - Improve info check in Version utils.
+* Enhancement - Improve URL validation for plugin header fields.
+* Enhancement - Improve ruleset files.
+* Enhancement - Increased severity for invalid plugin uri domain and plugin description checks in plugin header.
+* Enhancement - Remove CallTimePassByReference as it's deprecated rule.
+* Enhancement - Disallow special characters in textdomain.
+* Enhancement - Imported readme parser for preventing conflicts with wordpress.org. Use dotorg readme parser if available.
+* Enhancement - Discourage the use of `load_plugin_textdomain` found in plugins as it's not necessary in wordpress.org.
+* Enhancement - Upgrade severity for missing readme headers.
+* Enhancement - Show tested up to minor check only when it is current major version.
+* Enhancement - Added link in plugins page to run the plugin check.
+* Fix - Dynamic WP Content folder.
+* Fix - Fix test for special chars in file names giving problems to users after clone.
+* Fix - Remove Image_Functions_Check as they were making false positives.
+* Fix - Prevent WordPress version 10+ from being flagged as an error in the "Tested up to" check.
+
 = 1.5.0 =
 
 * Enhancement - Improve url validation to check duplicate protocol.
