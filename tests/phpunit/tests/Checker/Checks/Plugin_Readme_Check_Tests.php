@@ -370,8 +370,8 @@ class Plugin_Readme_Check_Tests extends WP_UnitTestCase {
 		$this->assertNotEmpty( $warnings );
 		$this->assertArrayHasKey( 'readme.txt', $warnings );
 		$this->assertSame( 7, $check_result->get_warning_count() );
-		$this->assertEmpty( $errors );
-		$this->assertSame( 0, $check_result->get_error_count() );
+		$this->assertNotEmpty( $errors );
+		$this->assertSame( 2, $check_result->get_error_count() );
 
 		// Check for parser warnings.
 		$this->assertArrayHasKey( 0, $warnings['readme.txt'] );
@@ -435,8 +435,8 @@ class Plugin_Readme_Check_Tests extends WP_UnitTestCase {
 		 * 'wp_plugin_check_ignored_readme_warnings' then that ignored warning is also added in the list of warnings.
 		 */
 		$this->assertEquals( 8, $check_result->get_warning_count() );
-		$this->assertEmpty( $errors );
-		$this->assertEquals( 0, $check_result->get_error_count() );
+		$this->assertNotEmpty( $errors );
+		$this->assertEquals( 2, $check_result->get_error_count() );
 	}
 
 	public function test_filter_readme_warnings_ignored() {
@@ -500,9 +500,9 @@ class Plugin_Readme_Check_Tests extends WP_UnitTestCase {
 			}
 		);
 
-		$this->assertEmpty( $errors );
+		$this->assertNotEmpty( $errors );
 		$this->assertEmpty( $warnings );
-		$this->assertSame( 0, $check_result->get_error_count() );
+		$this->assertSame( 2, $check_result->get_error_count() );
 		$this->assertSame( 0, $check_result->get_warning_count() );
 	}
 
@@ -621,5 +621,22 @@ class Plugin_Readme_Check_Tests extends WP_UnitTestCase {
 		$this->assertArrayHasKey( 'readme.txt', $errors );
 
 		$this->assertCount( 1, wp_list_filter( $errors['readme.txt'][0][0], array( 'code' => 'readme_invalid_donate_link_domain' ) ) );
+	}
+
+	public function test_run_language_detection_without_errors() {
+		$check         = new Plugin_Readme_Check();
+		$check_context = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-plugin-readme-errors-language/load.php' );
+		$check_result  = new Check_Result( $check_context );
+
+		$check->run( $check_result );
+
+		$errors = $check_result->get_errors();
+
+		$this->assertNotEmpty( $errors );
+		$this->assertArrayHasKey( 'readme.txt', $errors );
+
+		$this->assertCount( 1, wp_list_filter( $errors['readme.txt'][0][0], array( 'code' => 'readme_short_description_non_official_language' ) ) );
+
+		$this->assertCount( 1, wp_list_filter( $errors['readme.txt'][0][0], array( 'code' => 'readme_description_non_official_language' ) ) );
 	}
 }
