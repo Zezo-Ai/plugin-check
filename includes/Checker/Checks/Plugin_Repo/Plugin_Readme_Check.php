@@ -17,6 +17,7 @@ use WordPress\Plugin_Check\Traits\License_Utils;
 use WordPress\Plugin_Check\Traits\Stable_Check;
 use WordPress\Plugin_Check\Traits\URL_Utils;
 use WordPress\Plugin_Check\Traits\Version_Utils;
+use WordPress\Plugin_Check\Traits\Language_Utils;
 use WordPressdotorg\Plugin_Directory\Readme\Parser as DotorgParser;
 
 /**
@@ -34,6 +35,7 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 	use License_Utils;
 	use URL_Utils;
 	use Version_Utils;
+	use Language_Utils;
 
 	/**
 	 * Gets the categories for the check.
@@ -117,6 +119,9 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 
 		// Check the readme file for requires headers.
 		$this->check_requires_headers( $result, $readme_file, $parser );
+
+		// Check the readme for language.
+		$this->check_language( $result, $readme_file, $parser );
 	}
 
 	/**
@@ -899,6 +904,49 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 					0,
 					0,
 					'https://developer.wordpress.org/plugins/wordpress-org/how-your-readme-txt-works/#readme-header-information'
+				);
+			}
+		}
+	}
+
+	/**
+	 * Checks the readme file for official language.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param Check_Result           $result      The Check Result to amend.
+	 * @param string                 $readme_file Readme file.
+	 * @param DotorgParser|PCPParser $parser      The Parser object.
+	 */
+	private function check_language( Check_Result $result, string $readme_file, $parser ) {
+		$check_language = $this->is_on_official_language( $parser->short_description );
+
+		if ( ! $check_language ) {
+			$this->add_result_error_for_file(
+				$result,
+				__( 'The readme short description contains non-official language.', 'plugin-check' ),
+				'readme_short_description_non_official_language',
+				$readme_file,
+				0,
+				0,
+				'https://developer.wordpress.org/plugins/wordpress-org/how-your-readme-txt-works/#readme-header-information',
+				7
+			);
+		}
+
+		if ( ! empty( $parser->sections['description'] ) ) {
+			$check_language = $this->is_on_official_language( $parser->sections['description'] );
+
+			if ( ! $check_language ) {
+				$this->add_result_error_for_file(
+					$result,
+					__( 'The readme description contains non-official language.', 'plugin-check' ),
+					'readme_description_non_official_language',
+					$readme_file,
+					0,
+					0,
+					'https://developer.wordpress.org/plugins/wordpress-org/how-your-readme-txt-works/#readme-header-information',
+					7
 				);
 			}
 		}
