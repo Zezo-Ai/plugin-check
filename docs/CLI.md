@@ -20,13 +20,16 @@ Applies after evaluating `--checks`.
 : Ignore error codes provided as an argument in comma-separated values.
 
 [--format=<format>]
-: Format to display the results. Options are table, csv, and json. The default will be a table.
+: Format to display the results. Options are table, csv, json, strict-table, strict-csv, and strict-json. The default will be a table.
 ---
 default: table
 options:
   - table
   - csv
   - json
+  - strict-table
+  - strict-csv
+  - strict-json
 ---
 
 [--categories]
@@ -68,12 +71,22 @@ By default, `.git`, `vendor` and `node_modules` directories are excluded.
 
 [--slug=<slug>]
 : Slug to override the default.
+
+[--mode=<mode>]
+: Mode to run the checks in. Options are 'new' (default) or 'update'.
+---
+default: new
+options:
+  - new
+  - update
+---
 ```
 ## EXAMPLES
 ```
 wp plugin check akismet
 wp plugin check akismet --checks=late_escaping
 wp plugin check akismet --format=json
+wp plugin check akismet --mode=update
 ```
 
 # wp plugin list-checks
