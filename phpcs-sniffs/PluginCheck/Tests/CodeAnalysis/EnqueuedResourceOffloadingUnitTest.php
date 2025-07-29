@@ -29,6 +29,7 @@ final class EnqueuedResourceOffloadingUnitTest extends AbstractSniffUnitTest {
 				return array(
 					5  => 1,
 					13 => 1,
+					22 => 1,
 				);
 			default:
 				return array();
