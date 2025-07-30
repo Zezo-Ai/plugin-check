@@ -28,3 +28,15 @@ $multiple_urls = 'Custom URL https://docker.localhost/example and https://localh
 <img src="<?php echo "http://localhost/image.png"; ?>" alt="" /><!-- Error. -->
 
 <p>URL in inline HTML is http://localhost/example2.php bad.</p><!-- Error. -->
+
+<?php
+
+$multiline_string = 'A multi-line string with URLs
+	https://docker.localhost/example and
+	https://localhost/example.php here.'; // Errors.
+
+$multiline_string = <<<'TEXT'
+	Another multi-line string with URLs
+	https://docker.localhost/example and
+	https://localhost/example.php here.
+TEXT; // Errors.

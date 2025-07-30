@@ -35,6 +35,10 @@ final class LocalhostUnitTest extends AbstractSniffUnitTest {
 			25 => 2,
 			28 => 1,
 			30 => 1,
+			35 => 1,
+			36 => 1,
+			40 => 1,
+			41 => 1,
 		);
 	}
 
