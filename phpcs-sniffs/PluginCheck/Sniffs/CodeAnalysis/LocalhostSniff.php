@@ -49,7 +49,7 @@ final class LocalhostSniff extends Sniff {
 			return;
 		}
 
-		if ( preg_match_all( '#https?:\/\/(localhost|127.0.0.1|(.*\.local(host)?))\/#', $content, $matches, PREG_OFFSET_CAPTURE ) > 0 ) {
+		if ( preg_match_all( '#https?:\/\/(localhost|127.0.0.1|(.*\.local(host)?))\/#i', $content, $matches, PREG_OFFSET_CAPTURE ) > 0 ) {
 			foreach ( $matches[0] as $match ) {
 				$this->phpcsFile->addError(
 					'Do not use Localhost/127.0.0.1 in your code. Found: %s',

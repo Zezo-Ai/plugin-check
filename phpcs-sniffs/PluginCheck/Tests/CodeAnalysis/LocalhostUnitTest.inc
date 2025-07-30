@@ -8,7 +8,7 @@ $custom_content = file_get_contents("http://127.0.0.1/api.php?url=".$url); // Er
 wp_register_script( 'custom-js', 'https://127.0.0.1/dist/custom.js' ); // Error.
 wp_enqueue_script( 'custom-js', 'https://127.0.0.1/dist/custom.js' ); // Error.
 wp_register_style( 'custom-css', 'http://localhost/dist/custom.css' ); // Error.
-wp_enqueue_style( 'custom-css', 'http://localhost/dist/custom.css' ); // Error.
+wp_enqueue_style( 'custom-css', 'http://LOCALHOST/dist/custom.css' ); // Error.
 
 $important_links = array(
   'view-pro'      => array(
