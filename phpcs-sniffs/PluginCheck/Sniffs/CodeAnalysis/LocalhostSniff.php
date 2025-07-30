@@ -42,7 +42,6 @@ final class LocalhostSniff extends Sniff {
 	 * @return int|void Integer stack pointer to skip forward or void to continue normal file processing.
 	 */
 	public function process_token( $stackPtr ) {
-		$end_ptr = $stackPtr;
 		$content = $this->tokens[ $stackPtr ]['content'];
 
 		if ( false === stripos( $content, '//' ) ) {
@@ -59,8 +58,6 @@ final class LocalhostSniff extends Sniff {
 				);
 			}
 		}
-
-		return ( $end_ptr + 1 );
 	}
 
 	/**
