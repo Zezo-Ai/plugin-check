@@ -12,6 +12,7 @@ namespace PluginCheckCS\PluginCheck\Sniffs\CodeAnalysis;
 
 use PHP_CodeSniffer\Util\Tokens;
 use PHPCSUtils\Utils\PassedParameters;
+use PluginCheckCS\PluginCheck\Helpers\OffloadingServicesTrait;
 use WordPressCS\WordPress\AbstractFunctionParameterSniff;
 
 /**
@@ -26,6 +27,7 @@ use WordPressCS\WordPress\AbstractFunctionParameterSniff;
  * @since 1.1.0
  */
 final class EnqueuedResourceOffloadingSniff extends AbstractFunctionParameterSniff {
+	use OffloadingServicesTrait;
 
 	/**
 	 * The group name for this group of functions.
@@ -70,39 +72,6 @@ final class EnqueuedResourceOffloadingSniff extends AbstractFunctionParameterSni
 			return;
 		}
 
-		// Known offloading services.
-		$look_known_offloading_services = array(
-			'code\.jquery\.com',
-			'(?<!api\.)cloudflare\.com',
-			'cdn\.jsdelivr\.net',
-			'cdn\.rawgit\.com',
-			'code\.getmdl\.io',
-			'bootstrapcdn',
-			'cl\.ly',
-			'cdn\.datatables\.net',
-			'aspnetcdn\.com',
-			'ajax\.googleapis\.com',
-			'webfonts\.zoho\.com',
-			'raw\.githubusercontent\.com',
-			'github\.com\/.*\/raw',
-			'unpkg\.com',
-			'imgur\.com',
-			'rawgit\.com',
-			'amazonaws\.com',
-			'cdn\.tiny\.cloud',
-			'tiny\.cloud',
-			'tailwindcss\.com',
-			'herokuapp\.com',
-			'(?<!fonts\.)gstatic\.com',
-			'kit\.fontawesome',
-			'use\.fontawesome',
-			'googleusercontent\.com',
-			'placeholder\.com',
-			's\.w\.org',
-		);
-
-		$pattern = '/(' . implode( '|', $look_known_offloading_services ) . ')/i';
-
 		$error_ptr = $this->phpcsFile->findNext( Tokens::$emptyTokens, $src_param['start'], ( $src_param['end'] + 1 ), true );
 		if ( false === $error_ptr ) {
 			$error_ptr = $src_param['start'];
@@ -114,6 +83,8 @@ final class EnqueuedResourceOffloadingSniff extends AbstractFunctionParameterSni
 		}
 
 		$src_string = $src_param['clean'];
+
+		$pattern = $this->get_offloading_services_pattern();
 
 		if ( preg_match( $pattern, $src_string ) > 0 ) {
 			$this->phpcsFile->addError(
