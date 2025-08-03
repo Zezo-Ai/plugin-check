@@ -924,12 +924,12 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 		if ( ! $check_language ) {
 			$this->add_result_error_for_file(
 				$result,
-				__( 'The readme short description contains non-official language.', 'plugin-check' ),
+				__( 'The README description contains unofficial language. It must be written in standard English.', 'plugin-check' ),
 				'readme_short_description_non_official_language',
 				$readme_file,
 				0,
 				0,
-				'https://developer.wordpress.org/plugins/wordpress-org/how-your-readme-txt-works/#readme-header-information',
+				'https://make.wordpress.org/plugins/2025/07/28/requiring-the-readme-to-be-written-in-english/',
 				7
 			);
 		}
@@ -940,12 +940,12 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 			if ( ! $check_language ) {
 				$this->add_result_error_for_file(
 					$result,
-					__( 'The readme description contains non-official language.', 'plugin-check' ),
+					__( 'The README description contains unofficial language. It must be written in standard English.', 'plugin-check' ),
 					'readme_description_non_official_language',
 					$readme_file,
 					0,
 					0,
-					'https://developer.wordpress.org/plugins/wordpress-org/how-your-readme-txt-works/#readme-header-information',
+					'https://make.wordpress.org/plugins/2025/07/28/requiring-the-readme-to-be-written-in-english/',
 					7
 				);
 			}
