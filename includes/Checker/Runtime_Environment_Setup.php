@@ -99,7 +99,7 @@ final class Runtime_Environment_Setup {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @global wpdb $wpdb WordPress database abstraction object.
+	 * @global wpdb               $wpdb          WordPress database abstraction object.
 	 * @global WP_Filesystem_Base $wp_filesystem WordPress filesystem subclass.
 	 */
 	public function clean_up() {
@@ -108,8 +108,7 @@ final class Runtime_Environment_Setup {
 		require_once ABSPATH . '/wp-admin/includes/upgrade.php';
 
 		$prefix_cleanup = $this->amend_db_base_prefix();
-
-		$tables = $wpdb->tables();
+		$tables         = $wpdb->tables();
 
 		// Remove tables not starting with the prefix.
 		$tables = array_filter(
@@ -118,7 +117,7 @@ final class Runtime_Environment_Setup {
 				return str_starts_with( $table, $wpdb->prefix );
 			}
 		);
-		var_dump( $tables );
+
 		foreach ( $tables as $table ) {
 			$wpdb->query( "DROP TABLE IF EXISTS `$table`" ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		}
@@ -153,10 +152,11 @@ final class Runtime_Environment_Setup {
 	 * This returns true when the plugin's object-cache.php drop-in is active in the current request and/or when the
 	 * custom runtime environment database tables are present.
 	 *
-	 * @return bool True if the runtime environment is set up, false if not.
+	 * @since 1.3.0
+	 *
 	 * @global wpdb $wpdb WordPress database abstraction object.
 	 *
-	 * @since 1.3.0
+	 * @return bool True if the runtime environment is set up, false if not.
 	 */
 	public function is_set_up() {
 		global $wpdb;
@@ -179,10 +179,11 @@ final class Runtime_Environment_Setup {
 	/**
 	 * Checks if the WordPress Environment can be set up for runtime checks.
 	 *
-	 * @return bool Returns true if the runtime environment can be set up, false if not.
+	 * @since 1.0.0
+	 *
 	 * @global WP_Filesystem_Base $wp_filesystem WordPress filesystem subclass.
 	 *
-	 * @since 1.0.0
+	 * @return bool Returns true if the runtime environment can be set up, false if not.
 	 */
 	public function can_set_up() {
 		global $wp_filesystem;
@@ -230,10 +231,11 @@ final class Runtime_Environment_Setup {
 	/**
 	 * Installs WordPress, while providing tweaks to allow for early execution of the install process.
 	 *
-	 * @param string   $active_siteurl The actual site's site URL.
-	 * @param string   $active_theme The actual site's theme slug.
-	 * @param string[] $active_plugins The actual site's list of plugin basenames.
 	 * @since 1.3.0
+	 *
+	 * @param string   $active_siteurl The actual site's site URL.
+	 * @param string   $active_theme   The actual site's theme slug.
+	 * @param string[] $active_plugins The actual site's list of plugin basenames.
 	 */
 	private function install_wordpress( string $active_siteurl, string $active_theme, array $active_plugins ): void {
 		if ( ! isset( $_SERVER['HTTP_HOST'] ) ) {
