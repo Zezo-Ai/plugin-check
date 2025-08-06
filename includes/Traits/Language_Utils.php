@@ -29,15 +29,11 @@ trait Language_Utils {
 
 		$languages = $lang_detector->detect( $content )->close();
 
-		if ( empty( $languages['en'] ) ) {
-			return false;
-		}
-
 		// Get maximum value from the detected languages.
 		arsort( $languages );
 		$languages = array_slice( $languages, 0, 1, true );
 
-		if ( ! isset( $languages['en'] ) ) {
+		if ( ! isset( $languages['en'] ) || ! isset( $languages['ia'] ) ) {
 			return false;
 		}
 
