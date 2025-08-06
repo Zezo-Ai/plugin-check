@@ -68,14 +68,11 @@ final class EnqueuedResourceOffloadingSniff extends AbstractFunctionParameterSni
 	public function process_parameters( $stackPtr, $group_name, $matched_content, $parameters ) {
 		$src_param = PassedParameters::getParameterFromStack( $parameters, 2, 'src' );
 
-		if ( false === $src_param ) {
+		if ( false === $src_param || empty( $src_param['clean'] ) ) {
 			return;
 		}
 
 		$error_ptr = $this->phpcsFile->findNext( Tokens::$emptyTokens, $src_param['start'], ( $src_param['end'] + 1 ), true );
-		if ( false === $error_ptr ) {
-			$error_ptr = $src_param['start'];
-		}
 
 		$type = 'script';
 		if ( strpos( $matched_content, '_style' ) !== false ) {
