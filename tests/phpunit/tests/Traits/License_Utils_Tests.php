@@ -115,6 +115,8 @@ class License_Utils_Tests extends WP_UnitTestCase {
 			array( 'CC0', true ),
 			array( 'CC0-1.0', true ),
 			array( 'CC0 1.0 Universal', true ),
+			array( 'The Unlicense', true ),
+			array( 'Unlicense', true ),
 
 			array( 'EPL', false ),
 			array( 'EUPL', false ),
