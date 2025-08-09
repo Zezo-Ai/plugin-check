@@ -26,17 +26,12 @@ trait Language_Utils {
 	 */
 	protected function is_on_official_language( string $content ): bool {
 		$lang_detector = new Language();
+		$languages     = $lang_detector->detect( $content )->bestResults()->close();
 
-		$languages = $lang_detector->detect( $content )->close();
-
-		// Get maximum value from the detected languages.
-		arsort( $languages );
-		$languages = array_slice( $languages, 0, 1, true );
-
-		if ( ! isset( $languages['en'] ) || ! isset( $languages['ia'] ) ) {
-			return false;
+		if ( isset( $languages['en'] ) || ( ! isset( $languages['en'] ) && isset( $languages['ia'] ) ) ) {
+			return true;
 		}
 
-		return true;
+		return false;
 	}
 }
