@@ -169,20 +169,29 @@ class Plugin_Header_Fields_Check_Tests extends WP_UnitTestCase {
 		$this->assertEmpty( $errors );
 	}
 
-	public function test_run_with_errors_duplicated_protocol_is_valid_url() {
+	public function test_run_with_unsupported_plugin_name_in_new_mode() {
 		$check         = new Plugin_Header_Fields_Check();
-		$check_context = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-header-fields-duplicated-protocol-with-errors/load.php' );
+		$check_context = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-unsupported-plugin-name/load.php', '', 'new' );
 		$check_result  = new Check_Result( $check_context );
 
 		$check->run( $check_result );
 
 		$errors = $check_result->get_errors();
 
-		$filtered_items = wp_list_filter( $errors['load.php'][0][0], array( 'code' => 'plugin_header_invalid_author_uri' ) );
-		$filtered_items = array_values( $filtered_items );
+		$this->assertNotEmpty( $errors );
+		$this->assertCount( 1, wp_list_filter( $errors['load.php'][0][0], array( 'code' => 'plugin_header_unsupported_plugin_name' ) ) );
+	}
 
-		$this->assertCount( 1, $filtered_items );
-		$this->assertStringContainsString( 'Author URI', $filtered_items[0]['message'] );
-		$this->assertStringContainsString( 'is not valid', $filtered_items[0]['message'] );
+	public function test_run_with_unsupported_plugin_name_in_update_mode() {
+		$check         = new Plugin_Header_Fields_Check();
+		$check_context = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-unsupported-plugin-name/load.php', '', 'update' );
+		$check_result  = new Check_Result( $check_context );
+
+		$check->run( $check_result );
+
+		$errors = $check_result->get_errors();
+
+		// Should not have error in update mode.
+		$this->assertCount( 0, wp_list_filter( $errors['load.php'][0][0], array( 'code' => 'plugin_header_unsupported_plugin_name' ) ) );
 	}
 }

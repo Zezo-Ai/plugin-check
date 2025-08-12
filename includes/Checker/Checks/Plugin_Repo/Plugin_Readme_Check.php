@@ -15,6 +15,7 @@ use WordPress\Plugin_Check\Traits\Amend_Check_Result;
 use WordPress\Plugin_Check\Traits\Find_Readme;
 use WordPress\Plugin_Check\Traits\License_Utils;
 use WordPress\Plugin_Check\Traits\Stable_Check;
+use WordPress\Plugin_Check\Traits\URL_Utils;
 use WordPress\Plugin_Check\Traits\Version_Utils;
 use WordPressdotorg\Plugin_Directory\Readme\Parser as DotorgParser;
 
@@ -31,6 +32,7 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 	use Find_Readme;
 	use Stable_Check;
 	use License_Utils;
+	use URL_Utils;
 	use Version_Utils;
 
 	/**
@@ -219,62 +221,65 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 
 					$latest_wordpress_version = $this->get_wordpress_stable_version();
 
-					$tested_upto_major = $tested_upto;
-					if ( preg_match( '#^\d.\d#', $tested_upto, $matches ) ) {
-						$tested_upto_major = $matches[0];
-					}
+					// Only proceed with WordPress version validation if we got a valid version.
+					if ( ! empty( $latest_wordpress_version ) ) {
+						$tested_upto_major = $tested_upto;
+						if ( preg_match( '#^\d.\d#', $tested_upto, $matches ) ) {
+							$tested_upto_major = $matches[0];
+						}
 
-					if ( $tested_upto_major === $latest_wordpress_version && preg_match( '/^\d+\.\d+\.\d+/', $tested_upto ) ) {
-						$this->add_result_error_for_file(
-							$result,
-							sprintf(
-								/* translators: %s: currently used version */
-								__( '<strong>Tested up to: %1$s</strong><br>The version number should only include major versions %2$s.', 'plugin-check' ),
-								$tested_upto,
-								$tested_upto_major
-							),
-							'invalid_tested_upto_minor',
-							$readme_file,
-							0,
-							0,
-							'https://developer.wordpress.org/plugins/wordpress-org/how-your-readme-txt-works/#readme-header-information',
-							7
-						);
-					}
+						if ( $tested_upto_major === $latest_wordpress_version && preg_match( '/^\d+\.\d+\.\d+/', $tested_upto ) ) {
+							$this->add_result_error_for_file(
+								$result,
+								sprintf(
+									/* translators: %s: currently used version */
+									__( '<strong>Tested up to: %1$s</strong><br>The version number should only include major versions %2$s.', 'plugin-check' ),
+									$tested_upto,
+									$tested_upto_major
+								),
+								'invalid_tested_upto_minor',
+								$readme_file,
+								0,
+								0,
+								'https://developer.wordpress.org/plugins/wordpress-org/how-your-readme-txt-works/#readme-header-information',
+								7
+							);
+						}
 
-					if ( version_compare( $tested_upto_major, $latest_wordpress_version, '<' ) ) {
-						$this->add_result_error_for_file(
-							$result,
-							sprintf(
-								/* translators: 1: currently used version, 2: latest stable WordPress version, 3: 'Tested up to' */
-								__( '<strong>Tested up to: %1$s &lt; %2$s.</strong><br>The "%3$s" value in your plugin is not set to the current version of WordPress. This means your plugin will not show up in searches, as we require plugins to be compatible and documented as tested up to the most recent version of WordPress.', 'plugin-check' ),
-								$tested_upto_major,
-								$latest_wordpress_version,
-								'Tested up to'
-							),
-							'outdated_tested_upto_header',
-							$readme_file,
-							0,
-							0,
-							'https://developer.wordpress.org/plugins/wordpress-org/how-your-readme-txt-works/#readme-header-information',
-							7
-						);
-					} elseif ( version_compare( $tested_upto_major, number_format( (float) $latest_wordpress_version + 0.1, 1 ), '>' ) ) {
-						$this->add_result_error_for_file(
-							$result,
-							sprintf(
-								/* translators: 1: currently used version, 2: 'Tested up to' */
-								__( '<strong>Tested up to: %1$s.</strong><br>The "%2$s" value in your plugin is not valid. This version of WordPress does not exist (yet).', 'plugin-check' ),
-								$tested_upto_major,
-								'Tested up to'
-							),
-							'nonexistent_tested_upto_header',
-							$readme_file,
-							0,
-							0,
-							'https://developer.wordpress.org/plugins/wordpress-org/how-your-readme-txt-works/#readme-header-information',
-							7
-						);
+						if ( version_compare( $tested_upto_major, $latest_wordpress_version, '<' ) ) {
+							$this->add_result_error_for_file(
+								$result,
+								sprintf(
+									/* translators: 1: currently used version, 2: latest stable WordPress version, 3: 'Tested up to' */
+									__( '<strong>Tested up to: %1$s &lt; %2$s.</strong><br>The "%3$s" value in your plugin is not set to the current version of WordPress. This means your plugin will not show up in searches, as we require plugins to be compatible and documented as tested up to the most recent version of WordPress.', 'plugin-check' ),
+									$tested_upto_major,
+									$latest_wordpress_version,
+									'Tested up to'
+								),
+								'outdated_tested_upto_header',
+								$readme_file,
+								0,
+								0,
+								'https://developer.wordpress.org/plugins/wordpress-org/how-your-readme-txt-works/#readme-header-information',
+								7
+							);
+						} elseif ( version_compare( $tested_upto_major, number_format( (float) $latest_wordpress_version + 0.1, 1 ), '>' ) ) {
+							$this->add_result_error_for_file(
+								$result,
+								sprintf(
+									/* translators: 1: currently used version, 2: 'Tested up to' */
+									__( '<strong>Tested up to: %1$s.</strong><br>The "%2$s" value in your plugin is not valid. This version of WordPress does not exist (yet).', 'plugin-check' ),
+									$tested_upto_major,
+									'Tested up to'
+								),
+								'nonexistent_tested_upto_header',
+								$readme_file,
+								0,
+								0,
+								'https://developer.wordpress.org/plugins/wordpress-org/how-your-readme-txt-works/#readme-header-information',
+								7
+							);
+						}
 					}
 				} else {
 					if ( empty( $parser->{$field_key} ) ) {
@@ -310,12 +315,10 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 	private function check_default_text( Check_Result $result, string $readme_file, $parser ) {
 		$short_description = $parser->short_description;
 		$tags              = $parser->tags;
-		$donate_link       = $parser->donate_link;
 
 		if (
 			in_array( 'tag1', $tags, true )
 			|| str_contains( $short_description, 'Here is a short description of the plugin.' )
-			|| str_contains( $donate_link, '//example.com/' )
 		) {
 			$this->add_result_error_for_file(
 				$result,
@@ -527,6 +530,7 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 	 * @param DotorgParser|PCPParser $parser      The Parser object.
 	 *
 	 * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+	 * @SuppressWarnings(PHPMD.NPathComplexity)
 	 */
 	private function check_for_warnings( Check_Result $result, string $readme_file, $parser ) {
 		$warnings = $parser->warnings ? $parser->warnings : array();
@@ -541,7 +545,7 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 
 		$warning_keys = array_keys( $warnings );
 
-		$latest_wordpress_version = (float) $this->get_wordpress_stable_version();
+		$latest_wordpress_version = $this->get_wordpress_stable_version();
 
 		$warning_details = array(
 			'contributor_ignored'          => array(
@@ -565,8 +569,8 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 					/* translators: 1: plugin header tag; 2: Example version 5.0. 3: Example version 5.1. */
 					__( 'The "%1$s" field was ignored. This field should only contain a valid WordPress version such as "%2$s" or "%3$s".', 'plugin-check' ),
 					'Tested up to',
-					number_format( $latest_wordpress_version, 1 ),
-					number_format( $latest_wordpress_version + 0.1, 1 )
+					! empty( $latest_wordpress_version ) ? number_format( (float) $latest_wordpress_version, 1 ) : '5.0',
+					! empty( $latest_wordpress_version ) ? number_format( (float) $latest_wordpress_version + 0.1, 1 ) : '5.1'
 				),
 				'severity' => 7,
 			),
@@ -575,8 +579,8 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 					/* translators: 1: plugin header tag; 2: Example version 5.0. 3: Example version 4.9. */
 					__( 'The "%1$s" field was ignored. This field should only contain a valid WordPress version such as "%2$s" or "%3$s".', 'plugin-check' ),
 					'Requires at least',
-					number_format( $latest_wordpress_version, 1 ),
-					number_format( $latest_wordpress_version - 0.1, 1 )
+					! empty( $latest_wordpress_version ) ? number_format( (float) $latest_wordpress_version, 1 ) : '5.0',
+					! empty( $latest_wordpress_version ) ? number_format( (float) $latest_wordpress_version - 0.1, 1 ) : '4.9'
 				),
 			),
 			'too_many_tags'                => array(
@@ -678,11 +682,11 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 			return;
 		}
 
-		if ( ! ( filter_var( $donate_link, FILTER_VALIDATE_URL ) === $donate_link && str_starts_with( $donate_link, 'http' ) ) ) {
-			$this->add_result_warning_for_file(
+		if ( ! $this->is_valid_url( $donate_link ) ) {
+			$this->add_result_error_for_file(
 				$result,
 				sprintf(
-					/* translators: %s: plugin header field */
+					/* translators: %s: readme header field */
 					__( 'The "%s" header in the readme file must be a valid URL.', 'plugin-check' ),
 					'Donate link'
 				),
@@ -691,7 +695,30 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 				0,
 				0,
 				'https://developer.wordpress.org/plugins/wordpress-org/how-your-readme-txt-works/#readme-header-information',
-				6
+				7
+			);
+
+			return;
+		}
+
+		// Check for discouraged domain.
+		$matched_domain = $this->find_discouraged_domain( $donate_link );
+
+		if ( $matched_domain ) {
+			$this->add_result_error_for_file(
+				$result,
+				sprintf(
+					/* translators: 1: readme header field, 2: domain */
+					__( 'The "%1$s" header in the readme file is not valid. Discouraged domain "%2$s" found. This is the URL for users to support plugin author financially.', 'plugin-check' ),
+					'Donate link',
+					esc_html( $matched_domain )
+				),
+				'readme_invalid_donate_link_domain',
+				$readme_file,
+				0,
+				0,
+				'https://developer.wordpress.org/plugins/wordpress-org/how-your-readme-txt-works/#readme-header-information',
+				7
 			);
 		}
 	}
