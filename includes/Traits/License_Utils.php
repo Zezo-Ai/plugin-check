@@ -55,6 +55,7 @@ trait License_Utils {
 		$license = str_replace( ' version ', 'v', $license );
 		$license = preg_replace( '/GPL\s*[-|\.]*\s*[v]?([0-9])(\.[0])?/i', 'GPL$1', $license, 1 );
 		$license = preg_replace( '/Apache.*?([0-9])(\.[0])?/i', 'Apache$1', $license );
+		$license = preg_replace( '/(The\s+)?Unlicense/i', 'Unlicense', $license );
 		$license = str_replace( '.', '', $license );
 
 		return $license;

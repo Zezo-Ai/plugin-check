@@ -75,6 +75,9 @@ class License_Utils_Tests extends WP_UnitTestCase {
 
 			array( 'MPL-1.0', 'MPL10' ),
 			array( 'MPL-2.0', 'MPL20' ),
+
+			array( 'The Unlicense', 'Unlicense' ),
+			array( 'Unlicense', 'Unlicense' ),
 		);
 	}
 
