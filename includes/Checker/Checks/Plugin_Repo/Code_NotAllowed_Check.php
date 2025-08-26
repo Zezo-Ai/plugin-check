@@ -1,6 +1,6 @@
 <?php
 /**
- * Class Code_Obfuscation_Check.
+ * Class Code_NotAllowed_Check.
  *
  * @package plugin-check
  */
@@ -19,7 +19,7 @@ use WordPress\Plugin_Check\Traits\Stable_Check;
  *
  * @since 1.0.0
  */
-class Code_Obfuscation_Check extends Abstract_File_Check {
+class Code_NotAllowed_Check extends Abstract_File_Check {
 
 	use Amend_Check_Result;
 	use Stable_Check;
@@ -84,6 +84,8 @@ class Code_Obfuscation_Check extends Abstract_File_Check {
 		if ( $this->flags & self::TYPE_IONCUBE ) {
 			$this->look_for_ioncube( $result, $php_files );
 		}
+
+		$this->look_for_five_star_reviews( $result, $php_files );
 	}
 
 	/**
@@ -178,6 +180,33 @@ class Code_Obfuscation_Check extends Abstract_File_Check {
 			}
 		}
 	}
+
+	/**
+	 * Looks for five star reviews and amends the given result with an error if found.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param Check_Result $result    The check result to amend, including the plugin context to check.
+	 * @param array        $php_files List of absolute PHP file paths.
+	 */
+	protected function look_for_five_star_reviews( Check_Result $result, array $php_files ) {
+		$files = self::files_preg_match_all( '/reviews\/\?filter=5/', $php_files );
+		if ( ! empty( $files ) ) {
+			foreach ( $files as $file ) {
+				$this->add_result_error_for_file(
+					$result,
+					__( 'Linking directly to 5 stars reviews is not allowed.', 'plugin-check' ),
+					'five_star_reviews_detected',
+					$file['file'],
+					$file['line'],
+					$file['column'],
+					'https://developer.wordpress.org/plugins/wordpress-org/detailed-plugin-guidelines/',
+					7
+				);
+			}
+		}
+	}
+
 	/**
 	 * Gets the description for the check.
 	 *
