@@ -41,28 +41,28 @@ final class FeatureContext extends WP_CLI_FeatureContext {
 	/**
 	 * @BeforeFeature
 	 */
-	public static function store_feature( BeforeFeatureScope $scope ) {
+	public static function store_feature( BeforeFeatureScope $scope ): void {
 		self::$feature = $scope->getFeature();
 	}
 
 	/**
 	 * @BeforeScenario
 	 */
-	public function store_scenario( BeforeScenarioScope $scope ) {
+	public function store_scenario( BeforeScenarioScope $scope ): void {
 		$this->scenario = $scope->getScenario();
 	}
 
 	/**
 	 * @AfterScenario
 	 */
-	public function forget_scenario( AfterScenarioScope $scope ) {
+	public function forget_scenario( AfterScenarioScope $scope ): void {
 		$this->scenario = null;
 	}
 
 	/**
 	 * @AfterFeature
 	 */
-	public static function forget_feature( AfterFeatureScope $scope ) {
+	public static function forget_feature( AfterFeatureScope $scope ): void {
 		self::$feature = null;
 	}
 
