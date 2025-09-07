@@ -63,7 +63,7 @@ class Plugin_Content_Check extends Abstract_File_Check {
 	 * @param array        $php_files List of absolute PHP file paths.
 	 */
 	protected function look_for_five_star_reviews( Check_Result $result, array $php_files ) {
-		$files = self::files_preg_match_all( '/(?:https?:\/\/)?(?:wordpress\.org|wp\.org)\/.*reviews\/\?filter=5/', $php_files );
+		$files = self::files_preg_match_all( '/(?:https?:\/\/)?(?:wordpress\.org|wp\.org)\/.*reviews\/\?filter=5/', $php_files ); // phpcs:ignore WordPress.WP.CapitalPDangit.MisspelledInText
 		if ( ! empty( $files ) ) {
 			foreach ( $files as $file ) {
 				$this->add_result_error_for_file(
