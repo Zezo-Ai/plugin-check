@@ -14,3 +14,5 @@
 
 
 $review = 'https://wordpress.org/support/plugin/hello-dolly/reviews/?filter=5';
+$review_bad = 'https://wp.org/support/plugin/hello-dolly/reviews/?filter=5';
+$review_ok = 'https://example.com/reviews/?filter=5'; // This is a valid review URL.

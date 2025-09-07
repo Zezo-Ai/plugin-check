@@ -20,9 +20,11 @@ class Plugin_Content_Check_Tests extends WP_UnitTestCase {
 		$errors = $check_result->get_errors();
 
 		$this->assertNotEmpty( $errors );
-		$this->assertSame( 1, $check_result->get_error_count() );
+		$this->assertSame( 2, $check_result->get_error_count() );
 
-		$this->assertTrue( isset( $errors['load.php'][16][61][0] ) );
-		$this->assertSame( 'five_star_reviews_detected', $errors['load.php'][16][61][0]['code'] );
+		$this->assertTrue( isset( $errors['load.php'][16][12][0] ) );
+		$this->assertSame( 'five_star_reviews_detected', $errors['load.php'][16][12][0]['code'] );
+		$this->assertTrue( isset( $errors['load.php'][17][16][0] ) );
+		$this->assertSame( 'five_star_reviews_detected', $errors['load.php'][17][16][0]['code'] );
 	}
 }
