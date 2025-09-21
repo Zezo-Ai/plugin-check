@@ -60,8 +60,9 @@ class Plugin_Review_PHPCS_Check_Tests extends WP_UnitTestCase {
 		// Check for PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound error on Line no 41 and column no at 1.
 		$this->assertSame( 'PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound', $errors['load.php'][41][1][0]['code'] );
 
-		// Check for existing forbidden functions
+		// Check for existing forbidden functions.
 		$forbidden_found = 'Generic.PHP.ForbiddenFunctions.Found';
+
 		// Check for Generic.PHP.ForbiddenFunctions.create_functionFound error on Line no 44 and column no at 1.
 		$this->assertSame( $forbidden_found, $errors['load.php'][44][1][0]['code'] );
 
