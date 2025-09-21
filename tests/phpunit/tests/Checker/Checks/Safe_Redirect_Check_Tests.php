@@ -43,7 +43,7 @@ class Safe_Redirect_Check_Tests extends WP_UnitTestCase {
 
 	public function test_run_with_errors() {
 		$safe_redirect_check = new Safe_Redirect_Check();
-		$check_context       = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-safe-redirect-errors/load.php' );
+		$check_context       = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-safe-redirect/safe-redirect-errors.php' );
 		$check_result        = new Check_Result( $check_context );
 
 		$safe_redirect_check->run( $check_result );
@@ -63,7 +63,7 @@ class Safe_Redirect_Check_Tests extends WP_UnitTestCase {
 
 	public function test_run_without_errors() {
 		$safe_redirect_check = new Safe_Redirect_Check();
-		$check_context       = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-safe-redirect-without-errors/load.php' );
+		$check_context       = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-safe-redirect/load.php' );
 		$check_result        = new Check_Result( $check_context );
 
 		$safe_redirect_check->run( $check_result );
@@ -79,7 +79,7 @@ class Safe_Redirect_Check_Tests extends WP_UnitTestCase {
 
 	public function test_run_with_multiple_unsafe_redirects() {
 		$safe_redirect_check = new Safe_Redirect_Check();
-		$check_context       = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-safe-redirect-multiple-errors/load.php' );
+		$check_context       = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-safe-redirect/safe-redirect-multiple-errors.php' );
 		$check_result        = new Check_Result( $check_context );
 
 		$safe_redirect_check->run( $check_result );
@@ -102,7 +102,7 @@ class Safe_Redirect_Check_Tests extends WP_UnitTestCase {
 
 	public function test_run_with_mixed_redirects() {
 		$safe_redirect_check = new Safe_Redirect_Check();
-		$check_context       = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-safe-redirect-mixed/load.php' );
+		$check_context       = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-safe-redirect/safe-redirect-mixed.php' );
 		$check_result        = new Check_Result( $check_context );
 
 		$safe_redirect_check->run( $check_result );
