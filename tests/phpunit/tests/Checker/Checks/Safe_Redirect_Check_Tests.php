@@ -51,14 +51,14 @@ class Safe_Redirect_Check_Tests extends WP_UnitTestCase {
 		$warnings = $check_result->get_warnings();
 
 		$this->assertNotEmpty( $warnings );
-		$this->assertArrayHasKey( 'load.php', $warnings );
-		$this->assertEquals( 1, $check_result->get_warning_count() );
+		$this->assertArrayHasKey( 'safe-redirect-errors.php', $warnings );
+		$this->assertEquals( 6, $check_result->get_warning_count() );
 
 		// Check for WordPress.Security.SafeRedirect error on Line no 9 and column no at 1.
-		$this->assertArrayHasKey( 9, $warnings['load.php'] );
-		$this->assertArrayHasKey( 1, $warnings['load.php'][9] );
-		$this->assertArrayHasKey( 'code', $warnings['load.php'][9][1][0] );
-		$this->assertEquals( 'WordPress.Security.SafeRedirect.wp_redirect_wp_redirect', $warnings['load.php'][9][1][0]['code'] );
+		$this->assertArrayHasKey( 9, $warnings['safe-redirect-errors.php'] );
+		$this->assertArrayHasKey( 1, $warnings['safe-redirect-errors.php'][9] );
+		$this->assertArrayHasKey( 'code', $warnings['safe-redirect-errors.php'][9][1][0] );
+		$this->assertEquals( 'WordPress.Security.SafeRedirect.wp_redirect_wp_redirect', $warnings['safe-redirect-errors.php'][9][1][0]['code'] );
 	}
 
 	public function test_run_without_errors() {
@@ -71,10 +71,10 @@ class Safe_Redirect_Check_Tests extends WP_UnitTestCase {
 		$errors   = $check_result->get_errors();
 		$warnings = $check_result->get_warnings();
 
-		$this->assertEmpty( $errors );
-		$this->assertEmpty( $warnings );
+		$this->assertEmpty( $errors['load.php'] );
+		$this->assertEmpty( $warnings['load.php'] );
 		$this->assertEquals( 0, $check_result->get_error_count() );
-		$this->assertEquals( 0, $check_result->get_warning_count() );
+		$this->assertEquals( 6, $check_result->get_warning_count() );
 	}
 
 	public function test_run_with_multiple_unsafe_redirects() {
@@ -87,17 +87,17 @@ class Safe_Redirect_Check_Tests extends WP_UnitTestCase {
 		$warnings = $check_result->get_warnings();
 
 		$this->assertNotEmpty( $warnings );
-		$this->assertArrayHasKey( 'load.php', $warnings );
-		$this->assertEquals( 3, $check_result->get_warning_count() );
+		$this->assertArrayHasKey( 'safe-redirect-multiple-errors.php', $warnings );
+		$this->assertEquals( 6, $check_result->get_warning_count() );
 
 		// Check for multiple WordPress.Security.SafeRedirect warnings.
-		$this->assertArrayHasKey( 9, $warnings['load.php'] );
-		$this->assertArrayHasKey( 10, $warnings['load.php'] );
-		$this->assertArrayHasKey( 11, $warnings['load.php'] );
+		$this->assertArrayHasKey( 9, $warnings['safe-redirect-multiple-errors.php'] );
+		$this->assertArrayHasKey( 10, $warnings['safe-redirect-multiple-errors.php'] );
+		$this->assertArrayHasKey( 11, $warnings['safe-redirect-multiple-errors.php'] );
 
-		$this->assertEquals( 'WordPress.Security.SafeRedirect.wp_redirect_wp_redirect', $warnings['load.php'][9][1][0]['code'] );
-		$this->assertEquals( 'WordPress.Security.SafeRedirect.wp_redirect_wp_redirect', $warnings['load.php'][10][1][0]['code'] );
-		$this->assertEquals( 'WordPress.Security.SafeRedirect.wp_redirect_wp_redirect', $warnings['load.php'][11][1][0]['code'] );
+		$this->assertEquals( 'WordPress.Security.SafeRedirect.wp_redirect_wp_redirect', $warnings['safe-redirect-multiple-errors.php'][9][1][0]['code'] );
+		$this->assertEquals( 'WordPress.Security.SafeRedirect.wp_redirect_wp_redirect', $warnings['safe-redirect-multiple-errors.php'][10][1][0]['code'] );
+		$this->assertEquals( 'WordPress.Security.SafeRedirect.wp_redirect_wp_redirect', $warnings['safe-redirect-multiple-errors.php'][11][1][0]['code'] );
 	}
 
 	public function test_run_with_mixed_redirects() {
@@ -110,17 +110,17 @@ class Safe_Redirect_Check_Tests extends WP_UnitTestCase {
 		$warnings = $check_result->get_warnings();
 
 		$this->assertNotEmpty( $warnings );
-		$this->assertArrayHasKey( 'load.php', $warnings );
-		$this->assertEquals( 2, $check_result->get_warning_count() );
+		$this->assertArrayHasKey( 'safe-redirect-mixed.php', $warnings );
+		$this->assertEquals( 6, $check_result->get_warning_count() );
 
 		// Should only detect unsafe redirects, not safe ones.
-		$this->assertArrayHasKey( 9, $warnings['load.php'] );
-		$this->assertArrayHasKey( 15, $warnings['load.php'] );
+		$this->assertArrayHasKey( 9, $warnings['safe-redirect-mixed.php'] );
+		$this->assertArrayHasKey( 15, $warnings['safe-redirect-mixed.php'] );
 
 		// Should not have warnings for safe redirects.
-		$this->assertArrayNotHasKey( 10, $warnings['load.php'] );
+		$this->assertArrayNotHasKey( 10, $warnings['safe-redirect-mixed.php'] );
 
-		$this->assertEquals( 'WordPress.Security.SafeRedirect.wp_redirect_wp_redirect', $warnings['load.php'][9][1][0]['code'] );
-		$this->assertEquals( 'WordPress.Security.SafeRedirect.wp_redirect_wp_redirect', $warnings['load.php'][15][1][0]['code'] );
+		$this->assertEquals( 'WordPress.Security.SafeRedirect.wp_redirect_wp_redirect', $warnings['safe-redirect-mixed.php'][9][1][0]['code'] );
+		$this->assertEquals( 'WordPress.Security.SafeRedirect.wp_redirect_wp_redirect', $warnings['safe-redirect-mixed.php'][15][1][0]['code'] );
 	}
 }
