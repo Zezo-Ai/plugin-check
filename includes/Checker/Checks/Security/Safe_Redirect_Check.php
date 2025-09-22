@@ -15,7 +15,7 @@ use WordPress\Plugin_Check\Traits\Stable_Check;
 /**
  * Check for running WordPress safe redirect sniffs.
  *
- * @since 1.0.0
+ * @since 1.7.0
  */
 class Safe_Redirect_Check extends Abstract_PHP_CodeSniffer_Check {
 
@@ -26,7 +26,7 @@ class Safe_Redirect_Check extends Abstract_PHP_CodeSniffer_Check {
 	 *
 	 * Every check must have at least one category.
 	 *
-	 * @since 1.0.0
+	 * @since 1.7.0
 	 *
 	 * @return array The categories for the check.
 	 */
@@ -40,7 +40,7 @@ class Safe_Redirect_Check extends Abstract_PHP_CodeSniffer_Check {
 	/**
 	 * Returns an associative array of arguments to pass to PHPCS.
 	 *
-	 * @since 1.0.0
+	 * @since 1.7.0
 	 *
 	 * @param Check_Result $result The check result to amend, including the plugin context to check.
 	 * @return array An associative array of PHPCS CLI arguments.
@@ -58,7 +58,7 @@ class Safe_Redirect_Check extends Abstract_PHP_CodeSniffer_Check {
 	 *
 	 * Every check must have a short description explaining what the check does.
 	 *
-	 * @since 1.1.0
+	 * @since 1.7.0
 	 *
 	 * @return string Description.
 	 */
@@ -71,7 +71,7 @@ class Safe_Redirect_Check extends Abstract_PHP_CodeSniffer_Check {
 	 *
 	 * Every check must have a URL with further information about the check.
 	 *
-	 * @since 1.1.0
+	 * @since 1.7.0
 	 *
 	 * @return string The documentation URL.
 	 */
@@ -82,7 +82,7 @@ class Safe_Redirect_Check extends Abstract_PHP_CodeSniffer_Check {
 	/**
 	 * Amends the given result with a message for the specified file, including error information.
 	 *
-	 * @since 1.3.0
+	 * @since 1.7.0
 	 *
 	 * @param Check_Result $result   The check result to amend, including the plugin context to check.
 	 * @param bool         $error    Whether it is an error or notice.
@@ -95,15 +95,7 @@ class Safe_Redirect_Check extends Abstract_PHP_CodeSniffer_Check {
 	 * @param int          $severity Severity level. Default is 5.
 	 */
 	protected function add_result_message_for_file( Check_Result $result, $error, $message, $code, $file, $line = 0, $column = 0, string $docs = '', $severity = 5 ) {
-		switch ( $code ) {
-			case 'WordPress.Security.SafeRedirect.UnsafeRedirect':
-				$docs = __( 'https://developer.wordpress.org/reference/functions/wp_safe_redirect/', 'plugin-check' );
-				break;
-
-			default:
-				$docs = __( 'https://developer.wordpress.org/reference/functions/wp_safe_redirect/', 'plugin-check' );
-				break;
-		}
+		$docs = __( 'https://developer.wordpress.org/reference/functions/wp_safe_redirect/', 'plugin-check' );
 
 		parent::add_result_message_for_file( $result, $error, $message, $code, $file, $line, $column, $docs, $severity );
 	}

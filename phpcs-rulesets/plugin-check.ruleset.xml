@@ -25,11 +25,6 @@
 		<type>warning</type>
 	</rule>
 
-	<!-- Safe Redirect rules -->
-	<rule ref="WordPress.Security.SafeRedirect">
-		<type>warning</type>
-	</rule>
-
 	<!-- Prohibit the use of the backtick operator. -->
 	<rule ref="Generic.PHP.BacktickOperator">
 		<severity>7</severity>

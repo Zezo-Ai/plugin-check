@@ -13,8 +13,8 @@ use WordPress\Plugin_Check\Checker\Checks\Security\Safe_Redirect_Check;
 class Safe_Redirect_Check_Tests extends WP_UnitTestCase {
 
 	public function test_get_categories() {
-		$safe_redirect_check = new Safe_Redirect_Check();
-		$categories          = $safe_redirect_check->get_categories();
+		$check      = new Safe_Redirect_Check();
+		$categories = $check->get_categories();
 
 		$this->assertIsArray( $categories );
 		$this->assertContains( Check_Categories::CATEGORY_SECURITY, $categories );
@@ -23,8 +23,8 @@ class Safe_Redirect_Check_Tests extends WP_UnitTestCase {
 	}
 
 	public function test_get_description() {
-		$safe_redirect_check = new Safe_Redirect_Check();
-		$description         = $safe_redirect_check->get_description();
+		$check       = new Safe_Redirect_Check();
+		$description = $check->get_description();
 
 		$this->assertIsString( $description );
 		$this->assertNotEmpty( $description );
@@ -33,8 +33,8 @@ class Safe_Redirect_Check_Tests extends WP_UnitTestCase {
 	}
 
 	public function test_get_documentation_url() {
-		$safe_redirect_check = new Safe_Redirect_Check();
-		$documentation_url   = $safe_redirect_check->get_documentation_url();
+		$check             = new Safe_Redirect_Check();
+		$documentation_url = $check->get_documentation_url();
 
 		$this->assertIsString( $documentation_url );
 		$this->assertNotEmpty( $documentation_url );
@@ -42,11 +42,11 @@ class Safe_Redirect_Check_Tests extends WP_UnitTestCase {
 	}
 
 	public function test_run_with_errors() {
-		$safe_redirect_check = new Safe_Redirect_Check();
-		$check_context       = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-safe-redirect/safe-redirect-errors.php' );
-		$check_result        = new Check_Result( $check_context );
+		$check         = new Safe_Redirect_Check();
+		$check_context = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-safe-redirect/safe-redirect-errors.php' );
+		$check_result  = new Check_Result( $check_context );
 
-		$safe_redirect_check->run( $check_result );
+		$check->run( $check_result );
 
 		$warnings = $check_result->get_warnings();
 
@@ -62,11 +62,11 @@ class Safe_Redirect_Check_Tests extends WP_UnitTestCase {
 	}
 
 	public function test_run_without_errors() {
-		$safe_redirect_check = new Safe_Redirect_Check();
-		$check_context       = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-safe-redirect/load.php' );
-		$check_result        = new Check_Result( $check_context );
+		$check         = new Safe_Redirect_Check();
+		$check_context = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-safe-redirect/load.php' );
+		$check_result  = new Check_Result( $check_context );
 
-		$safe_redirect_check->run( $check_result );
+		$check->run( $check_result );
 
 		$errors   = $check_result->get_errors();
 		$warnings = $check_result->get_warnings();
@@ -78,11 +78,11 @@ class Safe_Redirect_Check_Tests extends WP_UnitTestCase {
 	}
 
 	public function test_run_with_multiple_unsafe_redirects() {
-		$safe_redirect_check = new Safe_Redirect_Check();
-		$check_context       = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-safe-redirect/safe-redirect-multiple-errors.php' );
-		$check_result        = new Check_Result( $check_context );
+		$check         = new Safe_Redirect_Check();
+		$check_context = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-safe-redirect/safe-redirect-multiple-errors.php' );
+		$check_result  = new Check_Result( $check_context );
 
-		$safe_redirect_check->run( $check_result );
+		$check->run( $check_result );
 
 		$warnings = $check_result->get_warnings();
 
@@ -101,11 +101,11 @@ class Safe_Redirect_Check_Tests extends WP_UnitTestCase {
 	}
 
 	public function test_run_with_mixed_redirects() {
-		$safe_redirect_check = new Safe_Redirect_Check();
-		$check_context       = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-safe-redirect/safe-redirect-mixed.php' );
-		$check_result        = new Check_Result( $check_context );
+		$check         = new Safe_Redirect_Check();
+		$check_context = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-safe-redirect/safe-redirect-mixed.php' );
+		$check_result  = new Check_Result( $check_context );
 
-		$safe_redirect_check->run( $check_result );
+		$check->run( $check_result );
 
 		$warnings = $check_result->get_warnings();
 
