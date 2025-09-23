@@ -110,13 +110,13 @@ final class Runtime_Environment_Setup {
 		$prefix_cleanup = $this->amend_db_base_prefix();
 		$tables         = $wpdb->tables();
 
-		// Remove tables not starting with the prefix.
-		$tables = array_filter(
-			$tables,
-			function ( $table ) use ( $wpdb ) {
-				return str_starts_with( $table, $wpdb->prefix );
-			}
-		);
+		// Do not remove custom tables (which by definition weren't duplicated because we cannot override constants).
+		if ( isset( $tables['users'] ) && defined( 'CUSTOM_USER_TABLE' ) && CUSTOM_USER_TABLE === $tables['users'] ) {
+			unset( $tables['users'] );
+		}
+		if ( isset( $tables['usermeta'] ) && defined( 'CUSTOM_USER_META_TABLE' ) && CUSTOM_USER_META_TABLE === $tables['usermeta'] ) {
+			unset( $tables['usermeta'] );
+		}
 
 		foreach ( $tables as $table ) {
 			$wpdb->query( "DROP TABLE IF EXISTS `$table`" ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
