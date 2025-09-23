@@ -255,7 +255,7 @@ class Log {
 						$type = 'class';
 						break;
 					case 'Stmt_Function':
-						$contextual_stmts = $this->parser_object->get_contextual_STMTS_for_element( $abstract )['context'];
+						$contextual_stmts = $this->parser_object->get_contextual_stmts_for_element( $abstract )['context'];
 						if ( $contextual_stmts !== $abstract->stmts && ! empty( $abstract->stmts ) ) {
 							$continue = false; // Function declared inside another function.
 						}

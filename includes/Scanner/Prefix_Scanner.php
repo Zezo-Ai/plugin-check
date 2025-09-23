@@ -386,7 +386,7 @@ class Prefix_Scanner extends PHP_Parser {
 			if ( ! empty( $consts ) ) {
 				foreach ( $consts as $const ) {
 					$is_inside_element_type = null;
-					$contextual_stmts       = $this->get_contextual_STMTS_for_element( $const, $is_inside_element_type )['context'];
+					$contextual_stmts       = $this->get_contextual_stmts_for_element( $const, $is_inside_element_type )['context'];
 					if ( ! empty( $contextual_stmts ) && ! in_array( $is_inside_element_type, array( 'PhpParser\Node\Stmt\Class_', 'PhpParser\Node\Stmt\Interface_' ), true ) ) { // Ignore const inside a class.
 						if ( isset( $const->name ) && method_exists( $const->name, '__toString' ) && ! empty( $const->name->__toString() ) ) {
 							$this->log()->add_var_expr( $const, 'prefixes_code', true );
