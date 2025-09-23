@@ -36,7 +36,7 @@ final class Checks {
 	 *
 	 * @throws Exception Thrown when check fails with critical error.
 	 */
-	public function run_checks( Check_Context $context, array $checks, Check_Runner $runner = null ) {
+	public function run_checks( Check_Context $context, array $checks, ?Check_Runner $runner = null ) {
 		$result = new Check_Result( $context );
 
 		// Run the checks.

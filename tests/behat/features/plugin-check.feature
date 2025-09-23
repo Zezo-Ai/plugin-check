@@ -887,3 +887,27 @@ Feature: Test that the WP-CLI command works.
       """
       plugin_header_unsupported_plugin_name
       """
+
+  Scenario: Check plugin with missing Text Domain plugin header field
+    Given a WP install with the Plugin Check plugin
+    And a wp-content/plugins/foo-sample/foo-sample.php file:
+      """
+      <?php
+      /**
+       * Plugin Name: Foo Sample
+       * Plugin URI: https://foo-sample.com
+       * Description: Custom plugin.
+       * Version: 0.1.0
+       * Author: WordPress Performance Team
+       * Author URI: https://make.wordpress.org/performance/
+       * License: GPL-2.0+
+       * License URI: http://www.gnu.org/licenses/gpl-2.0.txt
+       */
+
+      """
+
+    When I run the WP-CLI command `plugin check foo-sample --slug=custom-slug`
+    Then STDOUT should not contain:
+      """
+      textdomain_mismatch
+      """

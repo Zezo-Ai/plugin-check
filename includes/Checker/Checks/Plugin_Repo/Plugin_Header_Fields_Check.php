@@ -542,18 +542,7 @@ class Plugin_Header_Fields_Check implements Static_Check {
 	 * @return string[] Array of file header values keyed by header name.
 	 */
 	private function get_plugin_data( $plugin_file, $default_headers ) {
-		$plugin_data = get_file_data( $plugin_file, $default_headers, 'plugin' );
-
-		// If no text domain is defined fall back to the plugin slug.
-		if ( ! $plugin_data['TextDomain'] ) {
-			$plugin_slug = dirname( plugin_basename( $plugin_file ) );
-
-			if ( '.' !== $plugin_slug && ! str_contains( $plugin_slug, '/' ) ) {
-				$plugin_data['TextDomain'] = $plugin_slug;
-			}
-		}
-
-		return $plugin_data;
+		return get_file_data( $plugin_file, $default_headers, 'plugin' );
 	}
 
 	/**
