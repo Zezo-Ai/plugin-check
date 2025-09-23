@@ -146,8 +146,7 @@ final class Runtime_Environment_Setup {
 	 * @since 1.7.0
 	 *
 	 * @param array $tables List of WordPress database tables.
-	 *
-	 * @return array List of WordPress database tables to delete
+	 * @return array List of WordPress database tables to delete.
 	 */
 	private function ignore_custom_tables( array $tables ): array {
 		// Do not remove custom tables (which by definition weren't duplicated because we cannot override constants).
