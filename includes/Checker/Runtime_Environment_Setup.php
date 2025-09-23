@@ -110,13 +110,7 @@ final class Runtime_Environment_Setup {
 		$prefix_cleanup = $this->amend_db_base_prefix();
 		$tables         = $wpdb->tables();
 
-		// Do not remove custom tables (which by definition weren't duplicated because we cannot override constants).
-		if ( isset( $tables['users'] ) && defined( 'CUSTOM_USER_TABLE' ) && CUSTOM_USER_TABLE === $tables['users'] ) {
-			unset( $tables['users'] );
-		}
-		if ( isset( $tables['usermeta'] ) && defined( 'CUSTOM_USER_META_TABLE' ) && CUSTOM_USER_META_TABLE === $tables['usermeta'] ) {
-			unset( $tables['usermeta'] );
-		}
+		$tables = $this->ignore_custom_tables( $tables );
 
 		foreach ( $tables as $table ) {
 			$wpdb->query( "DROP TABLE IF EXISTS `$table`" ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
@@ -144,6 +138,26 @@ final class Runtime_Environment_Setup {
 				$wp_filesystem->delete( WP_CONTENT_DIR . '/object-cache.php' );
 			}
 		}
+	}
+
+	/**
+	 * Excludes the custom user and user meta tables from the list of tables to be deleted.
+	 *
+	 * @since 1.7.0
+	 *
+	 * @param array $tables List of WordPress database tables.
+	 *
+	 * @return array List of WordPress database tables to delete
+	 */
+	private function ignore_custom_tables( array $tables ): array {
+		// Do not remove custom tables (which by definition weren't duplicated because we cannot override constants).
+		if ( isset( $tables['users'] ) && defined( 'CUSTOM_USER_TABLE' ) && CUSTOM_USER_TABLE === $tables['users'] ) {
+			unset( $tables['users'] );
+		}
+		if ( isset( $tables['usermeta'] ) && defined( 'CUSTOM_USER_META_TABLE' ) && CUSTOM_USER_META_TABLE === $tables['usermeta'] ) {
+			unset( $tables['usermeta'] );
+		}
+		return $tables;
 	}
 
 	/**
