@@ -17,7 +17,7 @@ use WordPress\Plugin_Check\Traits\Stable_Check;
 /**
  * Check for prefixing.
  *
- * @since 1.6.0
+ * @since 1.7.0
  */
 class Prefixing_Check extends Abstract_PHP_CodeSniffer_Check {
 
@@ -30,7 +30,7 @@ class Prefixing_Check extends Abstract_PHP_CodeSniffer_Check {
 	 *
 	 * Every check must have at least one category.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 *
 	 * @return array The categories for the check.
 	 */
@@ -41,7 +41,7 @@ class Prefixing_Check extends Abstract_PHP_CodeSniffer_Check {
 	/**
 	 * Returns an associative array of arguments to pass to PHPCS.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 *
 	 * @param Check_Result $result The check result to amend, including the plugin context to check.
 	 * @return array An associative array of PHPCS CLI arguments.
@@ -69,7 +69,7 @@ class Prefixing_Check extends Abstract_PHP_CodeSniffer_Check {
 	 *
 	 * Every check must have a short description explaining what the check does.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 *
 	 * @return string Description.
 	 */
@@ -82,7 +82,7 @@ class Prefixing_Check extends Abstract_PHP_CodeSniffer_Check {
 	 *
 	 * Every check must have a URL with further information about the check.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 *
 	 * @return string The documentation URL.
 	 */

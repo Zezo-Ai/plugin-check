@@ -23,7 +23,7 @@ use PhpParser\PrettyPrinter\Standard;
 /**
  * Abstract class responsible for parsing files, logging, and processing Abstract Syntax Tree (AST) data.
  *
- * @since 1.6.0
+ * @since 1.7.0
  *
  * @SuppressWarnings(PHPMD.CyclomaticComplexity)
  * @SuppressWarnings(PHPMD.ExcessiveClassLength)
@@ -34,7 +34,7 @@ abstract class PHP_Parser {
 	/**
 	 * A collection of all file paths to be processed.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 * @var   string[]
 	 */
 	public array $files = array();
@@ -42,7 +42,7 @@ abstract class PHP_Parser {
 	/**
 	 * A collection of PHP file paths to be processed.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 * @var   string[]
 	 */
 	public array $files_php = array();
@@ -50,7 +50,7 @@ abstract class PHP_Parser {
 	/**
 	 * The full path of the file currently being processed.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 * @var   string
 	 */
 	public string $file = '';
@@ -58,7 +58,7 @@ abstract class PHP_Parser {
 	/**
 	 * The relative path of the file currently being processed.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 * @var   string
 	 */
 	public string $file_relative = '';
@@ -66,7 +66,7 @@ abstract class PHP_Parser {
 	/**
 	 * Flag to indicate if parent nodes need to be fetched during AST traversal.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 * @var   bool
 	 */
 	public bool $needs_get_parents = false;
@@ -74,7 +74,7 @@ abstract class PHP_Parser {
 	/**
 	 * Flag to indicate if sibling nodes need to be fetched during AST traversal.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 * @var   bool
 	 */
 	public bool $needs_get_siblings = false;
@@ -82,7 +82,7 @@ abstract class PHP_Parser {
 	/**
 	 * Flag to indicate if the service is initialized and ready.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 * @var   bool
 	 */
 	private bool $ready = false;
@@ -90,7 +90,7 @@ abstract class PHP_Parser {
 	/**
 	 * The PHP-Parser NodeFinder instance.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 * @var   \PhpParser\NodeFinder
 	 */
 	public $node_finder;
@@ -98,7 +98,7 @@ abstract class PHP_Parser {
 	/**
 	 * The Abstract Syntax Tree (AST) of the current file.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 * @var \PhpParser\Node[]|null
 	 */
 	public $stmts;
@@ -106,7 +106,7 @@ abstract class PHP_Parser {
 	/**
 	 * The logging object instance.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 * @var   Log
 	 */
 	private Log $log_object;
@@ -114,7 +114,7 @@ abstract class PHP_Parser {
 	/**
 	 * The PHP-Parser PrettyPrinter instance.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 * @var   \PhpParser\PrettyPrinter\Standard
 	 */
 	public $pretty_printer;
@@ -122,7 +122,7 @@ abstract class PHP_Parser {
 	/**
 	 * List of known sanitization functions.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 * @var   string[]
 	 */
 	public array $sanitize_functions;
@@ -130,7 +130,7 @@ abstract class PHP_Parser {
 	/**
 	 * List of known escaping functions.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 * @var   string[]
 	 */
 	public array $escaping_functions;
@@ -138,7 +138,7 @@ abstract class PHP_Parser {
 	/**
 	 * Cache for `define()` statement objects found during parsing.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 * @var   array
 	 */
 	private array $defines_objects = array();
@@ -146,7 +146,7 @@ abstract class PHP_Parser {
 	/**
 	 * Flag to indicate if the `define()` statement objects have been loaded.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 * @var   bool
 	 */
 	private bool $defines_objects_loaded = false;
@@ -154,7 +154,7 @@ abstract class PHP_Parser {
 	/**
 	 * Cache for variable assignment expressions to avoid re-parsing.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 * @var   array
 	 */
 	private array $cache_assignments_expressions_for_variable = array();
@@ -162,7 +162,7 @@ abstract class PHP_Parser {
 	/**
 	 * Constructor.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 */
 	public function __construct() {
 		$this->log_object         = new Log( $this );
@@ -173,7 +173,7 @@ abstract class PHP_Parser {
 	/**
 	 * Loads files.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 *
 	 * @param array $files Array of files.
 	 * @return void
@@ -192,7 +192,7 @@ abstract class PHP_Parser {
 	/**
 	 * Returns relative path.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 *
 	 * @param string $file File path.
 	 * @return string Relative path.
@@ -366,7 +366,7 @@ abstract class PHP_Parser {
 	/**
 	 * Checks if the given object is of one of the specified classes.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 *
 	 * @param object $object_name The object to check.
 	 * @param array  $classes An array of class names to check against.

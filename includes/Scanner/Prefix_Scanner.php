@@ -22,7 +22,7 @@ class Prefix_Scanner extends PHP_Parser {
 	/**
 	 * List of common prefixes that should be avoided to ensure consistent naming conventions and avoid conflicts.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 * @var array
 	 */
 	private array $not_valid_prefixes;
@@ -30,7 +30,7 @@ class Prefix_Scanner extends PHP_Parser {
 	/**
 	 * Possible prefixes.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 * @var array
 	 */
 	private array $possible_prefixes = array();
@@ -38,7 +38,7 @@ class Prefix_Scanner extends PHP_Parser {
 	/**
 	 * Processes items.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 * @var array
 	 */
 	private array $already_processed_items = array();
@@ -46,7 +46,7 @@ class Prefix_Scanner extends PHP_Parser {
 	/**
 	 * Number of namespaces encountered.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 * @var int
 	 */
 	private int $namespaces_count = 0;
@@ -54,7 +54,7 @@ class Prefix_Scanner extends PHP_Parser {
 	/**
 	 * Final potential prefixes.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 * @var array
 	 */
 	public array $final_prefixes = array();
@@ -62,7 +62,7 @@ class Prefix_Scanner extends PHP_Parser {
 	/**
 	 * Array of actions.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 * @var array
 	 */
 	private array $wp_actions;
@@ -70,7 +70,7 @@ class Prefix_Scanner extends PHP_Parser {
 	/**
 	 * Array of filters.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 * @var array
 	 */
 	private array $wp_filters;
@@ -78,7 +78,7 @@ class Prefix_Scanner extends PHP_Parser {
 	/**
 	 * Array of constants.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 * @var array
 	 */
 	private array $wp_constants;
@@ -86,7 +86,7 @@ class Prefix_Scanner extends PHP_Parser {
 	/**
 	 * Array of global variables.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 * @var array
 	 */
 	private array $wp_globals;
@@ -94,7 +94,7 @@ class Prefix_Scanner extends PHP_Parser {
 	/**
 	 * Array of options.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 * @var array
 	 */
 	private array $wp_options;
@@ -102,7 +102,7 @@ class Prefix_Scanner extends PHP_Parser {
 	/**
 	 * Array of transients.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 * @var array
 	 */
 	private array $wp_transients;
@@ -110,7 +110,7 @@ class Prefix_Scanner extends PHP_Parser {
 	/**
 	 * Array of site transients.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 * @var array
 	 */
 	private array $wp_site_transients;
@@ -118,7 +118,7 @@ class Prefix_Scanner extends PHP_Parser {
 	/**
 	 * Constructor.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 */
 	public function __construct() {
 		parent::__construct();
@@ -145,7 +145,7 @@ class Prefix_Scanner extends PHP_Parser {
 	/**
 	 * Loads files.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 *
 	 * @param array $files Array of file paths.
 	 * @return void
@@ -165,7 +165,7 @@ class Prefix_Scanner extends PHP_Parser {
 	/**
 	 * Loads file.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 *
 	 * @param string $file File path.
 	 * @return null
@@ -179,7 +179,7 @@ class Prefix_Scanner extends PHP_Parser {
 	/**
 	 * Executes a series of logging operations including tracking function calls, method calls, global declarations, and abstraction declarations.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 *
 	 * @return void
 	 */
@@ -193,7 +193,7 @@ class Prefix_Scanner extends PHP_Parser {
 	/**
 	 * Detects calls to specific functions (specially a set of WordPress functions) and adds them to the log with the argument that is of interest regarding prefixes.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 *
 	 * @return void
 	 */
@@ -313,7 +313,7 @@ class Prefix_Scanner extends PHP_Parser {
 	/**
 	 * Detects calls to specific methods and adds them to the log.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 *
 	 * @return void
 	 */
@@ -339,7 +339,7 @@ class Prefix_Scanner extends PHP_Parser {
 	/**
 	 * Detects calls to globals variables and adds them to the log.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 *
 	 * @return void
 	 */
@@ -402,7 +402,7 @@ class Prefix_Scanner extends PHP_Parser {
 	 * interfaces, and traits found in the provided statements. If a namespace is defined, only namespace declarations
 	 * are logged and the process stops early. Otherwise, all abstraction types are processed and logged accordingly.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 *
 	 * @return void
 	 */
@@ -437,7 +437,7 @@ class Prefix_Scanner extends PHP_Parser {
 	 * Handles various cases depending on the type of the call and the potential string element provided.
 	 * Also manages additional context logging if the expression is found on a different line.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 *
 	 * @param object $call         The call expression node to be logged.
 	 * @param mixed  $expr         The expression associated with the call.
@@ -473,7 +473,7 @@ class Prefix_Scanner extends PHP_Parser {
 	 * common prefixes, and logging any potential issues or observations regarding
 	 * prefix usage.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 *
 	 * @param string $logid The identifier of the log to analyze.
 	 * @return void
@@ -560,7 +560,7 @@ class Prefix_Scanner extends PHP_Parser {
 	/**
 	 * Checks if the given log item's name has a specific special prefix and updates the possible prefixes list accordingly.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 *
 	 * @param array $log_item The log item array containing information such as 'name' and 'type'.
 	 * @param mixed $key      The key used to associate the log item's type with the special prefix in the internal structure.
@@ -587,7 +587,7 @@ class Prefix_Scanner extends PHP_Parser {
 	 * removing items that meet exclusion criteria while maintaining a record
 	 * of unidentified prefix items.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 *
 	 * @param array $log The log array to process, containing items with keys such as 'name', 'type', and 'text'.
 	 * @return array The filtered log array after processing and exclusion of specific items.
@@ -621,7 +621,7 @@ class Prefix_Scanner extends PHP_Parser {
 	/**
 	 * Converts the 'name' value of each item in the provided array to lowercase if it exists.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 *
 	 * @param array $log An array of items, where each item may contain a 'name' key.
 	 * @return array The modified array with the 'name' values converted to lowercase.
@@ -639,7 +639,7 @@ class Prefix_Scanner extends PHP_Parser {
 	 * Determines the minimum prefix quantity based on the provided log count,
 	 * using varying thresholds and calculations depending on the value of the input.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 *
 	 * @param int $log_count The total number of logs for which the minimum prefix quantity is to be calculated.
 	 * @return int The calculated minimum prefix quantity.
@@ -662,7 +662,7 @@ class Prefix_Scanner extends PHP_Parser {
 	 * Handles namespace counting, formats complete names, splits prefixes using a specified separator,
 	 * and checks for multi-part prefixes.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 *
 	 * @param array  $item Array containing details, including 'name' and 'type', used to process and identify prefixes.
 	 * @param string $key Key associated with the prefix being processed.
@@ -699,7 +699,7 @@ class Prefix_Scanner extends PHP_Parser {
 	 * Updates the possible prefixes by adding the type of the provided item
 	 * under the specified prefix and key.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 *
 	 * @param array  $item   The item containing data, including its type, to be added.
 	 * @param string $key    The key under which the item type is stored for the prefix.
@@ -715,7 +715,7 @@ class Prefix_Scanner extends PHP_Parser {
 	 * filtering invalid or warning prefixes, removing redundant incidences,
 	 * ordering prefixes by length, and removing prefixes that are contained within others.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 *
 	 * @param array $common_prefixes An associative array where keys are prefixes and values are arrays of incidences.
 	 * @param array $log A log array that tracks incidences and messages related to prefixes.
@@ -772,7 +772,7 @@ class Prefix_Scanner extends PHP_Parser {
 	 * based on normalization criteria. It returns an associative array containing
 	 * the group of similar prefixes along with their total incidences.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 *
 	 * @param array $common_prefixes An associative array where keys are prefixes and values are arrays of incidences for each prefix.
 	 * @return array An associative array where each key is a prefix and the corresponding value is an array containing similar prefixes and the total number of incidences.
@@ -801,7 +801,7 @@ class Prefix_Scanner extends PHP_Parser {
 	/**
 	 * Normalizes a given prefix by removing underscores and hyphens.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 *
 	 * @param string $prefix The original prefix to be normalized.
 	 * @return string The normalized prefix.

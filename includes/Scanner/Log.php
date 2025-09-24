@@ -10,14 +10,14 @@ namespace WordPress\Plugin_Check\Scanner;
 /**
  * Log class.
  *
- * @since 1.6.0
+ * @since 1.7.0
  */
 class Log {
 
 	/**
 	 * An array of logs.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 * @var array
 	 */
 	private array $log = array();
@@ -25,7 +25,7 @@ class Log {
 	/**
 	 * An array of logs with longer location.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 * @var array
 	 */
 	private array $log_longer_location = array();
@@ -33,7 +33,7 @@ class Log {
 	/**
 	 * An instance of the PHP_Parser class.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 * @var PHP_Parser
 	 */
 	public PHP_Parser $parser_object;
@@ -41,7 +41,7 @@ class Log {
 	/**
 	 * An array of strings to be removed from the log.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 * @var string[]
 	 */
 	private array $remove_strings_from_log = array();
@@ -49,7 +49,7 @@ class Log {
 	/**
 	 * Constructor.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 *
 	 * @param PHP_Parser $parser An instance of the PHP_Parser class.
 	 */
@@ -60,7 +60,7 @@ class Log {
 	/**
 	 * Adds a log entry with the specified details to the log storage.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 *
 	 * @param int    $line_number The line number where the log entry originates from.
 	 * @param string $text        The text content of the log entry.
@@ -105,7 +105,7 @@ class Log {
 	/**
 	 * Generates a unique identifier for a specific line in a file.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 *
 	 * @param int $line_number The line number for which the identifier is generated.
 	 * @return string The MD5 hash representing the unique identifier for the line.
@@ -128,7 +128,7 @@ class Log {
 	/**
 	 * Merges the provided log data with the existing log data for the specified identifier.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 *
 	 * @param array  $log   The log data to merge.
 	 * @param string $logid The identifier of the log to merge into. Defaults to 'default'.
@@ -145,7 +145,7 @@ class Log {
 	/**
 	 * Adds a namespace to the log for a given identifier.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 *
 	 * @param object $namespace_obj The namespace object to add, which should include a name property.
 	 * @param string $logid         The identifier of the log where the namespace information should be added.
@@ -169,7 +169,7 @@ class Log {
 	/**
 	 * Adds a function call expression to the log and assigns metadata for processing.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 *
 	 * @param object $func_call   The function call expression object to be logged.
 	 * @param int    $argposition The position of the argument in the function call to extract metadata from.
@@ -201,7 +201,7 @@ class Log {
 	/**
 	 * Adds a variable expression to the log and records its metadata.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 *
 	 * @param object $var_call The variable expression object to be logged. It is expected to be an instance of specific PhpParser classes.
 	 * @param string $logid    The identifier of the log where the variable expression should be added.
@@ -237,7 +237,7 @@ class Log {
 	/**
 	 * Adds abstraction declarations like classes, functions, interfaces, or traits to the log with specific context and type.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 *
 	 * @param array  $abstractions An array of abstraction objects to process and add to the log. Each object must have a type and name.
 	 * @param string $logid The identifier for the log to which the abstraction declarations will be added.
@@ -291,7 +291,7 @@ class Log {
 	/**
 	 * Checks whether log data exists for the specified log identifier.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 *
 	 * @param string $logid The identifier of the log to check for existence. Defaults to 'default'.
 	 * @return bool True if log data exists for the provided identifier, otherwise false.
@@ -303,7 +303,7 @@ class Log {
 	/**
 	 * Constructs a location string consisting of the relative file path and line number.
 	 *
-	 * @since 1.6.0
+	 * @since 1.7.0
 	 *
 	 * @param int    $line_number   The line number in the file.
 	 * @param string $file_relative The file path relative to the root directory.

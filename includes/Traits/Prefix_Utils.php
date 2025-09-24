@@ -17,7 +17,7 @@ use WordPress\Plugin_Check\Utilities\Plugin_Request_Utility;
 /**
  * Trait for prefix utilities.
  *
- * @since 1.4.0
+ * @since 1.7.0
  */
 trait Prefix_Utils {
 
@@ -32,7 +32,7 @@ trait Prefix_Utils {
 	/**
 	 * Returns potential prefixes.
 	 *
-	 * @since 1.4.0
+	 * @since 1.7.0
 	 *
 	 * @param Check_Result $result The check result to amend.
 	 * @return array An array of potential prefixes.
@@ -52,7 +52,7 @@ trait Prefix_Utils {
 	/**
 	 * Gets the list of all files that are part of the given plugin.
 	 *
-	 * @since 1.4.0
+	 * @since 1.7.0
 	 *
 	 * @param Check_Context $plugin Context for the plugin to check.
 	 * @return array List of absolute file paths.
