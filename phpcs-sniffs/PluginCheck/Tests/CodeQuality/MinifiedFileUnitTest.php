@@ -8,8 +8,8 @@
 namespace PluginCheckCS\PluginCheck\Tests\CodeQuality;
 
 use PHP_CodeSniffer\Config;
-use PHP_CodeSniffer\Ruleset;
 use PHP_CodeSniffer\Files\LocalFile;
+use PHP_CodeSniffer\Ruleset;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -30,7 +30,7 @@ final class MinifiedFileUnitTest extends TestCase {
 
 		$foundErrors = $phpcsFile->getErrors();
 
-		// Should have no tokenizer errors
+		// Should have no tokenizer errors.
 		$hasTokenizerError = false;
 		foreach ( $foundErrors as $line => $errors ) {
 			foreach ( $errors as $column => $errorList ) {
@@ -64,7 +64,7 @@ final class MinifiedFileUnitTest extends TestCase {
 
 			$foundErrors = $phpcsFile->getErrors();
 
-			// Check if tokenizer error was found
+			// Check if tokenizer error was found.
 			$hasTokenizerError = false;
 			foreach ( $foundErrors as $line => $errors ) {
 				foreach ( $errors as $column => $errorList ) {
@@ -77,14 +77,13 @@ final class MinifiedFileUnitTest extends TestCase {
 				}
 			}
 
-			// Note: Not all minified files will break the tokenizer
-			// This is expected behavior
+			// Note: Not all minified files will break the tokenizer.
+			// This is expected behavior.
 			$this->assertTrue( true, 'Test completed' );
 
 		} catch ( \Exception $e ) {
-			// If tokenizer completely fails, that's also acceptable
+			// If tokenizer completely fails, that's also acceptable.
 			$this->assertTrue( true, 'Tokenizer failed as expected for severely minified file' );
 		}
 	}
 }
-
