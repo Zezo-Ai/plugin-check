@@ -85,7 +85,7 @@ class VerifyNonceSniff implements Sniff {
 		}
 
 		$phpcsFile->addError(
-			__( 'Unconditional call to wp_verify_nonce(). The return value must be checked. Consider using check_admin_referer() instead, which exits on failure.', 'plugin-check' ),
+			'Unconditional call to wp_verify_nonce(). The return value must be checked. Consider using check_admin_referer() instead, which exits on failure.',
 			$stackPtr,
 			'UnsafeVerifyNonceStatement'
 		);
@@ -135,7 +135,7 @@ class VerifyNonceSniff implements Sniff {
 		}
 
 		$phpcsFile->addError(
-			__( 'Unsafe use of wp_verify_nonce() with AND operator. If the condition before && is false, the nonce is never checked. Move nonce verification before the && or use separate conditions.', 'plugin-check' ),
+			'Unsafe use of wp_verify_nonce() with AND operator. If the condition before && is false, the nonce is never checked. Move nonce verification before the && or use separate conditions.',
 			$stackPtr,
 			'UnsafeVerifyNonceNegatedAnd'
 		);
@@ -199,7 +199,7 @@ class VerifyNonceSniff implements Sniff {
 		}
 
 		$phpcsFile->addWarning(
-			__( 'Possibly unsafe use of wp_verify_nonce() with OR operator. If the condition before || is true, the nonce is never checked. Move nonce verification before the || or use separate conditions.', 'plugin-check' ),
+			'Possibly unsafe use of wp_verify_nonce() with OR operator. If the condition before || is true, the nonce is never checked. Move nonce verification before the || or use separate conditions.',
 			$stackPtr,
 			'UnsafeVerifyNonceElse'
 		);
