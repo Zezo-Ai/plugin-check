@@ -1,6 +1,6 @@
 <?php
 /**
- * PluginCheck\Sniffs\Security\VerifyNonceSniff
+ * PluginCheckCS\PluginCheck\Sniffs\Security\VerifyNonceSniff
  *
  * Detects buggy and insecure usage patterns of wp_verify_nonce().
  *
@@ -8,7 +8,7 @@
  * @since 1.7.0
  */
 
-namespace PluginCheck\Sniffs\Security;
+namespace PluginCheckCS\PluginCheck\Sniffs\Security;
 
 use PHP_CodeSniffer\Files\File;
 use PHP_CodeSniffer\Sniffs\Sniff;
