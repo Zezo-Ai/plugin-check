@@ -10,4 +10,10 @@
 	<rule ref="PluginCheck.CodeAnalysis.RequiredFunctionParameters" />
 	<rule ref="PluginCheck.CodeAnalysis.SettingSanitization" />
 
+	<!-- Minified PHP files are not allowed without the original source -->
+	<rule ref="Internal.Tokenizer.Exception">
+		<message>File appears to be minified or has tokenization errors and cannot be processed. If this is a minified file, the non-minified source file must be included in the plugin.</message>
+		<type>error</type>
+	</rule>
+
 </ruleset>
