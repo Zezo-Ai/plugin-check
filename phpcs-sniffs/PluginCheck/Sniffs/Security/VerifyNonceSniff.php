@@ -32,7 +32,7 @@ class VerifyNonceSniff implements Sniff {
 	 * @return array
 	 */
 	public function register() {
-		return Tokens::$functionNameTokens;
+		return array_merge( array( T_IF, T_ELSEIF ), Tokens::$functionNameTokens );
 	}
 
 	/**
@@ -48,13 +48,45 @@ class VerifyNonceSniff implements Sniff {
 	public function process( File $phpcsFile, $stackPtr ) {
 		$tokens = $phpcsFile->getTokens();
 
-		if ( 'wp_verify_nonce' !== $tokens[ $stackPtr ]['content'] ) {
+		// Check for wp_verify_nonce function calls.
+		if ( 'wp_verify_nonce' === $tokens[ $stackPtr ]['content'] ) {
+			$this->check_unconditional_call( $phpcsFile, $stackPtr, $tokens );
 			return;
 		}
 
-		$this->check_unconditional_call( $phpcsFile, $stackPtr, $tokens );
-		$this->check_unsafe_negated_and( $phpcsFile, $stackPtr, $tokens );
-		$this->check_unsafe_or_condition( $phpcsFile, $stackPtr, $tokens );
+		// Check for if/elseif conditions.
+		if ( ! isset( $tokens[ $stackPtr ]['parenthesis_opener'] ) || ! isset( $tokens[ $stackPtr ]['parenthesis_closer'] ) ) {
+			return;
+		}
+
+		$opener = $tokens[ $stackPtr ]['parenthesis_opener'];
+		$closer = $tokens[ $stackPtr ]['parenthesis_closer'];
+
+		// Find wp_verify_nonce in this condition.
+		$noncePtr = $this->find_function_call( $phpcsFile, $opener, $closer, 'wp_verify_nonce' );
+		if ( false === $noncePtr ) {
+			return;
+		}
+
+		// Check if it's negated.
+		$isNegated = $this->is_negated( $phpcsFile, $noncePtr, $tokens );
+
+		// Check for isset() && !wp_verify_nonce() pattern.
+		if ( $isNegated && $this->has_isset_before_and( $phpcsFile, $noncePtr, $opener, $tokens ) ) {
+			$this->report_isset_and_negated_nonce( $phpcsFile, $noncePtr );
+			return;
+		}
+
+		// Check for !isset() && !wp_verify_nonce() pattern.
+		if ( $isNegated && $this->has_negated_isset_before_and( $phpcsFile, $noncePtr, $opener, $tokens ) ) {
+			$this->report_negated_isset_and_negated_nonce( $phpcsFile, $noncePtr, $stackPtr, $tokens );
+			return;
+		}
+
+		// Check for $something || wp_verify_nonce() with else that exits.
+		if ( ! $isNegated && $this->has_or_before_nonce( $phpcsFile, $noncePtr, $opener, $tokens ) ) {
+			$this->check_or_condition_with_else( $phpcsFile, $noncePtr, $stackPtr, $tokens );
+		}
 	}
 
 	/**
@@ -84,124 +116,15 @@ class VerifyNonceSniff implements Sniff {
 			return;
 		}
 
+		// Check if it's a ternary expression.
+		if ( $this->is_in_ternary( $phpcsFile, $stackPtr, $tokens ) ) {
+			return;
+		}
+
 		$phpcsFile->addError(
 			'Unconditional call to wp_verify_nonce(). The return value must be checked. Consider using check_admin_referer() instead, which exits on failure.',
 			$stackPtr,
 			'UnsafeVerifyNonceStatement'
-		);
-	}
-
-	/**
-	 * Check for unsafe negated nonce with AND operator.
-	 * Pattern: if ( $something && !wp_verify_nonce() )
-	 *
-	 * @since 1.7.0
-	 *
-	 * @param File  $phpcsFile The file being scanned.
-	 * @param int   $stackPtr  The position of the current token.
-	 * @param array $tokens    The stack of tokens.
-	 *
-	 * @return void
-	 */
-	private function check_unsafe_negated_and( File $phpcsFile, $stackPtr, $tokens ) {
-		if ( ! $this->is_in_conditional( $phpcsFile, $stackPtr, $tokens ) ) {
-			return;
-		}
-
-		if ( ! $this->is_negated( $phpcsFile, $stackPtr, $tokens ) ) {
-			return;
-		}
-
-		$condition = $this->get_condition_ptr( $phpcsFile, $stackPtr, $tokens );
-		if ( false === $condition ) {
-			return;
-		}
-
-		// Find AND operator before the nonce check.
-		$andPtr = $this->find_boolean_operator_before( $phpcsFile, $stackPtr, $tokens, $condition, array( T_BOOLEAN_AND, T_LOGICAL_AND ) );
-
-		if ( false === $andPtr ) {
-			return;
-		}
-
-		// Check if the condition scope contains error terminator.
-		if ( ! $this->scope_contains_error_terminator( $phpcsFile, $condition, $tokens ) ) {
-			return;
-		}
-
-		// Check if there's another wp_verify_nonce() before the AND.
-		if ( $this->has_verify_nonce_before_operator( $phpcsFile, $andPtr, $tokens, $condition ) ) {
-			return;
-		}
-
-		$phpcsFile->addError(
-			'Unsafe use of wp_verify_nonce() with AND operator. If the condition before && is false, the nonce is never checked. Move nonce verification before the && or use separate conditions.',
-			$stackPtr,
-			'UnsafeVerifyNonceNegatedAnd'
-		);
-	}
-
-	/**
-	 * Check for unsafe OR condition.
-	 * Pattern: if ( $something || wp_verify_nonce() ) { } else { exit; }
-	 *
-	 * @since 1.7.0
-	 *
-	 * @param File  $phpcsFile The file being scanned.
-	 * @param int   $stackPtr  The position of the current token.
-	 * @param array $tokens    The stack of tokens.
-	 *
-	 * @return void
-	 */
-	private function check_unsafe_or_condition( File $phpcsFile, $stackPtr, $tokens ) {
-		if ( ! $this->is_in_conditional( $phpcsFile, $stackPtr, $tokens ) ) {
-			return;
-		}
-
-		if ( $this->is_negated( $phpcsFile, $stackPtr, $tokens ) ) {
-			return;
-		}
-
-		$condition = $this->get_condition_ptr( $phpcsFile, $stackPtr, $tokens );
-		if ( false === $condition ) {
-			return;
-		}
-
-		// Find OR operator.
-		$orPtr = $this->find_boolean_operator_before( $phpcsFile, $stackPtr, $tokens, $condition, array( T_BOOLEAN_OR, T_LOGICAL_OR ) );
-
-		if ( false === $orPtr ) {
-			return;
-		}
-
-		// Check if there's an else clause.
-		if ( ! isset( $tokens[ $condition ]['scope_closer'] ) ) {
-			return;
-		}
-
-		$elsePtr = $phpcsFile->findNext( T_ELSE, $tokens[ $condition ]['scope_closer'], null, false );
-		if ( false === $elsePtr ) {
-			return;
-		}
-
-		// Check if else scope contains error terminator.
-		if ( ! isset( $tokens[ $elsePtr ]['scope_opener'] ) || ! isset( $tokens[ $elsePtr ]['scope_closer'] ) ) {
-			return;
-		}
-
-		if ( ! $this->scope_contains_error_terminator_in_range( $phpcsFile, $tokens[ $elsePtr ]['scope_opener'], $tokens[ $elsePtr ]['scope_closer'], $tokens ) ) {
-			return;
-		}
-
-		// Check if there's another wp_verify_nonce() in the condition.
-		if ( $this->has_verify_nonce_before_operator( $phpcsFile, $orPtr, $tokens, $condition ) ) {
-			return;
-		}
-
-		$phpcsFile->addWarning(
-			'Possibly unsafe use of wp_verify_nonce() with OR operator. If the condition before || is true, the nonce is never checked. Move nonce verification before the || or use separate conditions.',
-			$stackPtr,
-			'UnsafeVerifyNonceElse'
 		);
 	}
 
@@ -217,56 +140,22 @@ class VerifyNonceSniff implements Sniff {
 	 * @return bool
 	 */
 	private function is_in_conditional( File $phpcsFile, $stackPtr, $tokens ) {
-		$condition = $this->get_condition_ptr( $phpcsFile, $stackPtr, $tokens );
-		return false !== $condition;
-	}
-
-	/**
-	 * Get the condition pointer (if, elseif, etc.) for the current token.
-	 *
-	 * @since 1.7.0
-	 *
-	 * @param File  $phpcsFile The file being scanned.
-	 * @param int   $stackPtr  The position of the current token.
-	 * @param array $tokens    The stack of tokens.
-	 *
-	 * @return int|false
-	 */
-	private function get_condition_ptr( File $phpcsFile, $stackPtr, $tokens ) {
-		$conditionTypes = array( T_IF, T_ELSEIF );
-
-		foreach ( $tokens[ $stackPtr ]['conditions'] as $condPtr => $condType ) {
-			if ( in_array( $condType, $conditionTypes, true ) ) {
-				return $condPtr;
-			}
-		}
+		// Check if we're inside an if/elseif/while/for condition.
+		$conditions = array( T_IF, T_ELSEIF, T_WHILE, T_FOR, T_FOREACH );
 
 		// Look backward for a condition.
 		$openParen = $phpcsFile->findPrevious( T_OPEN_PARENTHESIS, $stackPtr - 1 );
 		if ( false !== $openParen && isset( $tokens[ $openParen ]['parenthesis_owner'] ) ) {
 			$owner = $tokens[ $openParen ]['parenthesis_owner'];
-			if ( in_array( $tokens[ $owner ]['code'], $conditionTypes, true ) ) {
-				return $owner;
+			if ( in_array( $tokens[ $owner ]['code'], $conditions, true ) ) {
+				// Check if we're between the parentheses.
+				if ( isset( $tokens[ $openParen ]['parenthesis_closer'] ) && $stackPtr < $tokens[ $openParen ]['parenthesis_closer'] ) {
+					return true;
+				}
 			}
 		}
 
 		return false;
-	}
-
-	/**
-	 * Check if the wp_verify_nonce() call is negated.
-	 *
-	 * @since 1.7.0
-	 *
-	 * @param File  $phpcsFile The file being scanned.
-	 * @param int   $stackPtr  The position of the current token.
-	 * @param array $tokens    The stack of tokens.
-	 *
-	 * @return bool
-	 */
-	private function is_negated( File $phpcsFile, $stackPtr, $tokens ) {
-		$prev = $phpcsFile->findPrevious( Tokens::$emptyTokens, $stackPtr - 1, null, true );
-		return false !== $prev && T_BOOLEAN_NOT === $tokens[ $prev ]['code'];
 	}
 
 	/**
@@ -307,25 +196,167 @@ class VerifyNonceSniff implements Sniff {
 	}
 
 	/**
-	 * Find boolean operator before the current position.
+	 * Check if it's in a ternary expression.
 	 *
 	 * @since 1.7.0
 	 *
-	 * @param File  $phpcsFile   The file being scanned.
-	 * @param int   $stackPtr    The position of the current token.
-	 * @param array $tokens      The stack of tokens.
-	 * @param int   $condition   The condition pointer.
+	 * @param File  $phpcsFile The file being scanned.
+	 * @param int   $stackPtr  The position of the current token.
+	 * @param array $tokens    The stack of tokens.
+	 *
+	 * @return bool
+	 */
+	private function is_in_ternary( File $phpcsFile, $stackPtr, $tokens ) {
+		// Look for a ternary operator after the function call.
+		$closeParen = $phpcsFile->findNext( T_CLOSE_PARENTHESIS, $stackPtr );
+		if ( false === $closeParen ) {
+			return false;
+		}
+
+		$semicolon = $phpcsFile->findNext( T_SEMICOLON, $closeParen );
+		if ( false === $semicolon ) {
+			return false;
+		}
+
+		for ( $i = $closeParen; $i < $semicolon; $i++ ) {
+			if ( T_INLINE_THEN === $tokens[ $i ]['code'] ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Find a function call within a range.
+	 *
+	 * @since 1.7.0
+	 *
+	 * @param File   $phpcsFile The file being scanned.
+	 * @param int    $start     Start position.
+	 * @param int    $end       End position.
+	 * @param string $function  Function name to find.
+	 *
+	 * @return int|false
+	 */
+	private function find_function_call( File $phpcsFile, $start, $end, $function ) {
+		$tokens = $phpcsFile->getTokens();
+
+		for ( $i = $start + 1; $i < $end; $i++ ) {
+			if ( isset( $tokens[ $i ]['content'] ) && $function === $tokens[ $i ]['content'] ) {
+				return $i;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Check if wp_verify_nonce() is negated.
+	 *
+	 * @since 1.7.0
+	 *
+	 * @param File  $phpcsFile The file being scanned.
+	 * @param int   $stackPtr  The position of the current token.
+	 * @param array $tokens    The stack of tokens.
+	 *
+	 * @return bool
+	 */
+	private function is_negated( File $phpcsFile, $stackPtr, $tokens ) {
+		$prev = $phpcsFile->findPrevious( Tokens::$emptyTokens, $stackPtr - 1, null, true );
+		return false !== $prev && T_BOOLEAN_NOT === $tokens[ $prev ]['code'];
+	}
+
+	/**
+	 * Check if there's isset() before an AND operator before the nonce check.
+	 *
+	 * @since 1.7.0
+	 *
+	 * @param File  $phpcsFile The file being scanned.
+	 * @param int   $noncePtr  The position of wp_verify_nonce.
+	 * @param int   $opener    The opening parenthesis of the condition.
+	 * @param array $tokens    The stack of tokens.
+	 *
+	 * @return bool
+	 */
+	private function has_isset_before_and( File $phpcsFile, $noncePtr, $opener, $tokens ) {
+		// Find AND operator before nonce.
+		$andPtr = $this->find_operator_before( $phpcsFile, $noncePtr, $opener, $tokens, array( T_BOOLEAN_AND, T_LOGICAL_AND ) );
+		if ( false === $andPtr ) {
+			return false;
+		}
+
+		// Check if there's isset() before the AND.
+		$issetPtr = $this->find_function_call( $phpcsFile, $opener, $andPtr, 'isset' );
+		return false !== $issetPtr;
+	}
+
+	/**
+	 * Check if there's !isset() before an AND operator before the nonce check.
+	 *
+	 * @since 1.7.0
+	 *
+	 * @param File  $phpcsFile The file being scanned.
+	 * @param int   $noncePtr  The position of wp_verify_nonce.
+	 * @param int   $opener    The opening parenthesis of the condition.
+	 * @param array $tokens    The stack of tokens.
+	 *
+	 * @return bool
+	 */
+	private function has_negated_isset_before_and( File $phpcsFile, $noncePtr, $opener, $tokens ) {
+		// Find AND operator before nonce.
+		$andPtr = $this->find_operator_before( $phpcsFile, $noncePtr, $opener, $tokens, array( T_BOOLEAN_AND, T_LOGICAL_AND ) );
+		if ( false === $andPtr ) {
+			return false;
+		}
+
+		// Check if there's isset() before the AND.
+		$issetPtr = $this->find_function_call( $phpcsFile, $opener, $andPtr, 'isset' );
+		if ( false === $issetPtr ) {
+			return false;
+		}
+
+		// Check if isset is negated.
+		return $this->is_negated( $phpcsFile, $issetPtr, $tokens );
+	}
+
+	/**
+	 * Check if there's an OR operator before the nonce check.
+	 *
+	 * @since 1.7.0
+	 *
+	 * @param File  $phpcsFile The file being scanned.
+	 * @param int   $noncePtr  The position of wp_verify_nonce.
+	 * @param int   $opener    The opening parenthesis of the condition.
+	 * @param array $tokens    The stack of tokens.
+	 *
+	 * @return bool
+	 */
+	private function has_or_before_nonce( File $phpcsFile, $noncePtr, $opener, $tokens ) {
+		$orPtr = $this->find_operator_before( $phpcsFile, $noncePtr, $opener, $tokens, array( T_BOOLEAN_OR, T_LOGICAL_OR ) );
+		if ( false === $orPtr ) {
+			return false;
+		}
+
+		// Make sure there's no wp_verify_nonce before the OR.
+		$firstNoncePtr = $this->find_function_call( $phpcsFile, $opener, $orPtr, 'wp_verify_nonce' );
+		return false === $firstNoncePtr;
+	}
+
+	/**
+	 * Find an operator before the current position.
+	 *
+	 * @since 1.7.0
+	 *
+	 * @param File  $phpcsFile     The file being scanned.
+	 * @param int   $stackPtr      The position of the current token.
+	 * @param int   $start         Start position to search from.
+	 * @param array $tokens        The stack of tokens.
 	 * @param array $operatorTypes Array of operator token types to search for.
 	 *
 	 * @return int|false
 	 */
-	private function find_boolean_operator_before( File $phpcsFile, $stackPtr, $tokens, $condition, $operatorTypes ) {
-		if ( ! isset( $tokens[ $condition ]['parenthesis_opener'] ) ) {
-			return false;
-		}
-
-		$start = $tokens[ $condition ]['parenthesis_opener'];
-
+	private function find_operator_before( File $phpcsFile, $stackPtr, $start, $tokens, $operatorTypes ) {
 		for ( $i = $stackPtr - 1; $i > $start; $i-- ) {
 			if ( in_array( $tokens[ $i ]['code'], $operatorTypes, true ) ) {
 				return $i;
@@ -336,31 +367,85 @@ class VerifyNonceSniff implements Sniff {
 	}
 
 	/**
-	 * Check if there's another wp_verify_nonce() before the operator.
+	 * Report isset() && !wp_verify_nonce() pattern.
+	 *
+	 * @since 1.7.0
+	 *
+	 * @param File $phpcsFile The file being scanned.
+	 * @param int  $stackPtr  The position of the current token.
+	 *
+	 * @return void
+	 */
+	private function report_isset_and_negated_nonce( File $phpcsFile, $stackPtr ) {
+		$phpcsFile->addError(
+			'Unsafe use of wp_verify_nonce() with isset() and AND operator. If isset() is false, the nonce is never checked. Use OR operator instead: if ( ! isset(...) || ! wp_verify_nonce(...) )',
+			$stackPtr,
+			'UnsafeVerifyNonceIssetAnd'
+		);
+	}
+
+	/**
+	 * Report !isset() && !wp_verify_nonce() pattern.
 	 *
 	 * @since 1.7.0
 	 *
 	 * @param File  $phpcsFile The file being scanned.
-	 * @param int   $operatorPtr The position of the operator.
+	 * @param int   $stackPtr  The position of the current token.
+	 * @param int   $condPtr   The position of the if/elseif.
 	 * @param array $tokens    The stack of tokens.
-	 * @param int   $condition The condition pointer.
 	 *
-	 * @return bool
+	 * @return void
 	 */
-	private function has_verify_nonce_before_operator( File $phpcsFile, $operatorPtr, $tokens, $condition ) {
-		if ( ! isset( $tokens[ $condition ]['parenthesis_opener'] ) ) {
-			return false;
+	private function report_negated_isset_and_negated_nonce( File $phpcsFile, $stackPtr, $condPtr, $tokens ) {
+		// Check if the condition scope contains error terminator.
+		if ( ! $this->scope_contains_error_terminator( $phpcsFile, $condPtr, $tokens ) ) {
+			return;
 		}
 
-		$start = $tokens[ $condition ]['parenthesis_opener'];
+		$phpcsFile->addError(
+			'Unsafe use of wp_verify_nonce() with !isset() and AND operator. If isset() is true (nonce exists), the nonce is never checked. Use OR operator instead: if ( ! isset(...) || ! wp_verify_nonce(...) )',
+			$stackPtr,
+			'UnsafeVerifyNonceNegatedAnd'
+		);
+	}
 
-		for ( $i = $operatorPtr - 1; $i > $start; $i-- ) {
-			if ( isset( $tokens[ $i ]['content'] ) && 'wp_verify_nonce' === $tokens[ $i ]['content'] ) {
-				return true;
-			}
+	/**
+	 * Check OR condition with else clause.
+	 *
+	 * @since 1.7.0
+	 *
+	 * @param File  $phpcsFile The file being scanned.
+	 * @param int   $stackPtr  The position of wp_verify_nonce.
+	 * @param int   $condPtr   The position of the if/elseif.
+	 * @param array $tokens    The stack of tokens.
+	 *
+	 * @return void
+	 */
+	private function check_or_condition_with_else( File $phpcsFile, $stackPtr, $condPtr, $tokens ) {
+		// Check if there's an else clause.
+		if ( ! isset( $tokens[ $condPtr ]['scope_closer'] ) ) {
+			return;
 		}
 
-		return false;
+		$elsePtr = $phpcsFile->findNext( T_ELSE, $tokens[ $condPtr ]['scope_closer'], null, false );
+		if ( false === $elsePtr ) {
+			return;
+		}
+
+		// Check if else scope contains error terminator.
+		if ( ! isset( $tokens[ $elsePtr ]['scope_opener'] ) || ! isset( $tokens[ $elsePtr ]['scope_closer'] ) ) {
+			return;
+		}
+
+		if ( ! $this->scope_contains_error_terminator_in_range( $phpcsFile, $tokens[ $elsePtr ]['scope_opener'], $tokens[ $elsePtr ]['scope_closer'], $tokens ) ) {
+			return;
+		}
+
+		$phpcsFile->addWarning(
+			'Possibly unsafe use of wp_verify_nonce() with OR operator. If the condition before || is true, the nonce is never checked. Move nonce verification before the || or use separate conditions.',
+			$stackPtr,
+			'UnsafeVerifyNonceElse'
+		);
 	}
 
 	/**
@@ -376,6 +461,11 @@ class VerifyNonceSniff implements Sniff {
 	 */
 	private function scope_contains_error_terminator( File $phpcsFile, $condition, $tokens ) {
 		if ( ! isset( $tokens[ $condition ]['scope_opener'] ) || ! isset( $tokens[ $condition ]['scope_closer'] ) ) {
+			// Check for single-line if without braces.
+			$semicolon = $phpcsFile->findNext( T_SEMICOLON, $condition, null, false );
+			if ( false !== $semicolon ) {
+				return $this->scope_contains_error_terminator_in_range( $phpcsFile, $condition, $semicolon, $tokens );
+			}
 			return false;
 		}
 
