@@ -10,8 +10,8 @@
 
 namespace PluginCheck\Sniffs\Security;
 
-use PHP_CodeSniffer\Sniffs\Sniff;
 use PHP_CodeSniffer\Files\File;
+use PHP_CodeSniffer\Sniffs\Sniff;
 use PHP_CodeSniffer\Util\Tokens;
 
 /**
@@ -234,7 +234,7 @@ class VerifyNonceSniff implements Sniff {
 	 */
 	private function get_condition_ptr( File $phpcsFile, $stackPtr, $tokens ) {
 		$conditionTypes = array( T_IF, T_ELSEIF );
-		
+
 		foreach ( $tokens[ $stackPtr ]['conditions'] as $condPtr => $condType ) {
 			if ( in_array( $condType, $conditionTypes, true ) ) {
 				return $condPtr;
@@ -325,7 +325,7 @@ class VerifyNonceSniff implements Sniff {
 		}
 
 		$start = $tokens[ $condition ]['parenthesis_opener'];
-		
+
 		for ( $i = $stackPtr - 1; $i > $start; $i-- ) {
 			if ( in_array( $tokens[ $i ]['code'], $operatorTypes, true ) ) {
 				return $i;
@@ -379,11 +379,11 @@ class VerifyNonceSniff implements Sniff {
 			return false;
 		}
 
-		return $this->scope_contains_error_terminator_in_range( 
-			$phpcsFile, 
-			$tokens[ $condition ]['scope_opener'], 
-			$tokens[ $condition ]['scope_closer'], 
-			$tokens 
+		return $this->scope_contains_error_terminator_in_range(
+			$phpcsFile,
+			$tokens[ $condition ]['scope_opener'],
+			$tokens[ $condition ]['scope_closer'],
+			$tokens
 		);
 	}
 
@@ -421,4 +421,3 @@ class VerifyNonceSniff implements Sniff {
 		return false;
 	}
 }
-
