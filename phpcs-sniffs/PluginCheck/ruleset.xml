@@ -9,5 +9,6 @@
 	<rule ref="PluginCheck.CodeAnalysis.Offloading" />
 	<rule ref="PluginCheck.CodeAnalysis.RequiredFunctionParameters" />
 	<rule ref="PluginCheck.CodeAnalysis.SettingSanitization" />
+	<rule ref="PluginCheck.Security.DirectDB" />
 
 </ruleset>
