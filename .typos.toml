@@ -5,6 +5,8 @@ extend-ignore-re = [
     "MAGPIE_INITALIZED",
     "setted_site_transient",
     "setted_transient",
+    "stati",
+    "wheres",
 ]
 
 [files]
