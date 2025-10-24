@@ -250,7 +250,6 @@ abstract class PHP_Parser {
 	public function init_file( $file ) {
 		$this->stmts = null;
 		if ( ! file_exists( $file ) ) {
-			echo 'ERROR: File ' . $file . " can't be read.\n";
 			return false;
 		}
 		$this->file          = $file;
@@ -305,7 +304,6 @@ abstract class PHP_Parser {
 					$this->stmts = $traverser->traverse( $this->stmts );
 				}
 			} catch ( Error $error ) {
-				echo $this->file_relative . ": Parse error: {$error->getMessage()}\n";
 				return;
 			}
 		}
@@ -347,7 +345,6 @@ abstract class PHP_Parser {
 					$stmts = $traverser->traverse( $stmts );
 				}
 			} catch ( Error $error ) {
-				echo "Parse error: {$error->getMessage()}\n";
 				return null;
 			}
 		}
