@@ -1023,6 +1023,14 @@ abstract class PHP_Parser {
 	 *                     or an empty string for non-accurate processing when no string is found.
 	 */
 	public function get_possible_string_for_element( $element, &$found_in_same_line = true, $accurate = true, $file = '' ) {
+		if ( ! is_object( $element ) ) {
+			if ( $accurate ) {
+				return false;
+			} else {
+				return '';
+			}
+		}
+
 		$class = get_class( $element );
 
 		switch ( $class ) {
