@@ -15,11 +15,15 @@ use PHPCSUtils\Utils\PassedParameters;
 
 /**
  * Base class for building context-aware escaping checks.
+ *
+ * @since 1.7.0
  */
 abstract class AbstractEscapingCheckSniff extends AbstractSniffHelper {
 
 	/**
 	 * Override these in child classes to list applicable escaping functions etc.
+	 *
+	 * @since 1.7.0
 	 *
 	 * @var array
 	 */
@@ -27,6 +31,8 @@ abstract class AbstractEscapingCheckSniff extends AbstractSniffHelper {
 
 	/**
 	 * Functions that are often mistaken for escaping functions, but are not SQL or HTML safe.
+	 *
+	 * @since 1.7.0
 	 *
 	 * @var array
 	 */
@@ -38,6 +44,8 @@ abstract class AbstractEscapingCheckSniff extends AbstractSniffHelper {
 
 	/**
 	 * Functions that are neither safe nor unsafe. Their output is as safe as the data passed as parameters.
+	 *
+	 * @since 1.7.0
 	 *
 	 * @var array
 	 */
@@ -53,6 +61,8 @@ abstract class AbstractEscapingCheckSniff extends AbstractSniffHelper {
 
 	/**
 	 * Functions with output that can be assumed to be safe. Escaping is always preferred, but alerting on these is unnecessary noise.
+	 *
+	 * @since 1.7.0
 	 *
 	 * @var array
 	 */
@@ -77,6 +87,8 @@ abstract class AbstractEscapingCheckSniff extends AbstractSniffHelper {
 	/**
 	 * Constants that can be assumed safe.
 	 *
+	 * @since 1.7.0
+	 *
 	 * @var array
 	 */
 	protected $safe_constants = array(
@@ -86,6 +98,8 @@ abstract class AbstractEscapingCheckSniff extends AbstractSniffHelper {
 
 	/**
 	 * Superglobals that are definitively not safe because they contain unescaped user input.
+	 *
+	 * @since 1.7.0
 	 *
 	 * @var array
 	 */
@@ -101,6 +115,8 @@ abstract class AbstractEscapingCheckSniff extends AbstractSniffHelper {
 	/**
 	 * Variable names that should only produce a warning when used unescaped.
 	 *
+	 * @since 1.7.0
+	 *
 	 * @var array
 	 */
 	protected $warn_only_parameters = array(
@@ -111,6 +127,8 @@ abstract class AbstractEscapingCheckSniff extends AbstractSniffHelper {
 	 * Variable names that will always produce an error when used unescaped.
 	 * NOTE: If set, ALL OTHER INPUT will default to a warning.
 	 *
+	 * @since 1.7.0
+	 *
 	 * @var array
 	 */
 	protected $error_always_parameters = array(
@@ -120,12 +138,16 @@ abstract class AbstractEscapingCheckSniff extends AbstractSniffHelper {
 	/**
 	 * Keep track of sanitized and unsanitized variables.
 	 *
+	 * @since 1.7.0
+	 *
 	 * @var array
 	 */
 	protected $sanitized_variables = array();
 
 	/**
 	 * Unsanitized variables array.
+	 *
+	 * @since 1.7.0
 	 *
 	 * @var array
 	 */
@@ -134,6 +156,8 @@ abstract class AbstractEscapingCheckSniff extends AbstractSniffHelper {
 	/**
 	 * Used by certain methods for providing extra context.
 	 *
+	 * @since 1.7.0
+	 *
 	 * @var int|null
 	 */
 	protected $methodPtr = null;
@@ -141,11 +165,15 @@ abstract class AbstractEscapingCheckSniff extends AbstractSniffHelper {
 	/**
 	 * Unsafe pointer.
 	 *
+	 * @since 1.7.0
+	 *
 	 * @var int|null
 	 */
 	protected $unsafe_ptr = null;
 	/**
 	 * Unsafe expression.
+	 *
+	 * @since 1.7.0
 	 *
 	 * @var string|null
 	 */
@@ -154,6 +182,8 @@ abstract class AbstractEscapingCheckSniff extends AbstractSniffHelper {
 	/**
 	 * Rule name.
 	 *
+	 * @since 1.7.0
+	 *
 	 * @var string
 	 */
 	protected $rule_name = __CLASS__;
@@ -161,6 +191,8 @@ abstract class AbstractEscapingCheckSniff extends AbstractSniffHelper {
 	/**
 	 * Mark the variable at $stackPtr as being safely sanitized for use in a SQL context.
 	 * $stackPtr must point to a T_VARIABLE. Handles arrays and (maybe) object properties.
+	 *
+	 * @since 1.7.0
 	 *
 	 * @param int      $stackPtr      The position of the variable token.
 	 * @param int|null $assignmentPtr The position of the assignment token.
@@ -196,6 +228,8 @@ abstract class AbstractEscapingCheckSniff extends AbstractSniffHelper {
 	 * Mark the variable at $stackPtr as being unsafe. Opposite of mark_sanitized_var().
 	 * Use this to reset a variable that might previously have been marked as sanitized.
 	 *
+	 * @since 1.7.0
+	 *
 	 * @param int      $stackPtr      The position of the variable token.
 	 * @param int|null $assignmentPtr The position of the assignment token.
 	 * @return bool
@@ -227,6 +261,8 @@ abstract class AbstractEscapingCheckSniff extends AbstractSniffHelper {
 	 * Check if the variable at $stackPtr has been sanitized for SQL in the current scope.
 	 * $stackPtr must point to a T_VARIABLE. Handles arrays and (maybe) object properties.
 	 *
+	 * @since 1.7.0
+	 *
 	 * @param int $stackPtr The position of the variable token.
 	 * @return bool
 	 */
@@ -245,6 +281,8 @@ abstract class AbstractEscapingCheckSniff extends AbstractSniffHelper {
 
 	/**
 	 * Check if the variable named in $variable_name has been safely sanitized in the given context.
+	 *
+	 * @since 1.7.0
 	 *
 	 * @param string $variable_name The variable name.
 	 * @param int    $context The context position.
@@ -288,6 +326,8 @@ abstract class AbstractEscapingCheckSniff extends AbstractSniffHelper {
 	/**
 	 * Unwind the stack to provide an explanation as to why a given variable is considered unsafe.
 	 * It might have been previously assigned to an unescaped value; this is to help tell the user exactly where it went wrong.
+	 *
+	 * @since 1.7.0
 	 *
 	 * @param int $stackPtr The position of the token.
 	 * @param int $limit    The limit for unwinding.
@@ -381,6 +421,8 @@ abstract class AbstractEscapingCheckSniff extends AbstractSniffHelper {
 	 * Return a string representing the unsafe portion of code pointed to by $stackPtr, as returned by check_expression().
 	 * This is necessary because phpcs hobbles the parsing of variables in strings.
 	 *
+	 * @since 1.7.0
+	 *
 	 * @param int $stackPtr The position of the token.
 	 * @return string
 	 */
@@ -423,6 +465,8 @@ abstract class AbstractEscapingCheckSniff extends AbstractSniffHelper {
 	 * We'll consider it safe IFF the first variable in the expression has previously been escaped OR the
 	 * first function call in the expression is an escaping function.
 	 *
+	 * @since 1.7.0
+	 *
 	 * @param int      $stackPtr The position of the token.
 	 * @param int|null $endPtr   The end position.
 	 * @return bool
@@ -443,6 +487,8 @@ abstract class AbstractEscapingCheckSniff extends AbstractSniffHelper {
 	/**
 	 * Find the first unsafe thing in the given expression, if any.
 	 * It's considered safe IFF everything is either escaped or constant.
+	 *
+	 * @since 1.7.0
 	 *
 	 * @param int      $stackPtr The position of the token.
 	 * @param int|null $endPtr   The end position.
@@ -605,6 +651,8 @@ abstract class AbstractEscapingCheckSniff extends AbstractSniffHelper {
 	 * Is $stackPtr a function call or other statement that requires escaped data?
 	 * Override this in child classes as needed.
 	 *
+	 * @since 1.7.0
+	 *
 	 * @param int $stackPtr The position of the token.
 	 * @return int Returns a pointer to the method call that requires escaping, if relevant.
 	 */
@@ -623,6 +671,8 @@ abstract class AbstractEscapingCheckSniff extends AbstractSniffHelper {
 
 	/**
 	 * Is a variable name one that should only produce a warning when it is used unescaped?
+	 *
+	 * @since 1.7.0
 	 *
 	 * @param string $parameter_name The parameter name.
 	 * @return bool
@@ -651,6 +701,8 @@ abstract class AbstractEscapingCheckSniff extends AbstractSniffHelper {
 	/**
 	 * Is an expression one that should only produce a warning when it is used unescaped?
 	 *
+	 * @since 1.7.0
+	 *
 	 * @param string $expression_string The expression string.
 	 * @return bool
 	 */
@@ -661,6 +713,8 @@ abstract class AbstractEscapingCheckSniff extends AbstractSniffHelper {
 
 	/**
 	 * Processes this test, when one of its tokens is encountered.
+	 *
+	 * @since 1.7.0
 	 *
 	 * @param int $stackPtr The position of the current token in the stack.
 	 * @return int|void Integer stack pointer to skip forward or void to continue normal file processing.

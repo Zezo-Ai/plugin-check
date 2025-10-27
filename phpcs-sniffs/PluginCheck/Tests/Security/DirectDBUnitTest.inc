@@ -3,9 +3,9 @@
 // This is not a real plugin. Do not try to run this code.
 // This merely contains intentionally INSECURE and UNSAFE examples of php code for testing.
 
-// TODO: turn this into unit tests
+// Seriously, this should never be run.
 
-return false; // Seriously, this should never be run.
+return false;
 
 function insecure_wpdb_query_1( $foo ) {
 	global $wpdb;

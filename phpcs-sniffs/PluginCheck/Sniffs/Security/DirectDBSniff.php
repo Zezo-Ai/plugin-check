@@ -2,8 +2,8 @@
 /**
  * DirectDBSniff
  *
- * Based on code from {@link https://github.com/WordPress/WordPress-Coding-Standards}
- * which is licensed under {@link https://opensource.org/licenses/MIT}.
+ * Based on code from {@link https://github.com/WordPress/wporg-code-analysis}
+ * which is licensed under {@link https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt}.
  *
  * @package PluginCheck
  */
@@ -15,12 +15,14 @@ use PluginCheckCS\PluginCheck\Helpers\AbstractEscapingCheckSniff;
 /**
  * Flag Database direct queries.
  *
- * @since   1.0.0
+ * @since 1.7.0
  */
 class DirectDBSniff extends AbstractEscapingCheckSniff {
 
 	/**
 	 * Rule name for this sniff.
+	 *
+	 * @since 1.7.0
 	 *
 	 * @var string
 	 */
@@ -28,6 +30,8 @@ class DirectDBSniff extends AbstractEscapingCheckSniff {
 
 	/**
 	 * Override the parent class escaping functions to only allow SQL-safe escapes.
+	 *
+	 * @since 1.7.0
 	 *
 	 * @var array
 	 */
@@ -48,6 +52,8 @@ class DirectDBSniff extends AbstractEscapingCheckSniff {
 	/**
 	 * Functions that are often mistaken for SQL escaping functions, but are not SQL safe.
 	 *
+	 * @since 1.7.0
+	 *
 	 * @var array
 	 */
 	protected $notEscapingFunctions = array(
@@ -63,6 +69,8 @@ class DirectDBSniff extends AbstractEscapingCheckSniff {
 	/**
 	 * None of these are SQL safe.
 	 *
+	 * @since 1.7.0
+	 *
 	 * @var array
 	 */
 	protected $sanitizingFunctions = array();
@@ -70,12 +78,16 @@ class DirectDBSniff extends AbstractEscapingCheckSniff {
 	/**
 	 * Unslashing functions array.
 	 *
+	 * @since 1.7.0
+	 *
 	 * @var array
 	 */
 	protected $unslashingFunctions = array();
 
 	/**
 	 * Functions that are neither safe nor unsafe. Their output is as safe as the data passed as parameters.
+	 *
+	 * @since 1.7.0
 	 *
 	 * @var array
 	 */
@@ -92,6 +104,8 @@ class DirectDBSniff extends AbstractEscapingCheckSniff {
 
 	/**
 	 * Functions with output that can be assumed to be safe. Escaping is always preferred, but alerting on these is unnecessary noise.
+	 *
+	 * @since 1.7.0
 	 *
 	 * @var array
 	 */
@@ -119,6 +133,8 @@ class DirectDBSniff extends AbstractEscapingCheckSniff {
 	 *
 	 * Note: 'prepare' is not included as it requires manual escaping.
 	 *
+	 * @since 1.7.0
+	 *
 	 * @var array
 	 */
 	protected $safe_methods = array(
@@ -130,6 +146,8 @@ class DirectDBSniff extends AbstractEscapingCheckSniff {
 
 	/**
 	 * $wpdb methods that require the first parameter to be escaped.
+	 *
+	 * @since 1.7.0
 	 *
 	 * @var array
 	 */
@@ -144,6 +162,8 @@ class DirectDBSniff extends AbstractEscapingCheckSniff {
 	/**
 	 * Safe constants array.
 	 *
+	 * @since 1.7.0
+	 *
 	 * @var array
 	 */
 	protected $safe_constants = array(
@@ -154,6 +174,8 @@ class DirectDBSniff extends AbstractEscapingCheckSniff {
 	/**
 	 * A list of variable names that, if used unescaped in a SQL query, will only produce a warning rather than an error.
 	 * For example, 'SELECT * FROM {$table}' is commonly used and typically a red herring.
+	 *
+	 * @since 1.7.0
 	 *
 	 * @var array
 	 */
@@ -181,6 +203,8 @@ class DirectDBSniff extends AbstractEscapingCheckSniff {
 	 * A list of SQL query prefixes that with only produce a warning instead of an error if they contain unsafe parameters.
 	 * For example, 'CREATE TABLE $tablename' is often used because there are no clear ways to escape a table name.
 	 *
+	 * @since 1.7.0
+	 *
 	 * @var array
 	 */
 	protected $warn_only_queries = array(
@@ -193,12 +217,16 @@ class DirectDBSniff extends AbstractEscapingCheckSniff {
 	/**
 	 * Keep track of sanitized and unsanitized variables.
 	 *
+	 * @since 1.7.0
+	 *
 	 * @var array
 	 */
 	protected $sanitized_variables = array();
 
 	/**
 	 * Unsanitized variables array.
+	 *
+	 * @since 1.7.0
 	 *
 	 * @var array
 	 */
@@ -207,12 +235,16 @@ class DirectDBSniff extends AbstractEscapingCheckSniff {
 	/**
 	 * Assignments array.
 	 *
+	 * @since 1.7.0
+	 *
 	 * @var array
 	 */
 	protected $assignments = array();
 
 	/**
 	 * Used for providing extra context from some methods.
+	 *
+	 * @since 1.7.0
 	 *
 	 * @var int|null
 	 */
@@ -221,12 +253,16 @@ class DirectDBSniff extends AbstractEscapingCheckSniff {
 	/**
 	 * Unsafe pointer.
 	 *
+	 * @since 1.7.0
+	 *
 	 * @var int|null
 	 */
 	protected $unsafe_ptr = null;
 
 	/**
 	 * Unsafe expression.
+	 *
+	 * @since 1.7.0
 	 *
 	 * @var string|null
 	 */
@@ -235,12 +271,16 @@ class DirectDBSniff extends AbstractEscapingCheckSniff {
 	/**
 	 * Expression severity.
 	 *
+	 * @since 1.7.0
+	 *
 	 * @var int
 	 */
 	protected $expression_severity = 0;
 
 	/**
 	 * Returns an array of tokens this test wants to listen for.
+	 *
+	 * @since 1.7.0
 	 *
 	 * @return array
 	 */
@@ -255,6 +295,8 @@ class DirectDBSniff extends AbstractEscapingCheckSniff {
 	 * Is a SQL query of a type that should only produce a warning when it contains unescaped parameters?
 	 *
 	 * For example, CREATE TABLE queries usually include unescaped table and column names.
+	 *
+	 * @since 1.7.0
 	 *
 	 * @param string $sql The SQL query to check.
 	 * @return bool

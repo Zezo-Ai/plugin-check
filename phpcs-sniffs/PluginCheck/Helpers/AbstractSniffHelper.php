@@ -17,11 +17,15 @@ use WordPressCS\WordPress\Sniff;
 
 /**
  * A base class for building more complex context-aware sniffs.
+ *
+ * @since 1.7.0
  */
 abstract class AbstractSniffHelper extends Sniff {
 
 	/**
 	 * Tokens that indicate the start of a function call or other non-constant string.
+	 *
+	 * @since 1.7.0
 	 *
 	 * @var array
 	 */
@@ -37,12 +41,16 @@ abstract class AbstractSniffHelper extends Sniff {
 	/**
 	 * Keep track of variable assignments.
 	 *
+	 * @since 1.7.0
+	 *
 	 * @var array
 	 */
 	protected $assignments = array();
 
 	/**
 	 * Used by parent class for providing extra context from some methods.
+	 *
+	 * @since 1.7.0
 	 *
 	 * @var int|null
 	 */
@@ -51,12 +59,16 @@ abstract class AbstractSniffHelper extends Sniff {
 	/**
 	 * End pointer.
 	 *
+	 * @since 1.7.0
+	 *
 	 * @var int|null
 	 */
 	protected $end = null;
 
 	/**
 	 * Get the name of the function containing the code at a given point.
+	 *
+	 * @since 1.7.0
 	 *
 	 * @param int $stackPtr The position of the token.
 	 * @return string|false
@@ -70,6 +82,8 @@ abstract class AbstractSniffHelper extends Sniff {
 
 	/**
 	 * Get the scope context of the code at a given point.
+	 *
+	 * @since 1.7.0
 	 *
 	 * @param int $stackPtr The position of the token.
 	 * @return int|false
@@ -89,6 +103,8 @@ abstract class AbstractSniffHelper extends Sniff {
 	/**
 	 * Get tokens between two pointers as a string.
 	 *
+	 * @since 1.7.0
+	 *
 	 * @param int $start The start position.
 	 * @param int $end   The end position.
 	 * @return string
@@ -99,6 +115,8 @@ abstract class AbstractSniffHelper extends Sniff {
 
 	/**
 	 * Is $stackPtr part of the conditional expression in an `if` statement?
+	 *
+	 * @since 1.7.0
 	 *
 	 * @param int $stackPtr The position of the token.
 	 * @return int|false
@@ -121,6 +139,8 @@ abstract class AbstractSniffHelper extends Sniff {
 	/**
 	 * Get the conditional expression part of an if/elseif statement.
 	 *
+	 * @since 1.7.0
+	 *
 	 * @param int $stackPtr The position of the token.
 	 * @return array|false
 	 */
@@ -133,6 +153,8 @@ abstract class AbstractSniffHelper extends Sniff {
 
 	/**
 	 * Get the scope part of an if/else/elseif statement.
+	 *
+	 * @since 1.7.0
 	 *
 	 * @param int $stackPtr The position of the token.
 	 * @return array|false
@@ -158,6 +180,8 @@ abstract class AbstractSniffHelper extends Sniff {
 	/**
 	 * Does the given if statement have an 'else' or 'elseif'.
 	 *
+	 * @since 1.7.0
+	 *
 	 * @param int $stackPtr The position of the token.
 	 * @return int|false
 	 */
@@ -182,6 +206,8 @@ abstract class AbstractSniffHelper extends Sniff {
 	/**
 	 * Is the expression part of a return statement.
 	 *
+	 * @since 1.7.0
+	 *
 	 * @param int $stackPtr The position of the token.
 	 * @return int|false
 	 */
@@ -196,6 +222,8 @@ abstract class AbstractSniffHelper extends Sniff {
 
 	/**
 	 * Is the expression part of an assignment.
+	 *
+	 * @since 1.7.0
 	 *
 	 * @param int $stackPtr The position of the token.
 	 * @return bool
@@ -212,6 +240,8 @@ abstract class AbstractSniffHelper extends Sniff {
 	/**
 	 * Mark the variable at $stackPtr as being safely sanitized for use in a SQL context.
 	 * $stackPtr must point to a T_VARIABLE. Handles arrays and (maybe) object properties.
+	 *
+	 * @since 1.7.0
 	 *
 	 * @param int      $stackPtr      The position of the variable token.
 	 * @param int|null $assignmentPtr The position of the assignment token.
@@ -247,6 +277,8 @@ abstract class AbstractSniffHelper extends Sniff {
 	 * Mark the variable at $stackPtr as being unsafe. Opposite of mark_sanitized_var().
 	 * Use this to reset a variable that might previously have been marked as sanitized.
 	 *
+	 * @since 1.7.0
+	 *
 	 * @param int      $stackPtr      The position of the variable token.
 	 * @param int|null $assignmentPtr The position of the assignment token.
 	 * @return bool
@@ -276,6 +308,8 @@ abstract class AbstractSniffHelper extends Sniff {
 	/**
 	 * Return a list of assignment statements for the variable at $stackPtr, within the same scope.
 	 *
+	 * @since 1.7.0
+	 *
 	 * @param int         $stackPtr The current position within the stack.
 	 * @param string|null $var_name The variable name. Optional; can be used if $stackPtr doesn't refer to the exact variable.
 	 * @return array|false
@@ -300,6 +334,8 @@ abstract class AbstractSniffHelper extends Sniff {
 	/**
 	 * Helper function to return the next non-empty token starting at $stackPtr inclusive.
 	 *
+	 * @since 1.7.0
+	 *
 	 * @param int  $stackPtr   The position of the token.
 	 * @param bool $local_only Whether to only search locally.
 	 * @return int|false
@@ -311,6 +347,8 @@ abstract class AbstractSniffHelper extends Sniff {
 	/**
 	 * Find the previous non-empty token starting at $stackPtr inclusive.
 	 *
+	 * @since 1.7.0
+	 *
 	 * @param int  $stackPtr   The position of the token.
 	 * @param bool $local_only Whether to only search locally.
 	 * @return int|false
@@ -321,6 +359,8 @@ abstract class AbstractSniffHelper extends Sniff {
 
 	/**
 	 * Find the token following the end of the current function call pointed to by $stackPtr.
+	 *
+	 * @since 1.7.0
 	 *
 	 * @param int $stackPtr The position of the token.
 	 * @return int|false
@@ -341,6 +381,8 @@ abstract class AbstractSniffHelper extends Sniff {
 
 	/**
 	 * Does the given expression contain multiple 'and' clauses like `$foo && bar()` or `foo() and $bar`?
+	 *
+	 * @since 1.7.0
 	 *
 	 * @param int  $start The first pointer of the expression to check.
 	 * @param int  $end The last pointer of the expression to check.
@@ -377,6 +419,8 @@ abstract class AbstractSniffHelper extends Sniff {
 	/**
 	 * Does the given expression contain multiple 'or' clauses like `$foo || bar()` or `foo() or $bar`?
 	 *
+	 * @since 1.7.0
+	 *
 	 * @param int  $start The first pointer of the expression to check.
 	 * @param int  $end The last pointer of the expression to check.
 	 * @param bool $inside_brackets Whether or not to check inside nested parentheses inside the expression.
@@ -412,6 +456,8 @@ abstract class AbstractSniffHelper extends Sniff {
 	/**
 	 * Is the expression immediately preceded by a boolean not `!`.
 	 *
+	 * @since 1.7.0
+	 *
 	 * @param int $stackPtr The position of the token.
 	 * @return int|false
 	 */
@@ -428,6 +474,8 @@ abstract class AbstractSniffHelper extends Sniff {
 	 * Get the expression starting at $stackPtr as a string.
 	 * A slightly more convenient wrapper around getTokensAsString().
 	 *
+	 * @since 1.7.0
+	 *
 	 * @param int      $stackPtr The position of the token.
 	 * @param int|null $endPtr   The end position.
 	 * @return string
@@ -442,6 +490,8 @@ abstract class AbstractSniffHelper extends Sniff {
 	/**
 	 * Get the variable at $stackPtr as a string.
 	 * Works with complex variables like $foo[0]->bar.
+	 *
+	 * @since 1.7.0
 	 *
 	 * @param int $stackPtr The position of the token.
 	 * @return string|false
@@ -506,6 +556,8 @@ abstract class AbstractSniffHelper extends Sniff {
 	/**
 	 * Find interpolated variable names in a "string" or heredoc.
 	 *
+	 * @since 1.7.0
+	 *
 	 * @param int $stackPtr Stack pointer to a double quoted string or heredoc.
 	 * @return array|false Array of variable names, or false if $stackPtr was not a double quoted string or heredoc.
 	 */
@@ -526,6 +578,8 @@ abstract class AbstractSniffHelper extends Sniff {
 	/**
 	 * Is the T_STRING at $stackPtr a constant.
 	 * Will accept language constants as set by define(), and class constants.
+	 *
+	 * @since 1.7.0
 	 *
 	 * @param int $stackPtr The position of the token.
 	 * @return bool
@@ -561,6 +615,8 @@ abstract class AbstractSniffHelper extends Sniff {
 
 	/**
 	 * Is the \T_VARIABLE at $stackPtr a property of wpdb like $wpdb->tablename.
+	 *
+	 * @since 1.7.0
 	 *
 	 * @param int $stackPtr The position of the token.
 	 * @return int|false
@@ -600,6 +656,8 @@ abstract class AbstractSniffHelper extends Sniff {
 	/**
 	 * Find the end of the current expression, being aware of bracket context etc.
 	 *
+	 * @since 1.7.0
+	 *
 	 * @param int $stackPtr The position of the token.
 	 * @return int A pointer to the last token in the expression.
 	 */
@@ -637,6 +695,8 @@ abstract class AbstractSniffHelper extends Sniff {
 	/**
 	 * Find the end of the complex variable at $stackPtr.
 	 *
+	 * @since 1.7.0
+	 *
 	 * @param int $stackPtr The position of the token.
 	 * @return int|false A pointer to the last token in the variable name.
 	 */
@@ -657,6 +717,8 @@ abstract class AbstractSniffHelper extends Sniff {
 
 	/**
 	 * Is $stackPtr within the conditional part of a ternary expression.
+	 *
+	 * @since 1.7.0
 	 *
 	 * @param int  $stackPtr    The position of the token.
 	 * @param bool $allow_empty True to allow short ternary `?:` with empty middle expression; False to require the middle expression.
@@ -701,6 +763,8 @@ abstract class AbstractSniffHelper extends Sniff {
 	 * Return a list of variable names found within the expression starting at $stackPtr.
 	 * Note that this returns variable names as strings, not pointers, and includes interpolated variables.
 	 *
+	 * @since 1.7.0
+	 *
 	 * @param int      $stackPtr The position of the token.
 	 * @param int|null $endPtr   The end position.
 	 * @return array
@@ -736,6 +800,8 @@ abstract class AbstractSniffHelper extends Sniff {
 	 * Return a list of function calls found within the expression starting at $stackPtr.
 	 * Note that this returns function names as strings. It does not handle variable functions or method calls.
 	 *
+	 * @since 1.7.0
+	 *
 	 * @param int      $stackPtr The position of the token.
 	 * @param int|null $endPtr   The end position.
 	 * @return array
@@ -769,7 +835,7 @@ abstract class AbstractSniffHelper extends Sniff {
 	 *
 	 * $array['key'][ $foo ][ something() ] = $bar;
 	 *
-	 * @since 0.5.0
+	 * @since 1.7.0
 	 *
 	 * @param int $stackPtr The index of the token in the stack. This must point to
 	 *                      either a T_VARIABLE or T_CLOSE_SQUARE_BRACKET token.
@@ -822,6 +888,8 @@ abstract class AbstractSniffHelper extends Sniff {
 	/**
 	 * Determine if a given line has any of the supplied sniff rule names suppressed.
 	 *
+	 * @since 1.7.0
+	 *
 	 * @param int   $stackPtr A pointer to the line in question.
 	 * @param array $sniffs A list of sniff rule names to check, e.g. ['WordPress.DB.PreparedSQL.NotPrepared'].
 	 */
@@ -855,6 +923,8 @@ abstract class AbstractSniffHelper extends Sniff {
 
 	/**
 	 * Based on the function from wp-includes/wp-db.php.
+	 *
+	 * @since 1.7.0
 	 *
 	 * @param string $query The SQL query.
 	 * @return string|false
@@ -928,6 +998,8 @@ abstract class AbstractSniffHelper extends Sniff {
 
 	/**
 	 * Is the T_STRING at $stackPtr a method call on $wpdb?
+	 *
+	 * @since 1.7.0
 	 *
 	 * @param int   $stackPtr The position of the current token in the stack.
 	 * @param array $methods  Array of method names to check for.
