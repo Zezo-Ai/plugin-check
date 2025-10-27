@@ -10,12 +10,10 @@
 
 namespace PluginCheckCS\PluginCheck\Sniffs\Security;
 
+use PluginCheckCS\PluginCheck\Helpers\AbstractEscapingCheckSniff;
+
 /**
  * Flag Database direct queries.
- *
- * @link    https://vip.wordpress.com/documentation/vip-go/code-review-blockers-warnings-notices/#direct-database-queries
- *
- * @package PluginCheck
  *
  * @since   1.0.0
  */
@@ -119,6 +117,8 @@ class DirectDBSniff extends AbstractEscapingCheckSniff {
 	/**
 	 * $wpdb methods with escaping built-in.
 	 *
+	 * Note: 'prepare' is not included as it requires manual escaping.
+	 *
 	 * @var array
 	 */
 	protected $safe_methods = array(
@@ -126,7 +126,6 @@ class DirectDBSniff extends AbstractEscapingCheckSniff {
 		'replace' => true,
 		'update'  => true,
 		'insert'  => true,
-		// Note: 'prepare' is commented out as it requires manual escaping.
 	);
 
 	/**

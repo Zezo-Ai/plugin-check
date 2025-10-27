@@ -8,7 +8,7 @@
  * @package PluginCheck
  */
 
-namespace PluginCheckCS\PluginCheck\Sniffs\Security;
+namespace PluginCheckCS\PluginCheck\Helpers;
 
 use PHP_CodeSniffer\Util\Tokens;
 use PHPCSUtils\Utils\PassedParameters;
@@ -17,6 +17,7 @@ use PHPCSUtils\Utils\PassedParameters;
  * Base class for building context-aware escaping checks.
  */
 abstract class AbstractEscapingCheckSniff extends AbstractSniffHelper {
+
 	/**
 	 * Override these in child classes to list applicable escaping functions etc.
 	 *
@@ -166,7 +167,6 @@ abstract class AbstractEscapingCheckSniff extends AbstractSniffHelper {
 	 * @return bool
 	 */
 	protected function mark_sanitized_var( $stackPtr, $assignmentPtr = null ) {
-
 		if ( \T_VARIABLE !== $this->tokens[ $stackPtr ]['code'] ) {
 			return false;
 		}
@@ -201,7 +201,6 @@ abstract class AbstractEscapingCheckSniff extends AbstractSniffHelper {
 	 * @return bool
 	 */
 	protected function mark_unsanitized_var( $stackPtr, $assignmentPtr = null ) {
-
 		if ( \T_VARIABLE !== $this->tokens[ $stackPtr ]['code'] ) {
 			return false;
 		}
@@ -219,6 +218,7 @@ abstract class AbstractEscapingCheckSniff extends AbstractSniffHelper {
 
 		if ( $assignmentPtr ) {
 			$end = $this->phpcsFile->findEndOfStatement( $assignmentPtr );
+
 			$this->assignments[ $context ][ $var ][ $assignmentPtr ] = $this->phpcsFile->getTokensAsString( $stackPtr, $end - $stackPtr );
 		}
 	}
@@ -251,7 +251,6 @@ abstract class AbstractEscapingCheckSniff extends AbstractSniffHelper {
 	 * @return bool
 	 */
 	protected function is_sanitized_var_internal( $variable_name, $context ) {
-
 		// If it's $wpdb->tablename then it's implicitly safe.
 		if ( '$wpdb->' === substr( $variable_name, 0, 7 ) || '$this->table' === substr( $variable_name, 0, 12 ) || '$this->the_table' === substr( $variable_name, 0, 16 ) || '$wpdb' === $variable_name ) {
 			return true;
@@ -317,11 +316,14 @@ abstract class AbstractEscapingCheckSniff extends AbstractSniffHelper {
 				}
 			}
 		}
+
 		$extra_context = array();
 		$from          = $stackPtr;
+
 		while ( $vars_to_explain && --$limit >= 0 ) {
 			foreach ( $vars_to_explain as $var => $dummy ) {
 				$assignments = $this->find_assignments( $from, $var );
+
 				if ( $assignments ) {
 					foreach ( array_reverse( $assignments, true ) as $assignmentPtr => $code ) {
 						// Ignore assignments that happen later in the execution flow.
@@ -378,9 +380,6 @@ abstract class AbstractEscapingCheckSniff extends AbstractSniffHelper {
 	/**
 	 * Return a string representing the unsafe portion of code pointed to by $stackPtr, as returned by check_expression().
 	 * This is necessary because phpcs hobbles the parsing of variables in strings.
-	 */
-	/**
-	 * Return unsafe portion of code as string for a given token pointer.
 	 *
 	 * @param int $stackPtr The position of the token.
 	 * @return string
@@ -397,7 +396,7 @@ abstract class AbstractEscapingCheckSniff extends AbstractSniffHelper {
 					$this->warn_only_parameters[] = $var;
 				}
 
-				// Where are we?.
+				// Where are we?
 				$context = $this->get_context( $stackPtr );
 
 				// If we've found an unsanitized var then fail early.
@@ -429,7 +428,6 @@ abstract class AbstractEscapingCheckSniff extends AbstractSniffHelper {
 	 * @return bool
 	 */
 	public function expression_is_safe( $stackPtr, $endPtr = null ) {
-		// TODO: could produce warnings or give more context.
 		$this->unsafe_expression = null;
 		$this->unsafe_ptr        = null;
 
@@ -438,6 +436,7 @@ abstract class AbstractEscapingCheckSniff extends AbstractSniffHelper {
 		if ( $this->unsafe_ptr ) {
 			$this->unsafe_expression = $this->get_unsafe_expression_as_string( $this->unsafe_ptr );
 		}
+
 		return ! $this->unsafe_ptr;
 	}
 
@@ -459,6 +458,7 @@ abstract class AbstractEscapingCheckSniff extends AbstractSniffHelper {
 		)
 			+ Tokens::$functionNameTokens
 			+ Tokens::$textStringTokens;
+
 		while ( $newPtr && $this->phpcsFile->findNext( $tokens_to_find, $newPtr, $endPtr, false, null, true ) ) {
 			$ternaryPtr = $this->is_ternary_condition( $newPtr );
 			if ( $ternaryPtr ) {
@@ -545,7 +545,7 @@ abstract class AbstractEscapingCheckSniff extends AbstractSniffHelper {
 						$this->warn_only_parameters[] = $var;
 					}
 
-					// Where are we?.
+					// Where are we?
 					$context = $this->get_context( $newPtr );
 
 					// If we've found an unsanitized var then fail early.
@@ -563,8 +563,7 @@ abstract class AbstractEscapingCheckSniff extends AbstractSniffHelper {
 					}
 				}
 
-				// If the expression contains an unsanitized variable and we haven't already found an escaping function,
-				// then we can fail at this point.
+				// If the expression contains an unsanitized variable and we haven't already found an escaping function, then we can fail at this point.
 				if ( ! $this->is_sanitized_var( $newPtr ) ) {
 					return $newPtr;
 				}
@@ -594,6 +593,7 @@ abstract class AbstractEscapingCheckSniff extends AbstractSniffHelper {
 				// We've run past the end, so exit.
 				return false;
 			}
+
 			++$newPtr;
 		}
 
@@ -614,7 +614,6 @@ abstract class AbstractEscapingCheckSniff extends AbstractSniffHelper {
 			return $this->methodPtr;
 		}
 
-		// FIXME: move array to property.
 		if ( in_array( $this->tokens[ $stackPtr ]['code'], array( \T_ECHO, \T_PRINT, \T_EXIT ), true ) ) {
 			return $stackPtr;
 		}
@@ -634,6 +633,7 @@ abstract class AbstractEscapingCheckSniff extends AbstractSniffHelper {
 				return true;
 			}
 		}
+
 		// If $error_always_parameters is set, then all other variable names will produce warnings only.
 		if ( ! empty( $this->error_always_parameters ) ) {
 			foreach ( $this->error_always_parameters as $error_param ) {
@@ -663,9 +663,7 @@ abstract class AbstractEscapingCheckSniff extends AbstractSniffHelper {
 	 * Processes this test, when one of its tokens is encountered.
 	 *
 	 * @param int $stackPtr The position of the current token in the stack.
-	 *
-	 * @return int|void Integer stack pointer to skip forward or void to continue
-	 *                  normal file processing.
+	 * @return int|void Integer stack pointer to skip forward or void to continue normal file processing.
 	 */
 	public function process_token( $stackPtr ) {
 		static $line_no = null;
@@ -688,7 +686,7 @@ abstract class AbstractEscapingCheckSniff extends AbstractSniffHelper {
 				$this->mark_unsanitized_var( $stackPtr, $nextToken + 1 );
 			}
 
-			return; // ??
+			return;
 		}
 
 		// Handle foreach ( $foo as $bar ), which is similar to assignment.
@@ -727,7 +725,7 @@ abstract class AbstractEscapingCheckSniff extends AbstractSniffHelper {
 		if ( $checkPtr ) {
 			// Function call.
 			if ( \T_STRING === $this->tokens[ $checkPtr ]['code'] ) {
-				// Only the first parameter needs escaping (FIXME?).
+				// Only the first parameter needs escaping.
 				$parameters  = PassedParameters::getParameters( $this->phpcsFile, $checkPtr );
 				$method      = $this->tokens[ $checkPtr ]['content'];
 				$methodParam = reset( $parameters );

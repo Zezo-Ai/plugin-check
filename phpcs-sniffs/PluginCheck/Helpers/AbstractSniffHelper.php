@@ -8,7 +8,7 @@
  * @package PluginCheck
  */
 
-namespace PluginCheckCS\PluginCheck\Sniffs\Security;
+namespace PluginCheckCS\PluginCheck\Helpers;
 
 use PHP_CodeSniffer\Util\Tokens;
 use PHPCSUtils\Utils\PassedParameters;
@@ -218,7 +218,6 @@ abstract class AbstractSniffHelper extends Sniff {
 	 * @return bool
 	 */
 	protected function mark_sanitized_var( $stackPtr, $assignmentPtr = null ) {
-
 		if ( \T_VARIABLE !== $this->tokens[ $stackPtr ]['code'] ) {
 			return false;
 		}
@@ -253,7 +252,6 @@ abstract class AbstractSniffHelper extends Sniff {
 	 * @return bool
 	 */
 	protected function mark_unsanitized_var( $stackPtr, $assignmentPtr = null ) {
-
 		if ( \T_VARIABLE !== $this->tokens[ $stackPtr ]['code'] ) {
 			return false;
 		}
@@ -449,7 +447,6 @@ abstract class AbstractSniffHelper extends Sniff {
 	 * @return string|false
 	 */
 	protected function get_variable_as_string( $stackPtr ) {
-
 		if ( \T_VARIABLE !== $this->tokens[ $stackPtr ]['code'] ) {
 			return false;
 		}
@@ -545,7 +542,6 @@ abstract class AbstractSniffHelper extends Sniff {
 		}
 
 		// It could be a function call or similar. That depends on what comes after it.
-
 		$nextToken = $this->next_non_empty( $stackPtr + 1 );
 		if ( \T_DOUBLE_COLON === $this->tokens[ $nextToken ]['code'] ) {
 			// It might be `self::MYCONST` or `Table::MYCONST`.
@@ -608,7 +604,6 @@ abstract class AbstractSniffHelper extends Sniff {
 	 * @return int A pointer to the last token in the expression.
 	 */
 	protected function find_end_of_expression( $stackPtr ) {
-
 		if ( isset( $this->tokens[ $stackPtr ]['parenthesis_closer'] ) ) {
 			return $this->tokens[ $stackPtr ]['parenthesis_closer'];
 		}
@@ -624,6 +619,7 @@ abstract class AbstractSniffHelper extends Sniff {
 			if ( in_array( $this->tokens[ $next ]['code'], $stops, true ) ) {
 				return $prev;
 			}
+
 			// If we found nested parens, jump to the end.
 			if ( \T_OPEN_PARENTHESIS === $this->tokens[ $next ]['code'] && isset( $this->tokens[ $next ]['parenthesis_closer'] ) ) {
 				$prev = $this->tokens[ $next ]['parenthesis_closer'];
@@ -649,10 +645,13 @@ abstract class AbstractSniffHelper extends Sniff {
 		$this->i = null;
 		$out     = false;
 		$var     = $this->get_variable_as_string( $stackPtr );
+
 		if ( $var && ! is_null( $this->i ) ) {
 			$out = $this->i;
 		}
+
 		$this->i = $_i;
+
 		return $out;
 	}
 
@@ -664,7 +663,6 @@ abstract class AbstractSniffHelper extends Sniff {
 	 * @return false|int A pointer to the ? operator, or false if it is not a ternary.
 	 */
 	protected function is_ternary_condition( $stackPtr, $allow_empty = false ) {
-
 		$end_of_expression = $this->find_end_of_expression( $stackPtr );
 		$next              = $this->next_non_empty( $end_of_expression + 1 );
 
@@ -727,6 +725,7 @@ abstract class AbstractSniffHelper extends Sniff {
 			} elseif ( \T_VARIABLE === $this->tokens[ $newPtr ]['code'] ) {
 				$out[] = $this->get_variable_as_string( $newPtr );
 			}
+
 			$newPtr = $this->phpcsFile->findNext( $tokens_to_find, $newPtr + 1, $endPtr, false, null, true );
 		} while ( $newPtr );
 
@@ -746,6 +745,7 @@ abstract class AbstractSniffHelper extends Sniff {
 
 		$newPtr = $stackPtr;
 		$newPtr = $this->phpcsFile->findNext( array( \T_STRING ), $newPtr, $endPtr, false, null, true );
+
 		while ( $newPtr ) {
 			$lookahead = $this->next_non_empty( $newPtr + 1 );
 			if ( $lookahead && ( is_null( $endPtr ) || $lookahead <= $endPtr ) ) {
@@ -777,7 +777,6 @@ abstract class AbstractSniffHelper extends Sniff {
 	 * @return bool Whether the token is a variable being assigned a value.
 	 */
 	protected function is_assignment( $stackPtr ) {
-
 		static $valid = array(
 			\T_VARIABLE             => true,
 			\T_CLOSE_SQUARE_BRACKET => true,
