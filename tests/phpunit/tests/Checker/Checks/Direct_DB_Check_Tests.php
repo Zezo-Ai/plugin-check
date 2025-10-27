@@ -18,11 +18,16 @@ class Direct_DB_Check_Tests extends WP_UnitTestCase {
 
 		$check->run( $check_result );
 
-		$errors   = $check_result->get_errors();
-		$warnings = $check_result->get_warnings();
+		$errors = $check_result->get_errors();
 
 		$this->assertNotEmpty( $errors );
 		$this->assertArrayHasKey( 'load.php', $errors );
-		$this->assertEquals( 1, $check_result->get_error_count() );
+		$this->assertEquals( 5, $check_result->get_error_count() );
+
+		$this->assertEquals( 'PluginCheck.Security.DirectDB.UnescapedDBParameter', $errors['load.php'][22][9][0]['code'] );
+		$this->assertEquals( 'PluginCheck.Security.DirectDB.UnescapedDBParameter', $errors['load.php'][29][9][0]['code'] );
+		$this->assertEquals( 'PluginCheck.Security.DirectDB.UnescapedDBParameter', $errors['load.php'][36][9][0]['code'] );
+		$this->assertEquals( 'PluginCheck.Security.DirectDB.UnescapedDBParameter', $errors['load.php'][43][9][0]['code'] );
+		$this->assertEquals( 'PluginCheck.Security.DirectDB.UnescapedDBParameter', $errors['load.php'][50][9][0]['code'] );
 	}
 }
