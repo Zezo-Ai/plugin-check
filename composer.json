@@ -9,6 +9,7 @@
     "automattic/vipwpcs": "^3.0.0",
     "composer/installers": "^2.2",
     "dealerdirect/phpcodesniffer-composer-installer": "^1.0.0",
+    "nikic/php-parser": "^4",
     "plugin-check/phpcs-sniffs": "@dev",
     "wp-coding-standards/wpcs": "^3.2.0"
   },
@@ -58,7 +59,9 @@
     },
     "platform": {
       "php": "7.4"
-    }
+    },
+    "sort-packages": true,
+    "autoloader-suffix": "Plugin_Check_Plugin"
   },
   "scripts": {
     "behat": "BEHAT_FEATURES_FOLDER=tests/behat/features run-behat-tests",

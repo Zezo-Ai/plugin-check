@@ -150,7 +150,7 @@ In any case, passing the checks in this tool likely helps to achieve a smooth pl
 * Enhancement - Improved the use of localhost URLs in the Plugin.
 * Enhancement - Documented checks in the plugin.
 * Enhancement - Increased severity for Code obfuscation checks.
-* Enhancement - Diffentiate between no existent readme and default readme file.
+* Enhancement - Differentiate between non-existent readme and default readme file.
 * Enhancement - Encourage developers to use native functions for loading images in templates.
 * Enhancement - Added a check for not allowing include libraries already in WordPress core.
 * Enhancement - Warning for usage of query_posts() in favor of WP_Query.

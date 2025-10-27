@@ -201,6 +201,11 @@ final class Runtime_Environment_Setup {
 	public function can_set_up() {
 		global $wp_filesystem;
 
+		if ( defined( 'CUSTOM_USER_TABLE' ) || defined( 'CUSTOM_USER_META_TABLE' ) ) {
+			// When these constants are defined, we cannot duplicate the user tables for testing.
+			return false;
+		}
+
 		require_once ABSPATH . '/wp-admin/includes/upgrade.php';
 
 		if ( ! is_object( $wp_filesystem ) && ! WP_Filesystem() ) {
