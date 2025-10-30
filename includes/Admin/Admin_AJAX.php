@@ -276,14 +276,38 @@ final class Admin_AJAX {
 			);
 		}
 
-		wp_send_json_success(
-			array(
-				'message'  => __( 'Checks run successfully', 'plugin-check' ),
-				'errors'   => in_array( 'error', $types, true ) ? $results->get_errors() : array(),
-				'warnings' => in_array( 'warning', $types, true ) ? $results->get_warnings() : array(),
-			)
-		);
+		$response_data = $this->prepare_results_response( $results, $types );
+
+		wp_send_json_success( $response_data );
 	}
+
+	/**
+	 * Prepare the results response based on requested types.
+	 *
+	 * @since 1.7.0
+	 *
+	 * @param object $results The check results object.
+	 * @param array  $types   The types of results to include (error, warning).
+	 * @return array The prepared response data.
+	 */
+	private function prepare_results_response( $results, array $types ) {
+		$response = array(
+			'message'  => __( 'Checks run successfully', 'plugin-check' ),
+			'errors'   => array(),
+			'warnings' => array(),
+		);
+
+		if ( in_array( 'error', $types, true ) ) {
+			$response['errors'] = $results->get_errors();
+		}
+
+		if ( in_array( 'warning', $types, true ) ) {
+			$response['warnings'] = $results->get_warnings();
+		}
+
+		return $response;
+	}
+
 
 	/**
 	 * Verify the request.
