@@ -71,13 +71,13 @@ class VerifyNonceSniff implements Sniff {
 		// Check if it's negated.
 		$isNegated = $this->is_negated( $phpcsFile, $noncePtr, $tokens );
 
-		// Check for isset() && !wp_verify_nonce() pattern.
+		// Check for the isset combined with negated wp_verify_nonce pattern.
 		if ( $isNegated && $this->has_isset_before_and( $phpcsFile, $noncePtr, $opener, $tokens ) ) {
 			$this->report_isset_and_negated_nonce( $phpcsFile, $noncePtr );
 			return;
 		}
 
-		// Check for !isset() && !wp_verify_nonce() pattern.
+		// Check for the negated isset combined with negated wp_verify_nonce pattern.
 		if ( $isNegated && $this->has_negated_isset_before_and( $phpcsFile, $noncePtr, $opener, $tokens ) ) {
 			$this->report_negated_isset_and_negated_nonce( $phpcsFile, $noncePtr, $stackPtr, $tokens );
 			return;
@@ -143,16 +143,25 @@ class VerifyNonceSniff implements Sniff {
 		// Check if we're inside an if/elseif/while/for condition.
 		$conditions = array( T_IF, T_ELSEIF, T_WHILE, T_FOR, T_FOREACH );
 
-		// Look backward for a condition.
-		$openParen = $phpcsFile->findPrevious( T_OPEN_PARENTHESIS, $stackPtr - 1 );
-		if ( false !== $openParen && isset( $tokens[ $openParen ]['parenthesis_owner'] ) ) {
-			$owner = $tokens[ $openParen ]['parenthesis_owner'];
-			if ( in_array( $tokens[ $owner ]['code'], $conditions, true ) ) {
-				// Check if we're between the parentheses.
-				if ( isset( $tokens[ $openParen ]['parenthesis_closer'] ) && $stackPtr < $tokens[ $openParen ]['parenthesis_closer'] ) {
-					return true;
+		// Look backward for all open parentheses, not just the first one.
+		$current = $stackPtr - 1;
+		while ( false !== $current ) {
+			$openParen = $phpcsFile->findPrevious( T_OPEN_PARENTHESIS, $current );
+			if ( false === $openParen ) {
+				break;
+			}
+
+			if ( isset( $tokens[ $openParen ]['parenthesis_owner'] ) ) {
+				$owner = $tokens[ $openParen ]['parenthesis_owner'];
+				if ( in_array( $tokens[ $owner ]['code'], $conditions, true ) ) {
+					// Check if we're between the parentheses.
+					if ( isset( $tokens[ $openParen ]['parenthesis_closer'] ) && $stackPtr < $tokens[ $openParen ]['parenthesis_closer'] ) {
+						return true;
+					}
 				}
 			}
+
+			$current = $openParen - 1;
 		}
 
 		return false;
@@ -186,13 +195,13 @@ class VerifyNonceSniff implements Sniff {
 	 * @return bool
 	 */
 	private function is_assignment( File $phpcsFile, $stackPtr, $tokens ) {
-		$closeParen = $phpcsFile->findNext( T_CLOSE_PARENTHESIS, $stackPtr );
-		if ( false === $closeParen ) {
-			return false;
+		// Look backward to see if there's an equals sign before the function call.
+		$prev = $phpcsFile->findPrevious( Tokens::$emptyTokens, $stackPtr - 1, null, true );
+		if ( false !== $prev && T_EQUAL === $tokens[ $prev ]['code'] ) {
+			return true;
 		}
 
-		$next = $phpcsFile->findNext( Tokens::$emptyTokens, $closeParen + 1, null, true );
-		return false !== $next && T_SEMICOLON === $tokens[ $next ]['code'];
+		return false;
 	}
 
 	/**
@@ -232,18 +241,18 @@ class VerifyNonceSniff implements Sniff {
 	 *
 	 * @since 1.7.0
 	 *
-	 * @param File   $phpcsFile The file being scanned.
-	 * @param int    $start     Start position.
-	 * @param int    $end       End position.
-	 * @param string $function  Function name to find.
+	 * @param File   $phpcsFile    The file being scanned.
+	 * @param int    $start        Start position.
+	 * @param int    $end          End position.
+	 * @param string $function_name Function name to find.
 	 *
 	 * @return int|false
 	 */
-	private function find_function_call( File $phpcsFile, $start, $end, $function ) {
+	private function find_function_call( File $phpcsFile, $start, $end, $function_name ) {
 		$tokens = $phpcsFile->getTokens();
 
 		for ( $i = $start + 1; $i < $end; $i++ ) {
-			if ( isset( $tokens[ $i ]['content'] ) && $function === $tokens[ $i ]['content'] ) {
+			if ( isset( $tokens[ $i ]['content'] ) && $function_name === $tokens[ $i ]['content'] ) {
 				return $i;
 			}
 		}
@@ -422,23 +431,39 @@ class VerifyNonceSniff implements Sniff {
 	 * @return void
 	 */
 	private function check_or_condition_with_else( File $phpcsFile, $stackPtr, $condPtr, $tokens ) {
-		// Check if there's an else clause.
-		if ( ! isset( $tokens[ $condPtr ]['scope_closer'] ) ) {
-			return;
+		// Find the else clause.
+		// For if with braces, look after scope_closer.
+		// For if without braces, look for the next else token.
+		$elsePtr = false;
+		if ( isset( $tokens[ $condPtr ]['scope_closer'] ) ) {
+			$elsePtr = $phpcsFile->findNext( T_ELSE, $tokens[ $condPtr ]['scope_closer'], null, false );
+		} else {
+			// If without braces, find the semicolon after the if statement.
+			$ifSemicolon = $phpcsFile->findNext( T_SEMICOLON, $condPtr, null, false );
+			if ( false !== $ifSemicolon ) {
+				$elsePtr = $phpcsFile->findNext( T_ELSE, $ifSemicolon, null, false );
+			}
 		}
 
-		$elsePtr = $phpcsFile->findNext( T_ELSE, $tokens[ $condPtr ]['scope_closer'], null, false );
 		if ( false === $elsePtr ) {
 			return;
 		}
 
 		// Check if else scope contains error terminator.
-		if ( ! isset( $tokens[ $elsePtr ]['scope_opener'] ) || ! isset( $tokens[ $elsePtr ]['scope_closer'] ) ) {
-			return;
-		}
-
-		if ( ! $this->scope_contains_error_terminator_in_range( $phpcsFile, $tokens[ $elsePtr ]['scope_opener'], $tokens[ $elsePtr ]['scope_closer'], $tokens ) ) {
-			return;
+		// Handle else with braces.
+		if ( isset( $tokens[ $elsePtr ]['scope_opener'] ) && isset( $tokens[ $elsePtr ]['scope_closer'] ) ) {
+			if ( ! $this->scope_contains_error_terminator_in_range( $phpcsFile, $tokens[ $elsePtr ]['scope_opener'], $tokens[ $elsePtr ]['scope_closer'], $tokens ) ) {
+				return;
+			}
+		} else {
+			// Handle else without braces (single statement).
+			$semicolon = $phpcsFile->findNext( T_SEMICOLON, $elsePtr, null, false );
+			if ( false === $semicolon ) {
+				return;
+			}
+			if ( ! $this->scope_contains_error_terminator_in_range( $phpcsFile, $elsePtr, $semicolon, $tokens ) ) {
+				return;
+			}
 		}
 
 		$phpcsFile->addWarning(
