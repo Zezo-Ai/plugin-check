@@ -96,6 +96,8 @@ class Default_Check_Repository extends Empty_Check_Repository {
 				'non_blocking_scripts'       => new Checks\Performance\Non_Blocking_Scripts_Check(),
 				'offloading_files'           => new Checks\Plugin_Repo\Offloading_Files_Check(),
 				'setting_sanitization'       => new Checks\Plugin_Repo\Setting_Sanitization_Check(),
+				'prefixing'                  => new Checks\Plugin_Repo\Prefixing_Check(),
+				'direct_db'                  => new Checks\Security\Direct_DB_Check(),
 			)
 		);
 
