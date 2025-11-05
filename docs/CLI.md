@@ -49,7 +49,7 @@ options:
 
 [--exclude-directories=<directories>]
 : Additional directories to exclude from checks.
-By default, `.git`, `vendor` and `node_modules` directories are excluded.
+By default, `.git`, `vendor`, `vendor_prefixed`, `vendor-prefixed` and `node_modules` directories are excluded.
 
 [--exclude-files=<files>]
 : Additional files to exclude from checks.

@@ -250,7 +250,6 @@ abstract class PHP_Parser {
 	public function init_file( $file ) {
 		$this->stmts = null;
 		if ( ! file_exists( $file ) ) {
-			echo 'ERROR: File ' . $file . " can't be read.\n";
 			return false;
 		}
 		$this->file          = $file;
@@ -305,7 +304,6 @@ abstract class PHP_Parser {
 					$this->stmts = $traverser->traverse( $this->stmts );
 				}
 			} catch ( Error $error ) {
-				echo $this->file_relative . ": Parse error: {$error->getMessage()}\n";
 				return;
 			}
 		}
@@ -347,7 +345,6 @@ abstract class PHP_Parser {
 					$stmts = $traverser->traverse( $stmts );
 				}
 			} catch ( Error $error ) {
-				echo "Parse error: {$error->getMessage()}\n";
 				return null;
 			}
 		}
@@ -1026,6 +1023,14 @@ abstract class PHP_Parser {
 	 *                     or an empty string for non-accurate processing when no string is found.
 	 */
 	public function get_possible_string_for_element( $element, &$found_in_same_line = true, $accurate = true, $file = '' ) {
+		if ( ! is_object( $element ) ) {
+			if ( $accurate ) {
+				return false;
+			} else {
+				return '';
+			}
+		}
+
 		$class = get_class( $element );
 
 		switch ( $class ) {

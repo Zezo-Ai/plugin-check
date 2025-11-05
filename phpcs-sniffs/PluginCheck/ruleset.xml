@@ -9,6 +9,7 @@
 	<rule ref="PluginCheck.CodeAnalysis.Offloading" />
 	<rule ref="PluginCheck.CodeAnalysis.RequiredFunctionParameters" />
 	<rule ref="PluginCheck.CodeAnalysis.SettingSanitization" />
+	<rule ref="PluginCheck.Security.DirectDB" />
 
 	<!-- Minified PHP files are not allowed without the original source -->
 	<rule ref="Internal.Tokenizer.Exception">
