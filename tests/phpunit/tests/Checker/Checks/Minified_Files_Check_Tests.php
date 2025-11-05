@@ -104,4 +104,3 @@ class Minified_Files_Check_Tests extends WP_UnitTestCase {
 		$this->assertNotEmpty( $check->get_documentation_url() );
 	}
 }
-
