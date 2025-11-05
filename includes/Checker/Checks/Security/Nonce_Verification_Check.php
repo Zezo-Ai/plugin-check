@@ -50,12 +50,9 @@ class Nonce_Verification_Check extends Abstract_PHP_CodeSniffer_Check {
 	 */
 	protected function get_args( Check_Result $result ) {
 		return array(
-			'extensions'      => 'php',
-			'standard'        => 'PluginCheck',
-			'sniffs'          => 'PluginCheck.Security.VerifyNonce',
-			'installed_paths' => array(
-				WP_PLUGIN_CHECK_PLUGIN_DIR_PATH . 'phpcs-sniffs',
-			),
+			'extensions' => 'php',
+			'standard'   => 'PluginCheck',
+			'sniffs'     => 'PluginCheck.Security.VerifyNonce',
 		);
 	}
 
