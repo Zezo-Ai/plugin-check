@@ -9,6 +9,7 @@
 | file_type | plugin_repo | Detects the usage of hidden and compressed files, VCS directories, application files and badly named files. | [Learn more](https://developer.wordpress.org/plugins/wordpress-org/detailed-plugin-guidelines/) |
 | plugin_header_fields | plugin_repo | Checks adherence to the Headers requirements. | [Learn more](https://developer.wordpress.org/plugins/plugin-basics/header-requirements/) |
 | late_escaping | security, plugin_repo | Checks that all output is escaped before being sent to the browser. | [Learn more](https://developer.wordpress.org/apis/security/escaping/) |
+| nonce_verification | security, plugin_repo | Checks for proper usage of <code>wp_verify_nonce()</code> to prevent CSRF vulnerabilities. | [Learn more](https://developer.wordpress.org/apis/security/nonces/) |
 | plugin_updater | plugin_repo | Prevents altering WordPress update routines or using custom updaters, which are not allowed on WordPress.org. | [Learn more](https://developer.wordpress.org/plugins/wordpress-org/detailed-plugin-guidelines/) |
 | plugin_review_phpcs | plugin_repo | Runs PHP_CodeSniffer to detect certain best practices plugins should follow for submission on WordPress.org. | [Learn more](https://developer.wordpress.org/plugins/plugin-basics/best-practices/) |
 | direct_db_queries | security, plugin_repo | Checks the usage of direct database queries, which should be avoided. | [Learn more](https://developer.wordpress.org/apis/database/) |
