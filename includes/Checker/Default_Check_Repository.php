@@ -98,6 +98,7 @@ class Default_Check_Repository extends Empty_Check_Repository {
 				'setting_sanitization'       => new Checks\Plugin_Repo\Setting_Sanitization_Check(),
 				'prefixing'                  => new Checks\Plugin_Repo\Prefixing_Check(),
 				'direct_db'                  => new Checks\Security\Direct_DB_Check(),
+				'minified_files'             => new Checks\Plugin_Repo\Minified_Files_Check(),
 			)
 		);
 
