@@ -8,10 +8,12 @@
 namespace WordPress\Plugin_Check\Admin;
 
 use Exception;
+use InvalidArgumentException;
 use WordPress\Plugin_Check\Checker\AJAX_Runner;
 use WordPress\Plugin_Check\Checker\Runtime_Check;
 use WordPress\Plugin_Check\Checker\Runtime_Environment_Setup;
 use WordPress\Plugin_Check\Utilities\Plugin_Request_Utility;
+use WordPress\Plugin_Check\Utilities\Results_Exporter;
 use WP_Error;
 
 /**
@@ -62,6 +64,14 @@ final class Admin_AJAX {
 	const ACTION_RUN_CHECKS = 'plugin_check_run_checks';
 
 	/**
+	 * Export results action name.
+	 *
+	 * @since 1.8.0
+	 * @var string
+	 */
+	const ACTION_EXPORT_RESULTS = 'plugin_check_export_results';
+
+	/**
 	 * Registers WordPress hooks for the Admin AJAX.
 	 *
 	 * @since 1.0.0
@@ -71,6 +81,7 @@ final class Admin_AJAX {
 		add_action( 'wp_ajax_' . self::ACTION_SET_UP_ENVIRONMENT, array( $this, 'set_up_environment' ) );
 		add_action( 'wp_ajax_' . self::ACTION_GET_CHECKS_TO_RUN, array( $this, 'get_checks_to_run' ) );
 		add_action( 'wp_ajax_' . self::ACTION_RUN_CHECKS, array( $this, 'run_checks' ) );
+		add_action( 'wp_ajax_' . self::ACTION_EXPORT_RESULTS, array( $this, 'export_results' ) );
 	}
 
 	/**
@@ -281,6 +292,73 @@ final class Admin_AJAX {
 				'warnings' => $results->get_warnings(),
 			)
 		);
+	}
+
+	/**
+	 * Handles exporting Plugin Check results.
+	 *
+	 * @since 1.8.0
+	 */
+	public function export_results() {
+		$valid_request = $this->verify_request( filter_input( INPUT_POST, 'nonce', FILTER_SANITIZE_FULL_SPECIAL_CHARS ) );
+
+		if ( is_wp_error( $valid_request ) ) {
+			wp_send_json_error( $valid_request, 403 );
+		}
+
+		$format = filter_input( INPUT_POST, 'format', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
+		if ( empty( $format ) ) {
+			$format = Results_Exporter::FORMAT_JSON;
+		}
+
+		$raw_results = isset( $_POST['results'] ) ? wp_unslash( $_POST['results'] ) : '';
+		if ( '' === $raw_results ) {
+			wp_send_json_error(
+				array( 'message' => __( 'Invalid or empty results payload.', 'plugin-check' ) ),
+				400
+			);
+		}
+
+		$decoded_results = json_decode( $raw_results, true );
+		if ( null === $decoded_results || JSON_ERROR_NONE !== json_last_error() ) {
+			wp_send_json_error(
+				array( 'message' => __( 'Malformed results payload.', 'plugin-check' ) ),
+				400
+			);
+		}
+
+		$errors   = isset( $decoded_results['errors'] ) && is_array( $decoded_results['errors'] ) ? $decoded_results['errors'] : array();
+		$warnings = isset( $decoded_results['warnings'] ) && is_array( $decoded_results['warnings'] ) ? $decoded_results['warnings'] : array();
+
+		$plugin_slug  = filter_input( INPUT_POST, 'plugin', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
+		$plugin_label = isset( $_POST['plugin_label'] ) ? sanitize_text_field( wp_unslash( $_POST['plugin_label'] ) ) : '';
+		if ( empty( $plugin_label ) ) {
+			$plugin_label = $plugin_slug;
+		}
+
+		$timestamp       = current_time( 'Ymd-His' );
+		$timestamp_human = current_time( 'mysql' );
+
+		try {
+			$payload = Results_Exporter::export(
+				$errors,
+				$warnings,
+				$format,
+				array(
+					'plugin'          => $plugin_label,
+					'slug'            => $plugin_slug,
+					'timestamp'       => $timestamp,
+					'timestamp_human' => $timestamp_human,
+				)
+			);
+		} catch ( InvalidArgumentException $exception ) {
+			wp_send_json_error(
+				array( 'message' => $exception->getMessage() ),
+				400
+			);
+		}
+
+		wp_send_json_success( $payload );
 	}
 
 	/**

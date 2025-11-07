@@ -1,6 +1,7 @@
 ( function ( pluginCheck ) {
 	const checkItButton = document.getElementById( 'plugin-check__submit' );
 	const resultsContainer = document.getElementById( 'plugin-check__results' );
+	const exportContainer = document.getElementById( 'plugin-check__export-controls' );
 	const spinner = document.getElementById( 'plugin-check__spinner' );
 	const pluginsList = document.getElementById(
 		'plugin-check__plugins-dropdown'
@@ -15,12 +16,18 @@
 		! checkItButton ||
 		! pluginsList ||
 		! resultsContainer ||
+		! exportContainer ||
 		! spinner ||
 		! categoriesList.length
 	) {
 		console.error( 'Missing form elements on page' );
 		return;
 	}
+
+	let aggregatedResults = createEmptyAggregatedResults();
+	let checksCompleted = false;
+	exportContainer.classList.add( 'is-hidden' );
+	exportContainer.addEventListener( 'click', onExportContainerClick );
 
 	const includeExperimental = document.getElementById(
 		'plugin-check__include-experimental'
@@ -98,6 +105,10 @@
 	function resetResults() {
 		// Empty the results container.
 		resultsContainer.innerText = '';
+		exportContainer.innerHTML = '';
+		exportContainer.classList.add( 'is-hidden' );
+		resetAggregatedResults();
+		checksCompleted = false;
 	}
 
 	/**
@@ -112,6 +123,192 @@
 		for ( let i = 0; i < categoriesList.length; i++ ) {
 			categoriesList[ i ].disabled = false;
 		}
+	}
+
+	function createEmptyAggregatedResults() {
+		return {
+			errors: {},
+			warnings: {},
+		};
+	}
+
+	function resetAggregatedResults() {
+		aggregatedResults = createEmptyAggregatedResults();
+	}
+
+	function mergeAggregatedResults( results ) {
+		if ( results.errors ) {
+			mergeResultTree( aggregatedResults.errors, results.errors );
+		}
+		if ( results.warnings ) {
+			mergeResultTree( aggregatedResults.warnings, results.warnings );
+		}
+	}
+
+	function mergeResultTree( target, source ) {
+		Object.keys( source ).forEach( ( file ) => {
+			if ( ! Object.prototype.hasOwnProperty.call( target, file ) ) {
+				target[ file ] = {};
+			}
+			Object.keys( source[ file ] ).forEach( ( line ) => {
+				if ( ! Object.prototype.hasOwnProperty.call( target[ file ], line ) ) {
+					target[ file ][ line ] = {};
+				}
+				Object.keys( source[ file ][ line ] ).forEach( ( column ) => {
+					if ( ! Object.prototype.hasOwnProperty.call( target[ file ][ line ], column ) ) {
+						target[ file ][ line ][ column ] = [];
+					}
+					const entries = source[ file ][ line ][ column ].map( cloneResultEntry );
+					Array.prototype.push.apply( target[ file ][ line ][ column ], entries );
+				} );
+			} );
+		} );
+	}
+
+	function cloneResultEntry( entry ) {
+		return { ...entry };
+	}
+
+	function hasAggregatedResults() {
+		return hasEntries( aggregatedResults.errors ) || hasEntries( aggregatedResults.warnings );
+	}
+
+	function hasEntries( tree ) {
+		return Object.keys( tree ).some( ( file ) => {
+			return Object.keys( tree[ file ] || {} ).some( ( line ) => {
+				return Object.keys( tree[ file ][ line ] || {} ).some( ( column ) => {
+					return ( tree[ file ][ line ][ column ] || [] ).length > 0;
+				} );
+			} );
+		} );
+	}
+
+	function defaultString( key, fallback ) {
+		if ( pluginCheck.strings && Object.prototype.hasOwnProperty.call( pluginCheck.strings, key ) ) {
+			return pluginCheck.strings[ key ];
+		}
+		return fallback;
+	}
+
+	function renderExportButtons() {
+		exportContainer.innerHTML = '';
+		if ( ! checksCompleted ) {
+			exportContainer.classList.add( 'is-hidden' );
+			return;
+		}
+
+		exportContainer.classList.remove( 'is-hidden' );
+
+		[
+			{ format: 'csv', label: defaultString( 'exportCsv', 'Export CSV' ) },
+			{ format: 'json', label: defaultString( 'exportJson', 'Export JSON' ) },
+			{ format: 'markdown', label: defaultString( 'exportMarkdown', 'Export Markdown' ) },
+		].forEach( ( item ) => {
+			const button = document.createElement( 'button' );
+			button.type = 'button';
+			button.className = 'button button-secondary plugin-check__export-button';
+			button.textContent = item.label;
+			button.setAttribute( 'data-export-format', item.format );
+			exportContainer.appendChild( button );
+		} );
+	}
+
+	function onExportContainerClick( event ) {
+		const button = event.target.closest( '[data-export-format]' );
+		if ( ! button || button.disabled ) {
+			return;
+		}
+
+		event.preventDefault();
+		handleExport( button );
+	}
+
+	function handleExport( button ) {
+		if ( ! hasAggregatedResults() ) {
+			window.alert( defaultString( 'noResults', 'Results are not available yet.' ) );
+			return;
+		}
+
+		const format = button.getAttribute( 'data-export-format' );
+		if ( ! format ) {
+			return;
+		}
+
+		const originalText = button.textContent;
+		button.disabled = true;
+		button.textContent = defaultString( 'exporting', 'Exporting…' );
+
+		requestExport( format )
+			.then( ( payload ) => {
+				downloadExport( payload );
+			} )
+			.catch( ( error ) => {
+				console.error( error );
+				window.alert( defaultString( 'exportError', 'Export failed.' ) );
+			} )
+			.finally( () => {
+				button.disabled = false;
+				button.textContent = originalText;
+			} );
+	}
+
+	function requestExport( format ) {
+		const payload = new FormData();
+		payload.append( 'nonce', pluginCheck.nonce );
+		payload.append( 'action', pluginCheck.actionExportResults );
+		payload.append( 'format', format );
+		if ( pluginsList.value ) {
+			payload.append( 'plugin', pluginsList.value );
+		}
+		payload.append( 'plugin_label', getSelectedPluginLabel() );
+		payload.append( 'results', JSON.stringify( aggregatedResults ) );
+
+		return fetch( ajaxurl, {
+			method: 'POST',
+			credentials: 'same-origin',
+			body: payload,
+		} )
+			.then( ( response ) => response.json() )
+			.then( ( responseData ) => {
+				if ( ! responseData ) {
+					throw new Error( 'Response contains no data' );
+				}
+
+				if ( ! responseData.success ) {
+					let message = defaultString( 'exportError', 'Export failed.' );
+					if ( responseData.data && responseData.data.message ) {
+						message = responseData.data.message;
+					}
+					throw new Error( message );
+				}
+
+				if ( ! responseData.data || ! responseData.data.content || ! responseData.data.filename ) {
+					throw new Error( 'Export payload is incomplete' );
+				}
+
+				return responseData.data;
+			} );
+	}
+
+	function downloadExport( exportPayload ) {
+		const blob = new Blob( [ exportPayload.content ], {
+			type: exportPayload.mime_type || 'text/plain',
+		} );
+		const downloadLink = document.createElement( 'a' );
+		downloadLink.href = window.URL.createObjectURL( blob );
+		downloadLink.download = exportPayload.filename;
+		document.body.appendChild( downloadLink );
+		downloadLink.click();
+		document.body.removeChild( downloadLink );
+		window.URL.revokeObjectURL( downloadLink.href );
+	}
+
+	function getSelectedPluginLabel() {
+		const selectedIndex = pluginsList.selectedIndex;
+		if ( selectedIndex < 0 ) {
+			return '';
+		}
+		return pluginsList.options[ selectedIndex ].text;
 	}
 
 	/**
@@ -259,6 +456,7 @@
 				) {
 					isSuccessMessage = false;
 				}
+				mergeAggregatedResults( results );
 				renderResults( results );
 			} catch ( e ) {
 				// Ignore for now.
@@ -286,6 +484,9 @@
 				type: messageType,
 				message: messageText,
 			} ) + resultsContainer.innerHTML;
+
+		checksCompleted = true;
+		renderExportButtons();
 	}
 
 	/**
