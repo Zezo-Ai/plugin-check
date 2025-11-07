@@ -147,34 +147,38 @@
 		}
 	}
 
+	function hasOwn( object, key ) {
+		return Object.prototype.hasOwnProperty.call( object, key );
+	}
+
 	function mergeResultTree( target, source ) {
-		Object.keys( source ).forEach( ( file ) => {
-			if ( ! Object.prototype.hasOwnProperty.call( target, file ) ) {
+		for ( const file of Object.keys( source ) ) {
+			if ( ! hasOwn( target, file ) ) {
 				target[ file ] = {};
 			}
-			Object.keys( source[ file ] ).forEach( ( line ) => {
-				if ( ! Object.prototype.hasOwnProperty.call( target[ file ], line ) ) {
-					target[ file ][ line ] = {};
+
+			const sourceFile = source[ file ];
+			const targetFile = target[ file ];
+
+			for ( const line of Object.keys( sourceFile ) ) {
+				if ( ! hasOwn( targetFile, line ) ) {
+					targetFile[ line ] = {};
 				}
-				Object.keys( source[ file ][ line ] ).forEach( ( column ) => {
-					if (
-						! Object.prototype.hasOwnProperty.call(
-							target[ file ][ line ],
-							column
-						)
-					) {
-						target[ file ][ line ][ column ] = [];
+
+				const sourceLine = sourceFile[ line ];
+				const targetLine = targetFile[ line ];
+
+				for ( const column of Object.keys( sourceLine ) ) {
+					if ( ! hasOwn( targetLine, column ) ) {
+						targetLine[ column ] = [];
 					}
-					const entries = source[ file ][ line ][ column ].map(
-						cloneResultEntry
-					);
-					Array.prototype.push.apply(
-						target[ file ][ line ][ column ],
-						entries
-					);
-				} );
-			} );
-		} );
+
+					for ( const entry of sourceLine[ column ] ) {
+						targetLine[ column ].push( cloneResultEntry( entry ) );
+					}
+				}
+			}
+		}
 	}
 
 	function cloneResultEntry( entry ) {
@@ -189,15 +193,21 @@
 	}
 
 	function hasEntries( tree ) {
-		return Object.keys( tree ).some( ( file ) => {
-			return Object.keys( tree[ file ] || {} ).some( ( line ) => {
-				return Object.keys( tree[ file ][ line ] || {} ).some( ( column ) => {
-					return (
-						( tree[ file ][ line ][ column ] || [] ).length > 0
-					);
-				} );
-			} );
-		} );
+		for ( const file of Object.keys( tree ) ) {
+			const lines = tree[ file ] || {};
+
+			for ( const line of Object.keys( lines ) ) {
+				const columns = lines[ line ] || {};
+
+				for ( const column of Object.keys( columns ) ) {
+					if ( ( columns[ column ] || [] ).length > 0 ) {
+						return true;
+					}
+				}
+			}
+		}
+
+		return false;
 	}
 
 	function defaultString( key, fallback ) {
@@ -219,7 +229,7 @@
 
 		exportContainer.classList.remove( 'is-hidden' );
 
-		[
+		const exportButtonConfigs = [
 			{
 				format: 'csv',
 				label: defaultString( 'exportCsv', 'Export CSV' ),
@@ -232,10 +242,16 @@
 				format: 'markdown',
 				label: defaultString( 'exportMarkdown', 'Export Markdown' ),
 			},
-		].forEach( ( item ) => {
+		];
+
+		exportButtonConfigs.forEach( ( item ) => {
 			const button = document.createElement( 'button' );
 			button.type = 'button';
-			button.className = 'button button-secondary plugin-check__export-button';
+			button.classList.add(
+				'button',
+				'button-secondary',
+				'plugin-check__export-button'
+			);
 			button.textContent = item.label;
 			button.setAttribute( 'data-export-format', item.format );
 			exportContainer.appendChild( button );
@@ -263,7 +279,9 @@
 
 	function handleExport( button ) {
 		if ( ! hasAggregatedResults() ) {
-			announce( defaultString( 'noResults', 'Results are not available yet.' ) );
+			announce(
+				defaultString( 'noResults', 'Results are not available yet.' )
+			);
 			return;
 		}
 
@@ -282,7 +300,11 @@
 			} )
 			.catch( ( error ) => {
 				console.error( error );
-				announce( defaultString( 'exportError', 'Export failed.' ) );
+				const failureMessage = defaultString(
+					'exportError',
+					'Export failed.'
+				);
+				announce( failureMessage );
 			} )
 			.finally( () => {
 				button.disabled = false;
@@ -313,7 +335,11 @@
 				}
 
 				if ( ! responseData.success ) {
-					let message = defaultString( 'exportError', 'Export failed.' );
+					const defaultExportErrorMessage = defaultString(
+						'exportError',
+						'Export failed.'
+					);
+					let message = defaultExportErrorMessage;
 					if ( responseData.data && responseData.data.message ) {
 						message = responseData.data.message;
 					}
