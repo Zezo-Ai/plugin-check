@@ -306,51 +306,11 @@ final class Admin_AJAX {
 			wp_send_json_error( $valid_request, 403 );
 		}
 
-		$format = filter_input( INPUT_POST, 'format', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
-		if ( empty( $format ) ) {
-			$format = Results_Exporter::FORMAT_JSON;
-		}
-
-		$raw_results = isset( $_POST['results'] ) ? wp_unslash( $_POST['results'] ) : '';
-		if ( '' === $raw_results ) {
-			wp_send_json_error(
-				array( 'message' => __( 'Invalid or empty results payload.', 'plugin-check' ) ),
-				400
-			);
-		}
-
-		$decoded_results = json_decode( $raw_results, true );
-		if ( null === $decoded_results || JSON_ERROR_NONE !== json_last_error() ) {
-			wp_send_json_error(
-				array( 'message' => __( 'Malformed results payload.', 'plugin-check' ) ),
-				400
-			);
-		}
-
-		$errors   = isset( $decoded_results['errors'] ) && is_array( $decoded_results['errors'] ) ? $decoded_results['errors'] : array();
-		$warnings = isset( $decoded_results['warnings'] ) && is_array( $decoded_results['warnings'] ) ? $decoded_results['warnings'] : array();
-
-		$plugin_slug  = filter_input( INPUT_POST, 'plugin', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
-		$plugin_label = isset( $_POST['plugin_label'] ) ? sanitize_text_field( wp_unslash( $_POST['plugin_label'] ) ) : '';
-		if ( empty( $plugin_label ) ) {
-			$plugin_label = $plugin_slug;
-		}
-
-		$timestamp       = current_time( 'Ymd-His' );
-		$timestamp_human = current_time( 'mysql' );
-
 		try {
-			$payload = Results_Exporter::export(
-				$errors,
-				$warnings,
-				$format,
-				array(
-					'plugin'          => $plugin_label,
-					'slug'            => $plugin_slug,
-					'timestamp'       => $timestamp,
-					'timestamp_human' => $timestamp_human,
-				)
-			);
+			$format          = $this->determine_export_format();
+			$results_payload = $this->extract_results_payload();
+			$export_metadata = $this->prepare_export_metadata();
+			$payload         = $this->build_export_payload( $results_payload, $format, $export_metadata );
 		} catch ( InvalidArgumentException $exception ) {
 			wp_send_json_error(
 				array( 'message' => $exception->getMessage() ),
@@ -359,6 +319,94 @@ final class Admin_AJAX {
 		}
 
 		wp_send_json_success( $payload );
+	}
+
+	/**
+	 * Determines the requested export format.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @return string Export format slug.
+	 */
+	private function determine_export_format() {
+		$format = filter_input( INPUT_POST, 'format', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
+		if ( empty( $format ) ) {
+			return Results_Exporter::FORMAT_JSON;
+		}
+
+		return strtolower( $format );
+	}
+
+	/**
+	 * Extracts errors and warnings payload from the request.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @return array{
+	 *     errors: array,
+	 *     warnings: array,
+	 * }
+	 *
+	 * @throws InvalidArgumentException When the payload is missing or malformed.
+	 */
+	private function extract_results_payload() {
+		$raw_results = isset( $_POST['results'] ) ? wp_unslash( $_POST['results'] ) : '';
+		if ( '' === $raw_results ) {
+			throw new InvalidArgumentException( __( 'Invalid or empty results payload.', 'plugin-check' ) );
+		}
+
+		$decoded_results = json_decode( $raw_results, true );
+		if ( null === $decoded_results || JSON_ERROR_NONE !== json_last_error() ) {
+			throw new InvalidArgumentException( __( 'Malformed results payload.', 'plugin-check' ) );
+		}
+
+		return array(
+			'errors'   => isset( $decoded_results['errors'] ) && is_array( $decoded_results['errors'] ) ? $decoded_results['errors'] : array(),
+			'warnings' => isset( $decoded_results['warnings'] ) && is_array( $decoded_results['warnings'] ) ? $decoded_results['warnings'] : array(),
+		);
+	}
+
+	/**
+	 * Prepares metadata used for export filenames and headers.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @return array Metadata values.
+	 */
+	private function prepare_export_metadata() {
+		$plugin_slug  = filter_input( INPUT_POST, 'plugin', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
+		$plugin_label = isset( $_POST['plugin_label'] ) ? sanitize_text_field( wp_unslash( $_POST['plugin_label'] ) ) : '';
+		if ( empty( $plugin_label ) ) {
+			$plugin_label = $plugin_slug;
+		}
+
+		return array(
+			'plugin'          => $plugin_label,
+			'slug'            => $plugin_slug,
+			'timestamp'       => current_time( 'Ymd-His' ),
+			'timestamp_human' => current_time( 'mysql' ),
+		);
+	}
+
+	/**
+	 * Builds the export payload using the Results Exporter.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param array  $results_payload Payload containing errors and warnings.
+	 * @param string $format          Export format slug.
+	 * @param array  $metadata        Export metadata.
+	 * @return array Export payload.
+	 *
+	 * @throws InvalidArgumentException If the payload cannot be generated.
+	 */
+	private function build_export_payload( array $results_payload, $format, array $metadata ) {
+		return Results_Exporter::export(
+			$results_payload['errors'],
+			$results_payload['warnings'],
+			$format,
+			$metadata
+		);
 	}
 
 	/**

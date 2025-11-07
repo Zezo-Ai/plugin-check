@@ -315,50 +315,10 @@ final class Results_Exporter {
 	 * @return array Combined file results.
 	 */
 	public static function flatten_file_results( array $file_errors, array $file_warnings ) {
-		$file_results = array();
-
-		foreach ( $file_errors as $line => $line_errors ) {
-			foreach ( $line_errors as $column => $column_errors ) {
-				foreach ( $column_errors as $column_error ) {
-					$column_error['message'] = str_replace(
-						array( '<br>', '<strong>', '</strong>', '<code>', '</code>' ),
-						array( ' ', '', '', '`', '`' ),
-						$column_error['message']
-					);
-					$column_error['message'] = html_entity_decode( $column_error['message'], ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401 );
-
-					$file_results[] = array_merge(
-						$column_error,
-						array(
-							'type'   => 'ERROR',
-							'line'   => (int) $line,
-							'column' => (int) $column,
-						)
-					);
-				}
-			}
-		}
-
-		foreach ( $file_warnings as $line => $line_warnings ) {
-			foreach ( $line_warnings as $column => $column_warnings ) {
-				foreach ( $column_warnings as $column_warning ) {
-					$column_warning['message'] = str_replace(
-						array( '<br>', '<strong>', '</strong>', '<code>', '</code>' ),
-						array( ' ', '', '', '`', '`' ),
-						$column_warning['message']
-					);
-
-					$file_results[] = array_merge(
-						$column_warning,
-						array(
-							'type'   => 'WARNING',
-							'line'   => (int) $line,
-							'column' => (int) $column,
-						)
-					);
-				}
-			}
-		}
+		$file_results = array_merge(
+			self::flatten_collection( $file_errors, 'ERROR' ),
+			self::flatten_collection( $file_warnings, 'WARNING' )
+		);
 
 		usort(
 			$file_results,
@@ -380,5 +340,60 @@ final class Results_Exporter {
 		);
 
 		return $file_results;
+	}
+
+	/**
+	 * Flattens a collection of check results for a single message type.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param array  $collection Collection grouped by line and column.
+	 * @param string $type       Message type, either ERROR or WARNING.
+	 * @return array Flattened collection.
+	 */
+	private static function flatten_collection( array $collection, $type ) {
+		$flattened = array();
+
+		foreach ( $collection as $line => $line_entries ) {
+			foreach ( $line_entries as $column => $column_entries ) {
+				foreach ( $column_entries as $entry ) {
+					$flattened[] = self::normalize_entry( $entry, $type, $line, $column );
+				}
+			}
+		}
+
+		return $flattened;
+	}
+
+	/**
+	 * Normalizes a single check result entry into the export structure.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param array  $entry  Entry data.
+	 * @param string $type   Message type.
+	 * @param int    $line   Line number.
+	 * @param int    $column Column number.
+	 * @return array Normalized entry.
+	 */
+	private static function normalize_entry( array $entry, $type, $line, $column ) {
+		$entry['message'] = str_replace(
+			array( '<br>', '<strong>', '</strong>', '<code>', '</code>' ),
+			array( ' ', '', '', '`', '`' ),
+			$entry['message']
+		);
+
+		if ( 'ERROR' === $type ) {
+			$entry['message'] = html_entity_decode( $entry['message'], ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401 );
+		}
+
+		return array_merge(
+			$entry,
+			array(
+				'type'   => $type,
+				'line'   => (int) $line,
+				'column' => (int) $column,
+			)
+		);
 	}
 }

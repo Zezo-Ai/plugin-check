@@ -1,7 +1,9 @@
 ( function ( pluginCheck ) {
 	const checkItButton = document.getElementById( 'plugin-check__submit' );
 	const resultsContainer = document.getElementById( 'plugin-check__results' );
-	const exportContainer = document.getElementById( 'plugin-check__export-controls' );
+	const exportContainer = document.getElementById(
+		'plugin-check__export-controls'
+	);
 	const spinner = document.getElementById( 'plugin-check__spinner' );
 	const pluginsList = document.getElementById(
 		'plugin-check__plugins-dropdown'
@@ -155,11 +157,21 @@
 					target[ file ][ line ] = {};
 				}
 				Object.keys( source[ file ][ line ] ).forEach( ( column ) => {
-					if ( ! Object.prototype.hasOwnProperty.call( target[ file ][ line ], column ) ) {
+					if (
+						! Object.prototype.hasOwnProperty.call(
+							target[ file ][ line ],
+							column
+						)
+					) {
 						target[ file ][ line ][ column ] = [];
 					}
-					const entries = source[ file ][ line ][ column ].map( cloneResultEntry );
-					Array.prototype.push.apply( target[ file ][ line ][ column ], entries );
+					const entries = source[ file ][ line ][ column ].map(
+						cloneResultEntry
+					);
+					Array.prototype.push.apply(
+						target[ file ][ line ][ column ],
+						entries
+					);
 				} );
 			} );
 		} );
@@ -170,21 +182,29 @@
 	}
 
 	function hasAggregatedResults() {
-		return hasEntries( aggregatedResults.errors ) || hasEntries( aggregatedResults.warnings );
+		return (
+			hasEntries( aggregatedResults.errors ) ||
+			hasEntries( aggregatedResults.warnings )
+		);
 	}
 
 	function hasEntries( tree ) {
 		return Object.keys( tree ).some( ( file ) => {
 			return Object.keys( tree[ file ] || {} ).some( ( line ) => {
 				return Object.keys( tree[ file ][ line ] || {} ).some( ( column ) => {
-					return ( tree[ file ][ line ][ column ] || [] ).length > 0;
+					return (
+						( tree[ file ][ line ][ column ] || [] ).length > 0
+					);
 				} );
 			} );
 		} );
 	}
 
 	function defaultString( key, fallback ) {
-		if ( pluginCheck.strings && Object.prototype.hasOwnProperty.call( pluginCheck.strings, key ) ) {
+		if (
+			pluginCheck.strings &&
+			Object.prototype.hasOwnProperty.call( pluginCheck.strings, key )
+		) {
 			return pluginCheck.strings[ key ];
 		}
 		return fallback;
@@ -200,9 +220,18 @@
 		exportContainer.classList.remove( 'is-hidden' );
 
 		[
-			{ format: 'csv', label: defaultString( 'exportCsv', 'Export CSV' ) },
-			{ format: 'json', label: defaultString( 'exportJson', 'Export JSON' ) },
-			{ format: 'markdown', label: defaultString( 'exportMarkdown', 'Export Markdown' ) },
+			{
+				format: 'csv',
+				label: defaultString( 'exportCsv', 'Export CSV' ),
+			},
+			{
+				format: 'json',
+				label: defaultString( 'exportJson', 'Export JSON' ),
+			},
+			{
+				format: 'markdown',
+				label: defaultString( 'exportMarkdown', 'Export Markdown' ),
+			},
 		].forEach( ( item ) => {
 			const button = document.createElement( 'button' );
 			button.type = 'button';
@@ -211,6 +240,15 @@
 			button.setAttribute( 'data-export-format', item.format );
 			exportContainer.appendChild( button );
 		} );
+	}
+
+	function announce( message ) {
+		if ( window.wp && window.wp.a11y && window.wp.a11y.speak ) {
+			window.wp.a11y.speak( message );
+			return;
+		}
+
+		console.warn( message );
 	}
 
 	function onExportContainerClick( event ) {
@@ -225,7 +263,7 @@
 
 	function handleExport( button ) {
 		if ( ! hasAggregatedResults() ) {
-			window.alert( defaultString( 'noResults', 'Results are not available yet.' ) );
+			announce( defaultString( 'noResults', 'Results are not available yet.' ) );
 			return;
 		}
 
@@ -244,7 +282,7 @@
 			} )
 			.catch( ( error ) => {
 				console.error( error );
-				window.alert( defaultString( 'exportError', 'Export failed.' ) );
+				announce( defaultString( 'exportError', 'Export failed.' ) );
 			} )
 			.finally( () => {
 				button.disabled = false;
@@ -282,7 +320,11 @@
 					throw new Error( message );
 				}
 
-				if ( ! responseData.data || ! responseData.data.content || ! responseData.data.filename ) {
+				if (
+					! responseData.data ||
+					! responseData.data.content ||
+					! responseData.data.filename
+				) {
 					throw new Error( 'Export payload is incomplete' );
 				}
 
