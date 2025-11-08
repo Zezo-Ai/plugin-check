@@ -284,7 +284,7 @@ final class Admin_AJAX {
 	/**
 	 * Prepare the results response based on requested types.
 	 *
-	 * @since 1.7.0
+	 * @since 1.8.0
 	 *
 	 * @param object $results The check results object.
 	 * @param array  $types   The types of results to include (error, warning).

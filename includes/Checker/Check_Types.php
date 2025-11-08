@@ -10,7 +10,7 @@ namespace WordPress\Plugin_Check\Checker;
 /**
  * Check Type class.
  *
- * @since 1.0.0
+ * @since 1.8.0
  */
 class Check_Types {
 
@@ -21,7 +21,7 @@ class Check_Types {
 	/**
 	 * Returns an array of check types.
 	 *
-	 * @since 1.7.0
+	 * @since 1.8.0
 	 *
 	 * @return array An array of check types.
 	 */
@@ -34,7 +34,7 @@ class Check_Types {
 		/**
 		 * Filters the check types.
 		 *
-		 * @since 1.7.0
+		 * @since 1.8.0
 		 *
 		 * @param array<string, string> $default_categories Associative array of type slugs to labels.
 		 */
