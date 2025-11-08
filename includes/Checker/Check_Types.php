@@ -36,7 +36,7 @@ class Check_Types {
 		 *
 		 * @since 1.8.0
 		 *
-		 * @param array<string, string> $default_categories Associative array of type slugs to labels.
+		 * @param array<string, string> $default_types Associative array of type slugs to labels.
 		 */
 		$check_types = (array) apply_filters( 'wp_plugin_check_types', $default_types );
 

@@ -77,12 +77,9 @@
 									<tr>
 										<td>
 											<fieldset>
-												<legend
-													class="screen-reader-text"><?php echo esc_html( $type ); ?></legend>
+												<legend class="screen-reader-text"><?php echo esc_html( $type ); ?></legend>
 												<label for="<?php echo esc_attr( $type ); ?>">
-													<input type="checkbox" id="<?php echo esc_attr( $type ); ?>"
-														   name="types"
-														   value="<?php echo esc_attr( $type ); ?>" checked/>
+													<input type="checkbox" id="<?php echo esc_attr( $type ); ?>" name="types" value="<?php echo esc_attr( $type ); ?>" checked="checked" />
 													<?php echo esc_html( $label ); ?>
 												</label>
 											</fieldset>
