@@ -30,8 +30,8 @@
 		<severity>7</severity>
 	</rule>
 
-	<!-- Prohibit the use of HEREDOC or NOWDOC. -->
-	<rule ref="Squiz.PHP.Heredoc">
+	<!-- Prohibit the use of HEREDOC. -->
+	<rule ref="PluginCheck.CodeAnalysis.Heredoc">
 		<severity>7</severity>
 	</rule>
 

@@ -33,8 +33,11 @@ class Plugin_Review_PHPCS_Check_Tests extends WP_UnitTestCase {
 		$this->assertArrayHasKey( 'code', $errors['load.php'][6][1][0] );
 		$this->assertEquals( 'Generic.PHP.DisallowShortOpenTag.Found', $errors['load.php'][6][1][0]['code'] );
 
-		// Check for Squiz.PHP.Heredoc.NotAllowed error on Line no 28 and column no at 8.
-		$this->assertEquals( 'Squiz.PHP.Heredoc.NotAllowed', $errors['load.php'][28][8][0]['code'] );
+		// Check for PluginCheck.CodeAnalysis.Heredoc.NotAllowed error on Line no 28 and column no at 8.
+		$this->assertArrayHasKey( 28, $errors['load.php'] );
+		$this->assertArrayHasKey( 8, $errors['load.php'][28] );
+		$this->assertArrayHasKey( 'code', $errors['load.php'][28][8][0] );
+		$this->assertEquals( 'PluginCheck.CodeAnalysis.Heredoc.NotAllowed', $errors['load.php'][28][8][0]['code'] );
 
 		// Check for WordPress.WP.DeprecatedFunctions.the_author_emailFound error on Line no 12 and column no at 5.
 		$this->assertArrayHasKey( 12, $errors['load.php'] );
