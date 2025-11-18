@@ -247,8 +247,6 @@ final class Results_Exporter {
 	private static function to_markdown( array $grouped_results, array $args ) {
 		$plugin_name    = isset( $args['plugin'] ) ? $args['plugin'] : '';
 		$generated_at   = isset( $args['timestamp_human'] ) ? $args['timestamp_human'] : current_time( 'mysql' );
-		$total_issues   = 0;
-		$total_files    = count( $grouped_results );
 		$markdown_lines = array(
 			'# Plugin Check Report',
 			'',
@@ -257,14 +255,7 @@ final class Results_Exporter {
 			'',
 		);
 
-		foreach ( $grouped_results as $file => $items ) {
-			$total_issues += count( $items );
-		}
-
-		$markdown_lines[] = sprintf( '**Files with issues:** %d', $total_files );
-		$markdown_lines[] = sprintf( '**Total issues:** %d', $total_issues );
 		$markdown_lines[] = '';
-
 		foreach ( $grouped_results as $file => $items ) {
 			$markdown_lines[] = '## `' . $file . '`';
 			$markdown_lines[] = '';
