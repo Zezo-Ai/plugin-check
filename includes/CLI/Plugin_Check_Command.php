@@ -138,12 +138,16 @@ final class Plugin_Check_Command {
 	 *   - update
 	 * ---
 	 *
+	 * [--use-ai]
+	 * : Enable AI-based analysis to detect false positives in check results.
+	 *
 	 * ## EXAMPLES
 	 *
 	 *   wp plugin check akismet
 	 *   wp plugin check akismet --checks=late_escaping
 	 *   wp plugin check akismet --format=json
 	 *   wp plugin check akismet --mode=update
+	 *   wp plugin check akismet --use-ai
 	 *
 	 * @subcommand check
 	 *
@@ -160,7 +164,7 @@ final class Plugin_Check_Command {
 	 */
 	public function check( $args, $assoc_args ) {
 		// Get options based on the CLI arguments.
-		$options = $this->get_options(
+			$options = $this->get_options(
 			$assoc_args,
 			array(
 				'checks'                        => '',
@@ -176,6 +180,7 @@ final class Plugin_Check_Command {
 				'slug'                          => '',
 				'ignore-codes'                  => '',
 				'mode'                          => 'new',
+				'use-ai'                        => false,
 			)
 		);
 
@@ -229,6 +234,7 @@ final class Plugin_Check_Command {
 			$runner->set_categories( $categories );
 			$runner->set_slug( $options['slug'] );
 			$runner->set_mode( $options['mode'] );
+			$runner->set_use_ai( $options['use-ai'] );
 		} catch ( Exception $error ) {
 			WP_CLI::error( $error->getMessage() );
 		}
@@ -255,8 +261,40 @@ final class Plugin_Check_Command {
 			$warnings = $result->get_warnings();
 		}
 
+		// Get AI analysis results if available.
+		$ai_analysis = array();
+		if ( $result && $options['use-ai'] ) {
+			$ai_analysis = $result->get_ai_analysis();
+		}
+
+		// Get AI statistics if available.
+		$ai_stats = array();
+		if ( $result && $options['use-ai'] ) {
+			$ai_stats = $result->get_ai_stats();
+		}
+
 		if ( empty( $errors ) && empty( $warnings ) ) {
-			WP_CLI::success( __( 'Checks complete. No errors found.', 'plugin-check' ) );
+			$message = __( 'Checks complete. No errors found.', 'plugin-check' );
+
+			// Add AI statistics to the message if available.
+			if ( ! empty( $ai_stats ) && isset( $ai_stats['false_positives'] ) && $ai_stats['false_positives'] > 0 ) {
+				$ai_info = sprintf(
+					// translators: %1$d: Number of false positives, %2$s: Tokens spent (formatted).
+					__( ' AI detected %1$d %2$s', 'plugin-check' ),
+					$ai_stats['false_positives'],
+					_n( 'false positive', 'false positives', $ai_stats['false_positives'], 'plugin-check' )
+				);
+				if ( isset( $ai_stats['tokens_spent'] ) && $ai_stats['tokens_spent'] > 0 ) {
+					$ai_info .= sprintf(
+						// translators: %s: Tokens spent (formatted).
+						__( ' (Tokens spent: %s)', 'plugin-check' ),
+						number_format_i18n( $ai_stats['tokens_spent'] )
+					);
+				}
+				$message .= '.' . $ai_info;
+			}
+
+			WP_CLI::success( $message );
 
 			return;
 		}

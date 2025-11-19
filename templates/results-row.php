@@ -21,6 +21,34 @@
 				<span aria-hidden="true" class="dashicons dashicons-external"></span>
 			</a>
 		<# } #>
+		<# if ( data.ai_analysis ) { #>
+			<br>
+			<# if ( data.ai_analysis.is_false_positive ) { #>
+				<span class="plugin-check__ai-analysis plugin-check__ai-analysis--false-positive" title="<?php esc_attr_e( 'AI Analysis', 'plugin-check' ); ?>">
+					<span class="dashicons dashicons-robot" aria-hidden="true"></span>
+					<?php esc_html_e( 'AI: Potential false positive', 'plugin-check' ); ?>
+					<# if ( data.ai_analysis.confidence ) { #>
+						(<?php esc_html_e( 'Confidence', 'plugin-check' ); ?>: {{Math.round(data.ai_analysis.confidence * 100)}}%)
+					<# } #>
+				</span>
+			<# } else { #>
+				<span class="plugin-check__ai-analysis plugin-check__ai-analysis--valid" title="<?php esc_attr_e( 'AI Analysis', 'plugin-check' ); ?>">
+					<span class="dashicons dashicons-robot" aria-hidden="true"></span>
+					<?php esc_html_e( 'AI: Valid issue', 'plugin-check' ); ?>
+					<# if ( data.ai_analysis.confidence ) { #>
+						(<?php esc_html_e( 'Confidence', 'plugin-check' ); ?>: {{Math.round(data.ai_analysis.confidence * 100)}}%)
+					<# } #>
+				</span>
+			<# } #>
+			<# if ( data.ai_analysis.reasoning ) { #>
+				<br>
+				<em class="plugin-check__ai-reasoning">{{{data.ai_analysis.reasoning}}}</em>
+			<# } #>
+			<# if ( data.ai_analysis.recommendation ) { #>
+				<br>
+				<strong><?php esc_html_e( 'Recommendation', 'plugin-check' ); ?>:</strong> <span class="plugin-check__ai-recommendation">{{{data.ai_analysis.recommendation}}}</span>
+			<# } #>
+		<# } #>
 	</td>
 	<# if ( data.hasLinks ) { #>
 		<td>

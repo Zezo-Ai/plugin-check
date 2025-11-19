@@ -22,9 +22,10 @@
 		return;
 	}
 
-	const includeExperimental = document.getElementById(
-		'plugin-check__include-experimental'
-	);
+		const includeExperimental = document.getElementById(
+			'plugin-check__include-experimental'
+		);
+		const useAi = document.getElementById( 'plugin-check__use-ai' );
 
 	// Handle disabling the Check it button when a plugin is not selected.
 	function canRunChecks() {
@@ -133,6 +134,10 @@
 			'include-experimental',
 			includeExperimental && includeExperimental.checked ? 1 : 0
 		);
+		pluginCheckData.append(
+			'use-ai',
+			useAi && useAi.checked ? 1 : 0
+		);
 
 		for ( let i = 0; i < data.checks.length; i++ ) {
 			pluginCheckData.append( 'checks[]', data.checks[ i ] );
@@ -205,6 +210,10 @@
 			'include-experimental',
 			includeExperimental && includeExperimental.checked ? 1 : 0
 		);
+		pluginCheckData.append(
+			'use-ai',
+			useAi && useAi.checked ? 1 : 0
+		);
 
 		for ( let i = 0; i < categoriesList.length; i++ ) {
 			if ( categoriesList[ i ].checked ) {
@@ -248,6 +257,7 @@
 	 */
 	async function runChecks( data ) {
 		let isSuccessMessage = true;
+		let aiStats = null;
 		for ( let i = 0; i < data.checks.length; i++ ) {
 			try {
 				const results = await runCheck( data.plugin, data.checks[ i ] );
@@ -260,12 +270,27 @@
 					isSuccessMessage = false;
 				}
 				renderResults( results );
+
+				// Collect AI stats from the last check.
+				if ( results.ai_stats ) {
+					// Merge stats if multiple checks.
+					if ( ! aiStats ) {
+						aiStats = {
+							tokens_spent: 0,
+							false_positives: 0,
+							issues_analyzed: 0,
+						};
+					}
+					aiStats.tokens_spent += results.ai_stats.tokens_spent || 0;
+					aiStats.false_positives += results.ai_stats.false_positives || 0;
+					aiStats.issues_analyzed += results.ai_stats.issues_analyzed || 0;
+				}
 			} catch ( e ) {
 				// Ignore for now.
 			}
 		}
 
-		renderResultsMessage( isSuccessMessage );
+		renderResultsMessage( isSuccessMessage, aiStats );
 	}
 
 	/**
@@ -274,12 +299,23 @@
 	 * @since 1.0.0
 	 *
 	 * @param {boolean} isSuccessMessage Whether the message is a success message.
+	 * @param {Object}  aiStats          AI statistics.
 	 */
-	function renderResultsMessage( isSuccessMessage ) {
+	function renderResultsMessage( isSuccessMessage, aiStats ) {
 		const messageType = isSuccessMessage ? 'success' : 'error';
-		const messageText = isSuccessMessage
+		let messageText = isSuccessMessage
 			? pluginCheck.successMessage
 			: pluginCheck.errorMessage;
+
+		// Add AI statistics to the message if available.
+		if ( aiStats && aiStats.false_positives > 0 ) {
+			let aiInfo = ' AI detected ' + aiStats.false_positives + ' ';
+			aiInfo += ( 1 === aiStats.false_positives ) ? 'false positive' : 'false positives';
+			if ( aiStats.tokens_spent > 0 ) {
+				aiInfo += ' (Tokens spent: ' + aiStats.tokens_spent.toLocaleString() + ')';
+			}
+			messageText += '.' + aiInfo;
+		}
 
 		resultsContainer.innerHTML =
 			renderTemplate( 'plugin-check-results-complete', {
@@ -307,6 +343,10 @@
 			'include-experimental',
 			includeExperimental && includeExperimental.checked ? 1 : 0
 		);
+		pluginCheckData.append(
+			'use-ai',
+			useAi && useAi.checked ? 1 : 0
+		);
 
 		return fetch( ajaxurl, {
 			method: 'POST',
@@ -321,6 +361,14 @@
 				// If the response is successful and there is no message in the response.
 				if ( ! responseData.data || ! responseData.data.message ) {
 					throw new Error( 'Response contains no data' );
+				}
+
+				// Debug: Log AI data if present.
+				if ( responseData.data.ai_analysis ) {
+					console.log( 'AI Analysis received:', responseData.data.ai_analysis );
+				}
+				if ( responseData.data.ai_stats ) {
+					console.log( 'AI Stats received:', responseData.data.ai_stats );
 				}
 
 				return responseData.data;
@@ -361,20 +409,25 @@
 	 * @param {Object} results The results object.
 	 */
 	function renderResults( results ) {
-		const { errors, warnings } = results;
+		const { errors, warnings, ai_analysis } = results || {};
+
+		// Debug: Log AI analysis data if available.
+		if ( ai_analysis && typeof ai_analysis === 'object' && Object.keys( ai_analysis ).length > 0 ) {
+			console.log( 'AI Analysis data in renderResults:', ai_analysis );
+		}
 		// Render errors and warnings for files.
 		for ( const file in errors ) {
 			if ( warnings[ file ] ) {
-				renderFileResults( file, errors[ file ], warnings[ file ] );
+				renderFileResults( file, errors[ file ], warnings[ file ], ai_analysis );
 				delete warnings[ file ];
 			} else {
-				renderFileResults( file, errors[ file ], [] );
+				renderFileResults( file, errors[ file ], [], ai_analysis );
 			}
 		}
 
 		// Render remaining files with only warnings.
 		for ( const file in warnings ) {
-			renderFileResults( file, [], warnings[ file ] );
+			renderFileResults( file, [], warnings[ file ], ai_analysis );
 		}
 	}
 
@@ -383,11 +436,12 @@
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param {string} file     The file name for the results.
-	 * @param {Object} errors   The file errors.
-	 * @param {Object} warnings The file warnings.
+	 * @param {string} file        The file name for the results.
+	 * @param {Object} errors      The file errors.
+	 * @param {Object} warnings    The file warnings.
+	 * @param {Object} ai_analysis AI analysis results.
 	 */
-	function renderFileResults( file, errors, warnings ) {
+	function renderFileResults( file, errors, warnings, ai_analysis ) {
 		const index =
 			Date.now().toString( 36 ) +
 			Math.random().toString( 36 ).substr( 2 );
@@ -406,8 +460,8 @@
 		);
 
 		// Render results to the table.
-		renderResultRows( 'ERROR', errors, resultsTable, hasLinks );
-		renderResultRows( 'WARNING', warnings, resultsTable, hasLinks );
+		renderResultRows( 'ERROR', errors, resultsTable, hasLinks, ai_analysis, file );
+		renderResultRows( 'WARNING', warnings, resultsTable, hasLinks, ai_analysis, file );
 	}
 
 	/**
@@ -436,12 +490,14 @@
 	 *
 	 * @since 1.0.0
 	 *
-	 * @param {string}  type     The result type. Either ERROR or WARNING.
-	 * @param {Object}  results  The results object.
-	 * @param {Object}  table    The HTML table to append a result row to.
-	 * @param {boolean} hasLinks Whether any result has links.
+	 * @param {string}  type        The result type. Either ERROR or WARNING.
+	 * @param {Object}  results     The results object.
+	 * @param {Object}  table       The HTML table to append a result row to.
+	 * @param {boolean} hasLinks    Whether any result has links.
+	 * @param {Object}  ai_analysis AI analysis results.
+	 * @param {string}  file        The file path.
 	 */
-	function renderResultRows( type, results, table, hasLinks ) {
+	function renderResultRows( type, results, table, hasLinks, ai_analysis, file ) {
 		// Loop over each result by the line, column and messages.
 		for ( const line in results ) {
 			for ( const column in results[ line ] ) {
@@ -451,22 +507,92 @@
 					const code = results[ line ][ column ][ i ].code;
 					const link = results[ line ][ column ][ i ].link;
 
+					// Find AI analysis for this issue.
+					let aiData = null;
+					if ( ai_analysis && typeof ai_analysis === 'object' ) {
+						// Try to find by file, line, column, and code match.
+						// ai_analysis is an object where keys are MD5 hashes and values are analysis data.
+						const analysisEntries = Object.values( ai_analysis );
+						aiData = analysisEntries.find( function( analysis ) {
+							if ( ! analysis || typeof analysis !== 'object' ) {
+								return false;
+							}
+							// Normalize values for comparison.
+							const analysisFile = String( analysis.file || '' );
+							const currentFile = String( file || '' );
+							const analysisLine = parseInt( analysis.line, 10 );
+							const currentLine = parseInt( line, 10 );
+							const analysisColumn = parseInt( analysis.column, 10 );
+							const currentColumn = parseInt( column, 10 );
+							const analysisCode = String( analysis.code || '' );
+							const currentCode = String( code || '' );
+
+							const fileMatch = analysisFile === currentFile;
+							const lineMatch = analysisLine === currentLine;
+							const columnMatch = analysisColumn === currentColumn;
+							const codeMatch = analysisCode === currentCode;
+
+							if ( fileMatch && lineMatch && columnMatch && codeMatch ) {
+								console.log( 'AI match found:', {
+									file: currentFile,
+									line: currentLine,
+									column: currentColumn,
+									code: currentCode,
+									analysis: analysis,
+								} );
+								return true;
+							}
+
+							return false;
+						} ) || null;
+					}
+
+					const rowData = {
+						line,
+						column,
+						type,
+						message,
+						docs,
+						code,
+						link,
+						hasLinks,
+					};
+
+					// Add AI analysis data if available.
+					if ( aiData ) {
+						rowData.ai_analysis = aiData;
+					}
+
 					table.innerHTML += renderTemplate(
 						'plugin-check-results-row',
-						{
-							line,
-							column,
-							type,
-							message,
-							docs,
-							code,
-							link,
-							hasLinks,
-						}
+						rowData
 					);
 				}
 			}
 		}
+	}
+
+	/**
+	 * Generates a unique key for an issue.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param {string} file   File path.
+	 * @param {number} line   Line number.
+	 * @param {number} column Column number.
+	 * @param {string} code   Issue code.
+	 * @return {string} Unique key.
+	 */
+	function getIssueKey( file, line, column, code ) {
+		const str = file + ':' + line + ':' + column + ':' + code;
+		// Simple MD5-like hash (using built-in hash if available, otherwise a simple hash).
+		let hash = 0;
+		for ( let i = 0; i < str.length; i++ ) {
+			const char = str.charCodeAt( i );
+			hash = ( hash << 5 ) - hash + char;
+			hash = hash & hash; // Convert to 32bit integer.
+		}
+		return hash.toString( 36 );
 	}
 
 	/**

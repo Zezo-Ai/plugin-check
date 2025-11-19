@@ -9,6 +9,7 @@ namespace WordPress\Plugin_Check;
 
 use WordPress\Plugin_Check\Admin\Admin_AJAX;
 use WordPress\Plugin_Check\Admin\Admin_Page;
+use WordPress\Plugin_Check\Admin\Settings_Page;
 
 /**
  * Main class for the plugin.
@@ -67,5 +68,9 @@ class Plugin_Main {
 		// Create the Admin page.
 		$admin_page = new Admin_Page( $admin_ajax );
 		$admin_page->add_hooks();
+
+		// Create the Settings page.
+		$settings_page = new Settings_Page();
+		$settings_page->add_hooks();
 	}
 }

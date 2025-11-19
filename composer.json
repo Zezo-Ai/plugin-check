@@ -11,6 +11,7 @@
     "dealerdirect/phpcodesniffer-composer-installer": "^1.0.0",
     "nikic/php-parser": "^4",
     "plugin-check/phpcs-sniffs": "@dev",
+    "wordpress/wp-ai-client": "^0.1.0",
     "wp-coding-standards/wpcs": "^3.2.0"
   },
   "require-dev": {
@@ -55,7 +56,8 @@
       "composer/installers": true,
       "cweagans/composer-patches": false,
       "dealerdirect/phpcodesniffer-composer-installer": true,
-      "phpstan/extension-installer": true
+      "phpstan/extension-installer": true,
+      "php-http/discovery": true
     },
     "platform": {
       "php": "7.4"

@@ -192,6 +192,7 @@ final class Admin_AJAX {
 		$checks               = is_null( $checks ) ? array() : $checks;
 		$plugin               = filter_input( INPUT_POST, 'plugin', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
 		$include_experimental = 1 === filter_input( INPUT_POST, 'include-experimental', FILTER_VALIDATE_INT );
+		$use_ai               = 1 === filter_input( INPUT_POST, 'use-ai', FILTER_VALIDATE_INT );
 		$runner               = Plugin_Request_Utility::get_runner();
 
 		if ( is_null( $runner ) ) {
@@ -211,6 +212,7 @@ final class Admin_AJAX {
 			$runner->set_check_slugs( $checks );
 			$runner->set_plugin( $plugin );
 			$runner->set_categories( $categories );
+			$runner->set_use_ai( $use_ai );
 
 			$plugin_basename = $runner->get_plugin_basename();
 			$checks_to_run   = $runner->get_checks_to_run();
@@ -261,11 +263,13 @@ final class Admin_AJAX {
 		$plugin = filter_input( INPUT_POST, 'plugin', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
 
 		$include_experimental = 1 === filter_input( INPUT_POST, 'include-experimental', FILTER_VALIDATE_INT );
+		$use_ai               = 1 === filter_input( INPUT_POST, 'use-ai', FILTER_VALIDATE_INT );
 
 		try {
 			$runner->set_experimental_flag( $include_experimental );
 			$runner->set_check_slugs( $checks );
 			$runner->set_plugin( $plugin );
+			$runner->set_use_ai( $use_ai );
 			$results = $runner->run();
 		} catch ( Exception $error ) {
 			wp_send_json_error(
@@ -274,13 +278,25 @@ final class Admin_AJAX {
 			);
 		}
 
-		wp_send_json_success(
-			array(
-				'message'  => __( 'Checks run successfully', 'plugin-check' ),
-				'errors'   => $results->get_errors(),
-				'warnings' => $results->get_warnings(),
-			)
+		$response = array(
+			'message'  => __( 'Checks run successfully', 'plugin-check' ),
+			'errors'   => $results->get_errors(),
+			'warnings' => $results->get_warnings(),
 		);
+
+		// Include AI analysis results if available.
+		$ai_analysis = $results->get_ai_analysis();
+		if ( ! empty( $ai_analysis ) ) {
+			$response['ai_analysis'] = $ai_analysis;
+		}
+
+		// Include AI statistics if available.
+		$ai_stats = $results->get_ai_stats();
+		if ( ! empty( $ai_stats ) ) {
+			$response['ai_stats'] = $ai_stats;
+		}
+
+		wp_send_json_success( $response );
 	}
 
 	/**

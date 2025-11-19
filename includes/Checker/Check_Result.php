@@ -55,6 +55,22 @@ final class Check_Result {
 	protected $warning_count = 0;
 
 	/**
+	 * AI analysis results for false positives.
+	 *
+	 * @since 1.8.0
+	 * @var array
+	 */
+	protected $ai_analysis = array();
+
+	/**
+	 * AI statistics (tokens spent, false positives count, etc.).
+	 *
+	 * @since 1.8.0
+	 * @var array
+	 */
+	protected $ai_stats = array();
+
+	/**
 	 * Sets the context for the plugin to check.
 	 *
 	 * @since 1.0.0
@@ -186,5 +202,49 @@ final class Check_Result {
 	 */
 	public function get_warning_count() {
 		return $this->warning_count;
+	}
+
+	/**
+	 * Sets AI analysis results.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param array $analysis AI analysis results.
+	 */
+	public function set_ai_analysis( array $analysis ) {
+		$this->ai_analysis = $analysis;
+	}
+
+	/**
+	 * Returns AI analysis results.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @return array AI analysis results.
+	 */
+	public function get_ai_analysis() {
+		return $this->ai_analysis;
+	}
+
+	/**
+	 * Sets AI statistics.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param array $stats AI statistics.
+	 */
+	public function set_ai_stats( array $stats ) {
+		$this->ai_stats = $stats;
+	}
+
+	/**
+	 * Returns AI statistics.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @return array AI statistics.
+	 */
+	public function get_ai_stats() {
+		return $this->ai_stats;
 	}
 }

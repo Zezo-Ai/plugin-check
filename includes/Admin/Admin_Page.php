@@ -202,6 +202,7 @@ final class Admin_Page {
 					'actionCleanUpRuntimeEnvironment' => Admin_AJAX::ACTION_CLEAN_UP_ENVIRONMENT,
 					'successMessage'                  => __( 'No errors found.', 'plugin-check' ),
 					'errorMessage'                    => __( 'Errors were found.', 'plugin-check' ),
+					'settingsPageUrl'                 => admin_url( 'options-general.php?page=plugin-check-settings' ),
 				)
 			),
 			'before'
