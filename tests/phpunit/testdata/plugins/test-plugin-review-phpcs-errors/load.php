@@ -57,3 +57,10 @@ do_shortcode_tag( $shortcode_tag );
 get_post_type_labels( $post_type );
 wp_get_sidebars_widgets();
 wp_get_widget_defaults( $widget_id );
+
+// NOWDOC example; Should not trigger error.
+$str = <<<'NOWDOC'
+Example of string
+spanning multiple lines
+using nowdoc syntax.
+NOWDOC;
