@@ -137,6 +137,13 @@ class Plugin_Review_PHPCS_Check_Tests extends WP_UnitTestCase {
 
 		// Check for Generic.PHP.ForbiddenFunctions.wp_get_widget_defaultsFound error on Line no 59 and column no at 1.
 		$this->assertSame( $forbidden_found, $errors['load.php'][59][1][0]['code'] );
+
+		// Check for PluginCheck.CodeAnalysis.ShortURL.Found warning on Line no 69 and column no at 14.
+		$this->assertArrayHasKey( 69, $warnings['load.php'] );
+		$this->assertArrayHasKey( 14, $warnings['load.php'][69] );
+		$this->assertArrayHasKey( 'code', $warnings['load.php'][69][14][0] );
+		$this->assertEquals( 'PluginCheck.CodeAnalysis.ShortURL.Found', $warnings['load.php'][69][14][0]['code'] );
+		$this->assertSame( 6, $warnings['load.php'][69][14][0]['severity'] );
 	}
 
 	public function test_run_without_errors() {

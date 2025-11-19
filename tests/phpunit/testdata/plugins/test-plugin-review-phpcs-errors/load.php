@@ -64,3 +64,6 @@ Example of string
 spanning multiple lines
 using nowdoc syntax.
 NOWDOC;
+
+// Test short URL detection.
+$short_url = 'https://bit.ly/abc123';
