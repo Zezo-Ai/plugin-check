@@ -230,20 +230,20 @@
 
 		exportContainer.classList.remove( 'is-hidden' );
 
-	const exportButtonConfigs = [
-		{
-			format: 'csv',
-			label: defaultString( 'exportCsv' ),
-		},
-		{
-			format: 'json',
-			label: defaultString( 'exportJson' ),
-		},
-		{
-			format: 'markdown',
-			label: defaultString( 'exportMarkdown' ),
-		},
-	];
+		const exportButtonConfigs = [
+			{
+				format: 'csv',
+				label: defaultString( 'exportCsv' ),
+			},
+			{
+				format: 'json',
+				label: defaultString( 'exportJson' ),
+			},
+			{
+				format: 'markdown',
+				label: defaultString( 'exportMarkdown' ),
+			},
+		];
 
 		exportButtonConfigs.forEach( ( item ) => {
 			const button = document.createElement( 'button' );
@@ -280,9 +280,7 @@
 
 	function handleExport( button ) {
 		if ( ! hasAggregatedResults() ) {
-			announce(
-				defaultString( 'noResults' )
-			);
+			announce( defaultString( 'noResults' ) );
 			return;
 		}
 
@@ -299,11 +297,11 @@
 			.then( ( payload ) => {
 				downloadExport( payload );
 			} )
-		.catch( ( error ) => {
-			console.error( error );
-			const failureMessage = defaultString( 'exportError' );
-			announce( failureMessage );
-		} )
+			.catch( ( error ) => {
+				console.error( error );
+				const failureMessage = defaultString( 'exportError' );
+				announce( failureMessage );
+			} )
 			.finally( () => {
 				button.disabled = false;
 				button.textContent = originalText;
@@ -332,9 +330,10 @@
 					throw new Error( 'Response contains no data' );
 				}
 
-			if ( ! responseData.success ) {
-				const defaultExportErrorMessage = defaultString( 'exportError' );
-				let message = defaultExportErrorMessage;
+				if ( ! responseData.success ) {
+					const defaultExportErrorMessage =
+						defaultString( 'exportError' );
+					let message = defaultExportErrorMessage;
 					if ( responseData.data && responseData.data.message ) {
 						message = responseData.data.message;
 					}
