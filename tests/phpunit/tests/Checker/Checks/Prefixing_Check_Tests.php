@@ -18,14 +18,14 @@ class Prefixing_Check_Tests extends WP_UnitTestCase {
 
 		$check->run( $check_result );
 
-		$errors = $check_result->get_errors();
+		$warnings = $check_result->get_warnings();
 
-		$this->assertNotEmpty( $errors );
-		$this->assertArrayHasKey( 'load.php', $errors );
+		$this->assertNotEmpty( $warnings );
+		$this->assertArrayHasKey( 'load.php', $warnings );
 
-		$this->assertCount( 1, wp_list_filter( $errors['load.php'][18][9], array( 'code' => 'WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound' ) ) );
-		$this->assertCount( 1, wp_list_filter( $errors['load.php'][20][1], array( 'code' => 'WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound' ) ) );
-		$this->assertCount( 1, wp_list_filter( $errors['load.php'][28][1], array( 'code' => 'WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound' ) ) );
-		$this->assertCount( 1, wp_list_filter( $errors['load.php'][41][1], array( 'code' => 'WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound' ) ) );
+		$this->assertCount( 1, wp_list_filter( $warnings['load.php'][18][9], array( 'code' => 'WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound' ) ) );
+		$this->assertCount( 1, wp_list_filter( $warnings['load.php'][20][1], array( 'code' => 'WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound' ) ) );
+		$this->assertCount( 1, wp_list_filter( $warnings['load.php'][28][1], array( 'code' => 'WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound' ) ) );
+		$this->assertCount( 1, wp_list_filter( $warnings['load.php'][41][1], array( 'code' => 'WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound' ) ) );
 	}
 }
