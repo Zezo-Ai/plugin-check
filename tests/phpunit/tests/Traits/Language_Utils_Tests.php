@@ -81,7 +81,7 @@ class Language_Utils_Tests extends WP_UnitTestCase {
 	}
 
 	public function test_is_on_official_language_with_german() {
-		$content = 'Dieses Plugin ist ein Werkzeug zur Überprüfung der Readme-Dateien von WordPress-Plugins und zur Erkennung häufiger Fehler in der Dokumentation.';
+		$content = 'Dieses Plugin it in Werkzeug zur Überprüfung der Readme-Dateien von WordPress-Plugins und zur Erkennung häufiger Fehler in der Dokumentation.';
 		$this->assertFalse( $this->is_on_official_language( $content ) );
 	}
 }
