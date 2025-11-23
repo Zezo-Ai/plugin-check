@@ -387,7 +387,7 @@ class Plugin_Readme_Check_Tests extends WP_UnitTestCase {
 
 		// Note: This test focuses on parser warnings. Any additional errors from other checks
 		// (like language detection, mismatched headers, etc.) will not cause this test to fail,
-		// making it resilient to new checks being added in the future.
+		// Making it resilient to new checks being added in the future.
 	}
 
 	public function test_run_with_errors_parser_warnings_with_custom_set_transient_version() {
