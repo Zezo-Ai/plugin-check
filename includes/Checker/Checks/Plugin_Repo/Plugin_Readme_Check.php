@@ -925,7 +925,7 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 		if ( ! $check_language ) {
 			$this->add_result_error_for_file(
 				$result,
-				__( 'The readme description contains unofficial language. It must be written in standard English.', 'plugin-check' ),
+				__( 'The readme short description contains unofficial language. It must be written in standard English.', 'plugin-check' ),
 				'readme_short_description_non_official_language',
 				$readme_file,
 				0,
