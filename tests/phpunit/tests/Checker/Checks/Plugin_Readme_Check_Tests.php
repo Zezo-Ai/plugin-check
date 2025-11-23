@@ -654,10 +654,8 @@ class Plugin_Readme_Check_Tests extends WP_UnitTestCase {
 		$this->assertArrayHasKey( 'readme.txt', $errors );
 		$this->assertCount( 1, wp_list_filter( $errors['readme.txt'][0][0], array( 'code' => 'readme_short_description_non_official_language' ) ) );
 
-		// Check that description warning exists.
-		$this->assertNotEmpty( $warnings );
-		$this->assertArrayHasKey( 'readme.txt', $warnings );
-		$this->assertCount( 1, wp_list_filter( $warnings['readme.txt'][0][0], array( 'code' => 'readme_description_non_official_language' ) ) );
+		// Check that description error exists.
+		$this->assertCount( 1, wp_list_filter( $errors['readme.txt'][0][0], array( 'code' => 'readme_description_non_official_language' ) ) );
 	}
 
 	public function test_run_language_detection_with_english_content() {
@@ -671,14 +669,11 @@ class Plugin_Readme_Check_Tests extends WP_UnitTestCase {
 		$warnings = $check_result->get_warnings();
 
 		// Check that NO language errors exist.
-		if ( isset( $errors['readme.txt'][0][0] ) ) {
-			$this->assertCount( 0, wp_list_filter( $errors['readme.txt'][0][0], array( 'code' => 'readme_short_description_non_official_language' ) ) );
-		}
+		$short_desc_errors = isset( $errors['readme.txt'][0][0] ) ? wp_list_filter( $errors['readme.txt'][0][0], array( 'code' => 'readme_short_description_non_official_language' ) ) : array();
+		$desc_errors       = isset( $errors['readme.txt'][0][0] ) ? wp_list_filter( $errors['readme.txt'][0][0], array( 'code' => 'readme_description_non_official_language' ) ) : array();
 
-		// Check that NO language warnings exist.
-		if ( isset( $warnings['readme.txt'][0][0] ) ) {
-			$this->assertCount( 0, wp_list_filter( $warnings['readme.txt'][0][0], array( 'code' => 'readme_description_non_official_language' ) ) );
-		}
+		$this->assertCount( 0, $short_desc_errors );
+		$this->assertCount( 0, $desc_errors );
 	}
 
 	public function test_run_language_detection_with_edge_cases() {
@@ -692,13 +687,10 @@ class Plugin_Readme_Check_Tests extends WP_UnitTestCase {
 		$warnings = $check_result->get_warnings();
 
 		// Check that NO language errors exist for content with code snippets, URLs, and technical terms.
-		if ( isset( $errors['readme.txt'][0][0] ) ) {
-			$this->assertCount( 0, wp_list_filter( $errors['readme.txt'][0][0], array( 'code' => 'readme_short_description_non_official_language' ) ) );
-		}
+		$short_desc_errors = isset( $errors['readme.txt'][0][0] ) ? wp_list_filter( $errors['readme.txt'][0][0], array( 'code' => 'readme_short_description_non_official_language' ) ) : array();
+		$desc_errors       = isset( $errors['readme.txt'][0][0] ) ? wp_list_filter( $errors['readme.txt'][0][0], array( 'code' => 'readme_description_non_official_language' ) ) : array();
 
-		// Check that NO language warnings exist.
-		if ( isset( $warnings['readme.txt'][0][0] ) ) {
-			$this->assertCount( 0, wp_list_filter( $warnings['readme.txt'][0][0], array( 'code' => 'readme_description_non_official_language' ) ) );
-		}
+		$this->assertCount( 0, $short_desc_errors );
+		$this->assertCount( 0, $desc_errors );
 	}
 }
