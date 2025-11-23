@@ -913,7 +913,7 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 	/**
 	 * Checks the readme file for official language.
 	 *
-	 * @since 1.0.0
+	 * @since 1.8.0
 	 *
 	 * @param Check_Result           $result      The Check Result to amend.
 	 * @param string                 $readme_file Readme file.
