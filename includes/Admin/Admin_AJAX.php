@@ -8,10 +8,12 @@
 namespace WordPress\Plugin_Check\Admin;
 
 use Exception;
+use InvalidArgumentException;
 use WordPress\Plugin_Check\Checker\AJAX_Runner;
 use WordPress\Plugin_Check\Checker\Runtime_Check;
 use WordPress\Plugin_Check\Checker\Runtime_Environment_Setup;
 use WordPress\Plugin_Check\Utilities\Plugin_Request_Utility;
+use WordPress\Plugin_Check\Utilities\Results_Exporter;
 use WP_Error;
 
 /**
@@ -62,6 +64,14 @@ final class Admin_AJAX {
 	const ACTION_RUN_CHECKS = 'plugin_check_run_checks';
 
 	/**
+	 * Export results action name.
+	 *
+	 * @since 1.8.0
+	 * @var string
+	 */
+	const ACTION_EXPORT_RESULTS = 'plugin_check_export_results';
+
+	/**
 	 * Registers WordPress hooks for the Admin AJAX.
 	 *
 	 * @since 1.0.0
@@ -71,6 +81,7 @@ final class Admin_AJAX {
 		add_action( 'wp_ajax_' . self::ACTION_SET_UP_ENVIRONMENT, array( $this, 'set_up_environment' ) );
 		add_action( 'wp_ajax_' . self::ACTION_GET_CHECKS_TO_RUN, array( $this, 'get_checks_to_run' ) );
 		add_action( 'wp_ajax_' . self::ACTION_RUN_CHECKS, array( $this, 'run_checks' ) );
+		add_action( 'wp_ajax_' . self::ACTION_EXPORT_RESULTS, array( $this, 'export_results' ) );
 	}
 
 	/**
@@ -308,6 +319,121 @@ final class Admin_AJAX {
 		return $response;
 	}
 
+
+	/**
+	 * Handles exporting Plugin Check results.
+	 *
+	 * @since 1.8.0
+	 */
+	public function export_results() {
+		$valid_request = $this->verify_request( filter_input( INPUT_POST, 'nonce', FILTER_SANITIZE_FULL_SPECIAL_CHARS ) );
+
+		if ( is_wp_error( $valid_request ) ) {
+			wp_send_json_error( $valid_request, 403 );
+		}
+
+		try {
+			$format          = $this->determine_export_format();
+			$results_payload = $this->extract_results_payload();
+			$export_metadata = $this->prepare_export_metadata();
+			$payload         = $this->build_export_payload( $results_payload, $format, $export_metadata );
+		} catch ( InvalidArgumentException $exception ) {
+			wp_send_json_error(
+				array( 'message' => $exception->getMessage() ),
+				400
+			);
+		}
+
+		wp_send_json_success( $payload );
+	}
+
+	/**
+	 * Determines the requested export format.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @return string Export format slug.
+	 */
+	private function determine_export_format() {
+		$format = filter_input( INPUT_POST, 'format', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
+		if ( empty( $format ) ) {
+			return Results_Exporter::FORMAT_JSON;
+		}
+
+		return strtolower( $format );
+	}
+
+	/**
+	 * Extracts errors and warnings payload from the request.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @return array{
+	 *     errors: array,
+	 *     warnings: array,
+	 * }
+	 *
+	 * @throws InvalidArgumentException When the payload is missing or malformed.
+	 */
+	private function extract_results_payload() {
+		$raw_results = isset( $_POST['results'] ) ? wp_unslash( $_POST['results'] ) : '';
+		if ( '' === $raw_results ) {
+			throw new InvalidArgumentException( __( 'Invalid or empty results payload.', 'plugin-check' ) );
+		}
+
+		$decoded_results = json_decode( $raw_results, true );
+		if ( null === $decoded_results || JSON_ERROR_NONE !== json_last_error() ) {
+			throw new InvalidArgumentException( __( 'Malformed results payload.', 'plugin-check' ) );
+		}
+
+		return array(
+			'errors'   => isset( $decoded_results['errors'] ) && is_array( $decoded_results['errors'] ) ? $decoded_results['errors'] : array(),
+			'warnings' => isset( $decoded_results['warnings'] ) && is_array( $decoded_results['warnings'] ) ? $decoded_results['warnings'] : array(),
+		);
+	}
+
+	/**
+	 * Prepares metadata used for export filenames and headers.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @return array Metadata values.
+	 */
+	private function prepare_export_metadata() {
+		$plugin_slug  = filter_input( INPUT_POST, 'plugin', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
+		$plugin_label = isset( $_POST['plugin_label'] ) ? sanitize_text_field( wp_unslash( $_POST['plugin_label'] ) ) : '';
+		if ( empty( $plugin_label ) ) {
+			$plugin_label = $plugin_slug;
+		}
+
+		return array(
+			'plugin'          => $plugin_label,
+			'slug'            => $plugin_slug,
+			'timestamp'       => current_time( 'Ymd-His' ),
+			'timestamp_human' => current_time( 'mysql' ),
+		);
+	}
+
+	/**
+	 * Builds the export payload using the Results Exporter.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param array  $results_payload Payload containing errors and warnings.
+	 * @param string $format          Export format slug.
+	 * @param array  $metadata        Export metadata.
+	 * @return array Export payload.
+	 *
+	 * @throws InvalidArgumentException If the payload cannot be generated.
+	 */
+	private function build_export_payload( array $results_payload, $format, array $metadata ) {
+		return Results_Exporter::export(
+			$results_payload['errors'],
+			$results_payload['warnings'],
+			$format,
+			$metadata
+		);
+	}
 
 	/**
 	 * Verify the request.

@@ -201,8 +201,17 @@ final class Admin_Page {
 					'actionSetUpRuntimeEnvironment'   => Admin_AJAX::ACTION_SET_UP_ENVIRONMENT,
 					'actionRunChecks'                 => Admin_AJAX::ACTION_RUN_CHECKS,
 					'actionCleanUpRuntimeEnvironment' => Admin_AJAX::ACTION_CLEAN_UP_ENVIRONMENT,
+					'actionExportResults'             => Admin_AJAX::ACTION_EXPORT_RESULTS,
 					'successMessage'                  => __( 'No errors found.', 'plugin-check' ),
 					'errorMessage'                    => __( 'Errors were found.', 'plugin-check' ),
+					'strings'                         => array(
+						'exportCsv'      => __( 'Export CSV', 'plugin-check' ),
+						'exportJson'     => __( 'Export JSON', 'plugin-check' ),
+						'exportMarkdown' => __( 'Export Markdown', 'plugin-check' ),
+						'exporting'      => __( 'Preparing export…', 'plugin-check' ),
+						'exportError'    => __( 'Export failed.', 'plugin-check' ),
+						'noResults'      => __( 'There are no results to export yet.', 'plugin-check' ),
+					),
 				)
 			),
 			'before'
@@ -390,6 +399,15 @@ final class Admin_Page {
 				#plugin-check__results h4:first-child {
 					margin-top: 88.5px;
 				}
+			}
+			.plugin-check__export-controls {
+				margin-top: 24px;
+				display: flex;
+				gap: 8px;
+				flex-wrap: wrap;
+			}
+			.plugin-check__export-controls.is-hidden {
+				display: none;
 			}
 		</style>
 		<?php
