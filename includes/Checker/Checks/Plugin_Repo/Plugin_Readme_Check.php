@@ -925,7 +925,7 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 		if ( ! $check_language ) {
 			$this->add_result_error_for_file(
 				$result,
-				__( 'The README description contains unofficial language. It must be written in standard English.', 'plugin-check' ),
+				__( 'The readme description contains unofficial language. It must be written in standard English.', 'plugin-check' ),
 				'readme_short_description_non_official_language',
 				$readme_file,
 				0,
@@ -939,15 +939,15 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 			$check_language = $this->is_on_official_language( $parser->sections['description'] );
 
 			if ( ! $check_language ) {
-				$this->add_result_warning_for_file(
+				$this->add_result_error_for_file(
 					$result,
-					__( 'The README description contains unofficial language. It must be written in standard English.', 'plugin-check' ),
+					__( 'The readme description contains unofficial language. It must be written in standard English.', 'plugin-check' ),
 					'readme_description_non_official_language',
 					$readme_file,
 					0,
 					0,
 					'https://make.wordpress.org/plugins/2025/07/28/requiring-the-readme-to-be-written-in-english/',
-					6
+					7
 				);
 			}
 		}

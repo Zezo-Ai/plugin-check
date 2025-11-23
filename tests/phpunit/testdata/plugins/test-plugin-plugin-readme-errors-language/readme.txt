@@ -1,4 +1,3 @@
-
 === Test Plugin with readme ===
 
 Contributors:      plugin-check
