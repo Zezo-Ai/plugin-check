@@ -1,8 +1,8 @@
 === Plugin Check (PCP) ===
 
 Contributors:      wordpressdotorg
-Tested up to:      6.7
-Stable tag:        1.4.0
+Tested up to:      6.9
+Stable tag:        1.7.0
 License:           GPLv2 or later
 License URI:       https://www.gnu.org/licenses/gpl-2.0.html
 Tags:              plugin best practices, testing, accessibility, performance, security
@@ -68,6 +68,60 @@ In any case, passing the checks in this tool likely helps to achieve a smooth pl
 
 == Changelog ==
 
+= 1.7.0 =
+
+* Enhancement - Add Minified File Detection Check to identify and handle minified files in plugins.
+* Enhancement - Implement check for insecure use of wp_verify_nonce() to improve security validation.
+* Enhancement - Add direct database query sniff to detect direct database calls without using WordPress functions.
+* Enhancement - Add prefixing check to ensure proper function and class name prefixing.
+* Enhancement - Update localhost sniff regex to improve detection of localhost URLs including *.local domains.
+* Enhancement - Disallow runtime checks when custom user table constants are defined for better compatibility.
+* Enhancement - Add forbidden functions check to detect usage of disallowed PHP functions.
+* Enhancement - New check for wp_safe_redirect to encourage use of WordPress safe redirect function.
+* Enhancement - Improve mismatched text domain check for better internationalization validation.
+* Enhancement - Detect links that request five-star reviews to enforce plugin directory guidelines.
+* Enhancement - Add The Unlicense to GPL-compatible license check.
+* Enhancement - Improve localhost sniff code for more accurate detection.
+* Fix - Ignore vendor_prefixed and vendor-prefixed folders in checks to prevent false positives.
+* Fix - Handle possible empty element in scanner to prevent PHP warnings.
+* Fix - Hide error output in scanner for cleaner output.
+* Fix - Call ReflectionProperty::setAccessible() only in older PHP versions for better PHP 8.1+ compatibility.
+* Fix - Prevent deletion of custom WordPress tables during cleanup in test environment.
+
+= 1.6.0 =
+
+* Enhancement - Support strict output format for CLI commands.
+* Enhancement - Improve check for donate link in readme.
+* Enhancement - Improve info check in Version utils.
+* Enhancement - Improve URL validation for plugin header fields.
+* Enhancement - Improve ruleset files.
+* Enhancement - Increased severity for invalid plugin uri domain and plugin description checks in plugin header.
+* Enhancement - Remove CallTimePassByReference as it's deprecated rule.
+* Enhancement - Disallow special characters in textdomain.
+* Enhancement - Imported readme parser for preventing conflicts with wordpress.org. Use dotorg readme parser if available.
+* Enhancement - Discourage the use of `load_plugin_textdomain` found in plugins as it's not necessary in wordpress.org.
+* Enhancement - Upgrade severity for missing readme headers.
+* Enhancement - Show tested up to minor check only when it is current major version.
+* Enhancement - Added link in plugins page to run the plugin check.
+* Fix - Dynamic WP Content folder.
+* Fix - Fix test for special chars in file names giving problems to users after clone.
+* Fix - Remove Image_Functions_Check as they were making false positives.
+* Fix - Prevent WordPress version 10+ from being flagged as an error in the "Tested up to" check.
+
+= 1.5.0 =
+
+* Enhancement - Improve url validation to check duplicate protocol.
+* Enhancement - Update severity for incorrect textdomains and i18n error codes.
+* Enhancement - Now issues in URL Author check are ERROR instead of WARNING.
+* Enhancement - New check for minor version in Tested up.
+* Enhancement - Make sure headers are not empty in the requires header check.
+* Enhancement - Include experimental option in admin.
+* Enhancement - Add Behat test for experimental checks from addons.
+* Enhancement - Improve license check for Apache.
+* Enhancement - Warn if requires headers are not same in readme and plugin header.
+* Fix - Remove warning for dynamic callback in register_setting check.
+* Fix - Incorrect database tables being referenced on subsites in Multisite.
+
 = 1.4.0 =
 
 * Enhancement - Allow ISC license in the License check.
@@ -116,7 +170,7 @@ In any case, passing the checks in this tool likely helps to achieve a smooth pl
 * Enhancement - Improved the use of localhost URLs in the Plugin.
 * Enhancement - Documented checks in the plugin.
 * Enhancement - Increased severity for Code obfuscation checks.
-* Enhancement - Diffentiate between no existent readme and default readme file.
+* Enhancement - Differentiate between non-existent readme and default readme file.
 * Enhancement - Encourage developers to use native functions for loading images in templates.
 * Enhancement - Added a check for not allowing include libraries already in WordPress core.
 * Enhancement - Warning for usage of query_posts() in favor of WP_Query.

@@ -13,7 +13,9 @@ use WordPress\Plugin_Check\Checker\Check_Result;
 use WordPress\Plugin_Check\Checker\Static_Check;
 use WordPress\Plugin_Check\Traits\Amend_Check_Result;
 use WordPress\Plugin_Check\Traits\License_Utils;
+use WordPress\Plugin_Check\Traits\Mode_Aware;
 use WordPress\Plugin_Check\Traits\Stable_Check;
+use WordPress\Plugin_Check\Traits\URL_Utils;
 use WordPress\Plugin_Check\Traits\Version_Utils;
 
 /**
@@ -26,7 +28,9 @@ class Plugin_Header_Fields_Check implements Static_Check {
 	use Amend_Check_Result;
 	use License_Utils;
 	use Stable_Check;
+	use URL_Utils;
 	use Version_Utils;
+	use Mode_Aware;
 
 	/**
 	 * Gets the categories for the check.
@@ -83,7 +87,7 @@ class Plugin_Header_Fields_Check implements Static_Check {
 
 		if ( ! empty( $plugin_header['Name'] ) ) {
 			if ( in_array( $plugin_header['Name'], array( 'Plugin Name', 'My Basics Plugin' ), true ) ) {
-				$this->add_result_warning_for_file(
+				$this->add_result_error_for_file(
 					$result,
 					sprintf(
 						/* translators: %s: plugin header field */
@@ -95,33 +99,36 @@ class Plugin_Header_Fields_Check implements Static_Check {
 					0,
 					0,
 					'',
-					6
+					7
 				);
 			} else {
-				$valid_chars_count = preg_match_all( '/[a-z0-9]/i', $plugin_header['Name'] );
+				// Check for unsupported plugin name only in 'new' mode.
+				if ( $this->is_new_mode( $result ) ) {
+					$valid_chars_count = preg_match_all( '/[a-z0-9]/i', $plugin_header['Name'] );
 
-				if ( intval( $valid_chars_count ) < 5 ) {
-					$this->add_result_error_for_file(
-						$result,
-						sprintf(
-							/* translators: %s: plugin header field */
-							__( 'The "%s" header in the plugin file is not valid. It needs to contain at least 5 latin letters (a-Z) and/or numbers. This is necessary because the initial plugin slug is generated from the name.', 'plugin-check' ),
-							esc_html( $labels['Name'] )
-						),
-						'plugin_header_unsupported_plugin_name',
-						$plugin_main_file,
-						0,
-						0,
-						'https://developer.wordpress.org/plugins/plugin-basics/header-requirements/#header-fields',
-						7
-					);
+					if ( intval( $valid_chars_count ) < 5 ) {
+						$this->add_result_error_for_file(
+							$result,
+							sprintf(
+								/* translators: %s: plugin header field */
+								__( 'The "%s" header in the plugin file is not valid. It needs to contain at least 5 latin letters (a-Z) and/or numbers. This is necessary because the initial plugin slug is generated from the name.', 'plugin-check' ),
+								esc_html( $labels['Name'] )
+							),
+							'plugin_header_unsupported_plugin_name',
+							$plugin_main_file,
+							0,
+							0,
+							'https://developer.wordpress.org/plugins/plugin-basics/header-requirements/#header-fields',
+							7
+						);
+					}
 				}
 			}
 		}
 
 		if ( ! empty( $plugin_header['PluginURI'] ) ) {
 			if ( true !== $this->is_valid_url( $plugin_header['PluginURI'] ) ) {
-				$this->add_result_warning_for_file(
+				$this->add_result_error_for_file(
 					$result,
 					sprintf(
 						/* translators: %s: plugin header field */
@@ -132,25 +139,28 @@ class Plugin_Header_Fields_Check implements Static_Check {
 					$plugin_main_file,
 					0,
 					0,
-					'',
-					6
-				);
-			} elseif ( preg_match( '/\/\/(example\.com|example\.net|example\.org)\//', $plugin_header['PluginURI'], $matches ) ) {
-				$this->add_result_warning_for_file(
-					$result,
-					sprintf(
-						/* translators: 1: plugin header field, 2: domain */
-						__( 'The "%1$s" header in the plugin file is not valid. Discouraged domain "%2$s" found. This is the homepage of the plugin, which should be a unique URL, preferably on your own website. ', 'plugin-check' ),
-						esc_html( $labels['PluginURI'] ),
-						esc_html( $matches[1] ),
-					),
-					'plugin_header_invalid_plugin_uri_domain',
-					$plugin_main_file,
-					0,
-					0,
 					'https://developer.wordpress.org/plugins/plugin-basics/header-requirements/#header-fields',
-					6
+					7
 				);
+			} else {
+				$matched_domain = $this->find_discouraged_domain( $plugin_header['PluginURI'] );
+				if ( $matched_domain ) {
+					$this->add_result_error_for_file(
+						$result,
+						sprintf(
+							/* translators: 1: plugin header field, 2: domain */
+							__( 'The "%1$s" header in the plugin file is not valid. Discouraged domain "%2$s" found. This is the homepage of the plugin, which should be a unique URL, preferably on your own website.', 'plugin-check' ),
+							esc_html( $labels['PluginURI'] ),
+							esc_html( $matched_domain )
+						),
+						'plugin_header_invalid_plugin_uri_domain',
+						$plugin_main_file,
+						0,
+						0,
+						'https://developer.wordpress.org/plugins/plugin-basics/header-requirements/#header-fields',
+						7
+					);
+				}
 			}
 		}
 
@@ -175,7 +185,7 @@ class Plugin_Header_Fields_Check implements Static_Check {
 				|| str_contains( $plugin_header['Description'], 'Here is a short description of the plugin' )
 				|| str_contains( $plugin_header['Description'], 'Handle the basics with this plugin' )
 				) {
-				$this->add_result_warning_for_file(
+				$this->add_result_error_for_file(
 					$result,
 					sprintf(
 						/* translators: %s: plugin header field */
@@ -186,8 +196,8 @@ class Plugin_Header_Fields_Check implements Static_Check {
 					$plugin_main_file,
 					0,
 					0,
-					'',
-					6
+					'https://developer.wordpress.org/plugins/plugin-basics/header-requirements/#header-fields',
+					7
 				);
 			}
 		}
@@ -239,15 +249,34 @@ class Plugin_Header_Fields_Check implements Static_Check {
 					$plugin_main_file,
 					0,
 					0,
-					'',
+					'https://developer.wordpress.org/plugins/plugin-basics/header-requirements/#header-fields',
 					7
 				);
+			} else {
+				$matched_domain = $this->find_discouraged_domain( $plugin_header['AuthorURI'] );
+				if ( $matched_domain ) {
+					$this->add_result_error_for_file(
+						$result,
+						sprintf(
+							/* translators: 1: plugin header field, 2: domain */
+							__( 'The "%1$s" header in the plugin file is not valid. Discouraged domain "%2$s" found. This is the author\'s website or profile on another website.', 'plugin-check' ),
+							esc_html( $labels['AuthorURI'] ),
+							esc_html( $matched_domain )
+						),
+						'plugin_header_invalid_author_uri_domain',
+						$plugin_main_file,
+						0,
+						0,
+						'https://developer.wordpress.org/plugins/plugin-basics/header-requirements/#header-fields',
+						7
+					);
+				}
 			}
 		}
 
 		if ( ! empty( $plugin_header['Network'] ) ) {
 			if ( 'true' !== strtolower( $plugin_header['Network'] ) ) {
-				$this->add_result_warning_for_file(
+				$this->add_result_error_for_file(
 					$result,
 					sprintf(
 						/* translators: %s: plugin header field */
@@ -259,7 +288,7 @@ class Plugin_Header_Fields_Check implements Static_Check {
 					0,
 					0,
 					'https://developer.wordpress.org/plugins/plugin-basics/header-requirements/#header-fields',
-					6
+					7
 				);
 			}
 		}
@@ -267,44 +296,53 @@ class Plugin_Header_Fields_Check implements Static_Check {
 		if ( ! empty( $plugin_header['RequiresWP'] ) ) {
 			$latest_wp_version = $this->get_wordpress_stable_version();
 
-			if ( ! preg_match( '!^\d+\.\d(\.\d+)?$!', $plugin_header['RequiresWP'] ) ) {
-				$previous_wp_version = $this->get_wordpress_relative_major_version( $latest_wp_version, -1 );
+			// Only proceed with WordPress version validation if we got a valid version.
+			if ( ! empty( $latest_wp_version ) ) {
+				if ( ! preg_match( '!^\d+\.\d(\.\d+)?$!', $plugin_header['RequiresWP'] ) ) {
+					$previous_wp_version = $this->get_wordpress_relative_major_version( $latest_wp_version, -1 );
 
-				$this->add_result_error_for_file(
-					$result,
-					sprintf(
-						/* translators: 1: plugin header field, 2: Example version 6.7, 3: Example version 6.6 */
-						__( 'The "%1$s" header in the plugin file should only contain a WordPress version such as "%2$s" or "%3$s".', 'plugin-check' ),
-						esc_html( $labels['RequiresWP'] ),
-						esc_html( $latest_wp_version ),
-						esc_html( $previous_wp_version )
-					),
-					'plugin_header_invalid_requires_wp',
-					$plugin_main_file,
-					0,
-					0,
-					'',
-					7
-				);
-			} else {
-				$acceptable_min_wp_version = $this->get_wordpress_relative_major_version( $latest_wp_version, 1 );
+					// Only add error if we got a valid previous version.
+					if ( ! empty( $previous_wp_version ) ) {
+						$this->add_result_error_for_file(
+							$result,
+							sprintf(
+								/* translators: 1: plugin header field, 2: Example version 6.7, 3: Example version 6.6 */
+								__( 'The "%1$s" header in the plugin file should only contain a WordPress version such as "%2$s" or "%3$s".', 'plugin-check' ),
+								esc_html( $labels['RequiresWP'] ),
+								esc_html( $latest_wp_version ),
+								esc_html( $previous_wp_version )
+							),
+							'plugin_header_invalid_requires_wp',
+							$plugin_main_file,
+							0,
+							0,
+							'',
+							7
+						);
+					}
+				} else {
+					$acceptable_min_wp_version = $this->get_wordpress_relative_major_version( $latest_wp_version, 1 );
 
-				if ( version_compare( $plugin_header['RequiresWP'], $acceptable_min_wp_version, '>' ) ) {
-					$this->add_result_error_for_file(
-						$result,
-						sprintf(
-							/* translators: 1: plugin header field, 2: currently used version */
-							__( '<strong>%1$s: %2$s.</strong><br>The "%1$s" value in your plugin header is not valid. This version of WordPress does not exist (yet).', 'plugin-check' ),
-							esc_html( $labels['RequiresWP'] ),
-							esc_html( $plugin_header['RequiresWP'] )
-						),
-						'plugin_header_nonexistent_requires_wp',
-						$plugin_main_file,
-						0,
-						0,
-						'https://developer.wordpress.org/plugins/plugin-basics/header-requirements/#header-fields',
-						7
-					);
+					// Only add error if we got a valid acceptable minimum version.
+					if ( ! empty( $acceptable_min_wp_version ) ) {
+						if ( version_compare( $plugin_header['RequiresWP'], $acceptable_min_wp_version, '>' ) ) {
+							$this->add_result_error_for_file(
+								$result,
+								sprintf(
+									/* translators: 1: plugin header field, 2: currently used version */
+									__( '<strong>%1$s: %2$s.</strong><br>The "%1$s" value in your plugin header is not valid. This version of WordPress does not exist (yet).', 'plugin-check' ),
+									esc_html( $labels['RequiresWP'] ),
+									esc_html( $plugin_header['RequiresWP'] )
+								),
+								'plugin_header_nonexistent_requires_wp',
+								$plugin_main_file,
+								0,
+								0,
+								'https://developer.wordpress.org/plugins/plugin-basics/header-requirements/#header-fields',
+								7
+							);
+						}
+					}
 				}
 			}
 		}
@@ -411,25 +449,43 @@ class Plugin_Header_Fields_Check implements Static_Check {
 
 		if ( ! $result->plugin()->is_single_file_plugin() ) {
 			if ( ! empty( $plugin_header['TextDomain'] ) ) {
-				$plugin_slug = $result->plugin()->slug();
-
-				if ( $plugin_slug !== $plugin_header['TextDomain'] ) {
-					$this->add_result_warning_for_file(
+				if ( ! preg_match( '/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $plugin_header['TextDomain'] ) ) {
+					$this->add_result_error_for_file(
 						$result,
 						sprintf(
-							/* translators: 1: plugin header field, 2: plugin header text domain, 3: plugin slug */
-							__( 'The "%1$s" header in the plugin file does not match the slug. Found "%2$s", expected "%3$s".', 'plugin-check' ),
+							/* translators: 1: plugin header field, 2: text domain */
+							__( 'The "%1$s" header in the plugin file should only contain lowercase letters, numbers, and hyphens. Found "%2$s".', 'plugin-check' ),
 							esc_html( $labels['TextDomain'] ),
-							esc_html( $plugin_header['TextDomain'] ),
-							esc_html( $plugin_slug )
+							esc_html( $plugin_header['TextDomain'] )
 						),
-						'textdomain_mismatch',
+						'textdomain_invalid_format',
 						$plugin_main_file,
 						0,
 						0,
-						'https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/',
-						6
+						'https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/#text-domains',
+						7
 					);
+				} else {
+					$plugin_slug = $result->plugin()->slug();
+
+					if ( $plugin_slug !== $plugin_header['TextDomain'] ) {
+						$this->add_result_warning_for_file(
+							$result,
+							sprintf(
+								/* translators: 1: plugin header field, 2: plugin header text domain, 3: plugin slug */
+								__( 'The "%1$s" header in the plugin file does not match the slug. Found "%2$s", expected "%3$s".', 'plugin-check' ),
+								esc_html( $labels['TextDomain'] ),
+								esc_html( $plugin_header['TextDomain'] ),
+								esc_html( $plugin_slug )
+							),
+							'textdomain_mismatch',
+							$plugin_main_file,
+							0,
+							0,
+							'https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/',
+							6
+						);
+					}
 				}
 			}
 
@@ -477,18 +533,6 @@ class Plugin_Header_Fields_Check implements Static_Check {
 	}
 
 	/**
-	 * Checks if URL is valid.
-	 *
-	 * @since 1.2.0
-	 *
-	 * @param string $url URL.
-	 * @return bool true if the URL is valid, otherwise false.
-	 */
-	private function is_valid_url( $url ) {
-		return filter_var( $url, FILTER_VALIDATE_URL ) === $url && str_starts_with( $url, 'http' );
-	}
-
-	/**
 	 * Parses the plugin contents to retrieve plugin's metadata.
 	 *
 	 * @since 1.2.0
@@ -498,18 +542,7 @@ class Plugin_Header_Fields_Check implements Static_Check {
 	 * @return string[] Array of file header values keyed by header name.
 	 */
 	private function get_plugin_data( $plugin_file, $default_headers ) {
-		$plugin_data = get_file_data( $plugin_file, $default_headers, 'plugin' );
-
-		// If no text domain is defined fall back to the plugin slug.
-		if ( ! $plugin_data['TextDomain'] ) {
-			$plugin_slug = dirname( plugin_basename( $plugin_file ) );
-
-			if ( '.' !== $plugin_slug && ! str_contains( $plugin_slug, '/' ) ) {
-				$plugin_data['TextDomain'] = $plugin_slug;
-			}
-		}
-
-		return $plugin_data;
+		return get_file_data( $plugin_file, $default_headers, 'plugin' );
 	}
 
 	/**

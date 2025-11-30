@@ -97,6 +97,7 @@ class I18n_Usage_Check extends Abstract_PHP_CodeSniffer_Check {
 	 * @param string       $docs     URL for further information about the message.
 	 * @param int          $severity Severity level. Default is 5.
 	 *
+	 * @SuppressWarnings(PHPMD.CyclomaticComplexity)
 	 * @SuppressWarnings(PHPMD.NPathComplexity)
 	 */
 	protected function add_result_message_for_file( Check_Result $result, $error, $message, $code, $file, $line = 0, $column = 0, string $docs = '', $severity = 5 ) {
@@ -132,11 +133,8 @@ class I18n_Usage_Check extends Abstract_PHP_CodeSniffer_Check {
 
 		// Update severity.
 		switch ( $code ) {
-			case 'WordPress.WP.I18n.InterpolatedVariableDomain':
 			case 'WordPress.WP.I18n.MissingArgText':
 			case 'WordPress.WP.I18n.NoEmptyStrings':
-			case 'WordPress.WP.I18n.NonSingularStringLiteralContext':
-			case 'WordPress.WP.I18n.NonSingularStringLiteralDomain':
 			case 'WordPress.WP.I18n.TooManyFunctionArgs':
 				$severity = 7;
 				break;
@@ -145,13 +143,19 @@ class I18n_Usage_Check extends Abstract_PHP_CodeSniffer_Check {
 				break;
 		}
 
+		// Update severity for error code variations. Eg: WordPress.WP.I18n.NonSingularStringLiteralXXX.
+		if ( str_starts_with( $code, 'WordPress.WP.I18n.InterpolatedVariable' ) || str_starts_with( $code, 'WordPress.WP.I18n.NonSingularStringLiteral' ) ) {
+			$severity = 7;
+		}
+
 		if ( 'WordPress.WP.I18n.TextDomainMismatch' === $code ) {
 			$restricted_textdomains = $this->get_restricted_textdomains();
 
-			$pattern = '/but\sgot\s&#039;(' . implode( '|', array_map( 'preg_quote', $restricted_textdomains ) ) . ')&#039;\.$/';
-
-			if ( preg_match( $pattern, $message ) ) {
-				$severity = 7;
+			if ( preg_match( '/but\sgot\s&#039;([^&#039;]+)&#039;\.$/', $message, $matches ) ) {
+				$textdomain = $matches[1];
+				if ( preg_match( '/[^a-z0-9-]/', $textdomain ) || in_array( $textdomain, $restricted_textdomains, true ) ) {
+					$severity = 7;
+				}
 			}
 		}
 

@@ -241,6 +241,8 @@ class Plugin_Request_Utility_Tests extends WP_UnitTestCase {
 			'.git',
 			'vendor',
 			'node_modules',
+			'vendor_prefixed',
+			'vendor-prefixed',
 		);
 
 		$actual_directories = Plugin_Request_Utility::get_directories_to_ignore();

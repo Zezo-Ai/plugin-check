@@ -25,9 +25,9 @@ trait Version_Utils {
 		$version = $this->get_latest_version_info( 'current' );
 
 		// Strip off any -alpha, -RC, -beta suffixes.
-		list( $version, ) = explode( '-', $version );
+		list( $version, ) = explode( '-', (string) $version );
 
-		if ( preg_match( '#^\d.\d#', $version, $matches ) ) {
+		if ( preg_match( '#^\d+\.\d#', $version, $matches ) ) {
 			$version = $matches[0];
 		}
 
@@ -78,6 +78,8 @@ trait Version_Utils {
 		$info = get_transient( 'wp_plugin_check_latest_version_info' );
 
 		if ( false === $info ) {
+			$info = array();
+
 			$response = wp_remote_get( 'https://api.wordpress.org/core/version-check/1.7/' );
 
 			if ( ! is_wp_error( $response ) && 200 === wp_remote_retrieve_response_code( $response ) ) {
