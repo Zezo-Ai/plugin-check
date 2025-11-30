@@ -10,6 +10,7 @@ namespace WordPress\Plugin_Check\Admin;
 use WordPress\Plugin_Check\Checker\Check;
 use WordPress\Plugin_Check\Checker\Check_Categories;
 use WordPress\Plugin_Check\Checker\Check_Repository;
+use WordPress\Plugin_Check\Checker\Check_Types;
 use WordPress\Plugin_Check\Checker\Default_Check_Repository;
 
 /**
@@ -200,9 +201,18 @@ final class Admin_Page {
 					'actionSetUpRuntimeEnvironment'   => Admin_AJAX::ACTION_SET_UP_ENVIRONMENT,
 					'actionRunChecks'                 => Admin_AJAX::ACTION_RUN_CHECKS,
 					'actionCleanUpRuntimeEnvironment' => Admin_AJAX::ACTION_CLEAN_UP_ENVIRONMENT,
+					'actionExportResults'             => Admin_AJAX::ACTION_EXPORT_RESULTS,
 					'successMessage'                  => __( 'No errors found.', 'plugin-check' ),
 					'errorMessage'                    => __( 'Errors were found.', 'plugin-check' ),
 					'settingsPageUrl'                 => admin_url( 'options-general.php?page=plugin-check-settings' ),
+					'strings'                         => array(
+						'exportCsv'      => __( 'Export CSV', 'plugin-check' ),
+						'exportJson'     => __( 'Export JSON', 'plugin-check' ),
+						'exportMarkdown' => __( 'Export Markdown', 'plugin-check' ),
+						'exporting'      => __( 'Preparing export…', 'plugin-check' ),
+						'exportError'    => __( 'Export failed.', 'plugin-check' ),
+						'noResults'      => __( 'There are no results to export yet.', 'plugin-check' ),
+					),
 				)
 			),
 			'before'
@@ -280,6 +290,7 @@ final class Admin_Page {
 		$selected_plugin_basename = filter_input( INPUT_GET, 'plugin', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
 
 		$categories = Check_Categories::get_categories();
+		$types      = Check_Types::get_types();
 
 		// Get user settings for category preferences.
 		$user_enabled_categories = get_user_setting( 'plugin_check_category_preferences', implode( '__', $this->get_default_check_categories_to_be_selected() ) );
@@ -389,6 +400,15 @@ final class Admin_Page {
 				#plugin-check__results h4:first-child {
 					margin-top: 88.5px;
 				}
+			}
+			.plugin-check__export-controls {
+				margin-top: 24px;
+				display: flex;
+				gap: 8px;
+				flex-wrap: wrap;
+			}
+			.plugin-check__export-controls.is-hidden {
+				display: none;
 			}
 		</style>
 		<?php

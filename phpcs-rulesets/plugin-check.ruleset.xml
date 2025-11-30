@@ -35,6 +35,11 @@
 		<severity>7</severity>
 	</rule>
 
+	<!-- Check for short URLs. -->
+	<rule ref="PluginCheck.CodeAnalysis.ShortURL">
+		<severity>6</severity>
+	</rule>
+
 	<!-- Prohibit the use of the `goto` PHP language construct. -->
 	<rule ref="Generic.PHP.DiscourageGoto.Found">
 		<type>error</type>

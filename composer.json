@@ -12,7 +12,8 @@
     "nikic/php-parser": "^4",
     "plugin-check/phpcs-sniffs": "@dev",
     "wordpress/wp-ai-client": "^0.1.0",
-    "wp-coding-standards/wpcs": "^3.2.0"
+    "wp-coding-standards/wpcs": "^3.2.0",
+    "patrickschur/language-detection": "^5.3"
   },
   "require-dev": {
     "phpcompatibility/php-compatibility": "dev-develop",
