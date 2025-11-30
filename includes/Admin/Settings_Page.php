@@ -155,8 +155,8 @@ final class Settings_Page {
 	 * @param array $args Field arguments.
 	 */
 	public function render_provider_field( $args ) {
-		$settings = get_option( self::OPTION_NAME, array() );
-		$value    = isset( $settings['ai_provider'] ) ? esc_attr( $settings['ai_provider'] ) : '';
+		$settings  = get_option( self::OPTION_NAME, array() );
+		$value     = isset( $settings['ai_provider'] ) ? esc_attr( $settings['ai_provider'] ) : '';
 		$providers = $this->get_available_providers();
 		?>
 		<select
