@@ -12,14 +12,14 @@ use LanguageDetection\Language;
 /**
  * Trait for language utilities.
  *
- * @since 1.7.0
+ * @since 1.8.0
  */
 trait Language_Utils {
 
 	/**
 	 * Checks if the content is in an official WordPress language.
 	 *
-	 * @since 1.6.0
+	 * @since 1.8.0
 	 *
 	 * @param string $content The content to check.
 	 * @return bool True if the content is in an official language, otherwise false.
