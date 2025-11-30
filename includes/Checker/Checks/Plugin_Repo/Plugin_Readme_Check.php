@@ -947,7 +947,7 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 					0,
 					0,
 					'https://make.wordpress.org/plugins/2025/07/28/requiring-the-readme-to-be-written-in-english/',
-					7
+					6
 				);
 			}
 		}
