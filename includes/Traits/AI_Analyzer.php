@@ -403,4 +403,3 @@ Respond ONLY with valid JSON, no other text.',
 		return md5( $file . ':' . $line . ':' . $column . ':' . $code );
 	}
 }
-
