@@ -86,9 +86,11 @@ final class Settings_Page {
 			array(
 				'sanitize_callback' => array( $this, 'sanitize_settings' ),
 				'default'           => array(
-					'ai_provider' => '',
-					'ai_api_key'  => '',
-					'ai_model'    => '',
+					'ai_provider'         => '',
+					'ai_api_key'          => '',
+					'ai_model'            => '',
+					'ai_severity_errors'   => 7,
+					'ai_severity_warnings' => 6,
 				),
 			)
 		);
@@ -132,6 +134,35 @@ final class Settings_Page {
 				'label_for' => 'ai_model',
 			)
 		);
+
+		add_settings_section(
+			'ai_severity_section',
+			__( 'Severity Threshold', 'plugin-check' ),
+			array( $this, 'render_severity_section_description' ),
+			self::PAGE_SLUG
+		);
+
+		add_settings_field(
+			'ai_severity_errors',
+			__( 'Errors', 'plugin-check' ),
+			array( $this, 'render_severity_errors_field' ),
+			self::PAGE_SLUG,
+			'ai_severity_section',
+			array(
+				'label_for' => 'ai_severity_errors',
+			)
+		);
+
+		add_settings_field(
+			'ai_severity_warnings',
+			__( 'Warnings', 'plugin-check' ),
+			array( $this, 'render_severity_warnings_field' ),
+			self::PAGE_SLUG,
+			'ai_severity_section',
+			array(
+				'label_for' => 'ai_severity_warnings',
+			)
+		);
 	}
 
 	/**
@@ -143,6 +174,19 @@ final class Settings_Page {
 		?>
 		<p>
 			<?php esc_html_e( 'Configure AI integration settings for false positive detection. Select your AI provider, enter your credentials, and choose the model to use for analysis.', 'plugin-check' ); ?>
+		</p>
+		<?php
+	}
+
+	/**
+	 * Renders the severity section description.
+	 *
+	 * @since 1.8.0
+	 */
+	public function render_severity_section_description() {
+		?>
+		<p>
+			<?php esc_html_e( 'Set the minimum severity level (1-10) to be analyzed by AI.', 'plugin-check' ); ?>
 		</p>
 		<?php
 	}
@@ -255,6 +299,58 @@ final class Settings_Page {
 				esc_html_e( 'Select the AI model to use for analysis. Different models have different capabilities and costs.', 'plugin-check' );
 			}
 			?>
+		</p>
+		<?php
+	}
+
+	/**
+	 * Renders the severity threshold field for errors.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param array $args Field arguments.
+	 */
+	public function render_severity_errors_field( $args ) {
+		$settings = get_option( self::OPTION_NAME, array() );
+		$value    = isset( $settings['ai_severity_errors'] ) ? intval( $settings['ai_severity_errors'] ) : 7;
+		?>
+		<input
+			type="number"
+			id="<?php echo esc_attr( $args['label_for'] ); ?>"
+			name="<?php echo esc_attr( self::OPTION_NAME . '[ai_severity_errors]' ); ?>"
+			value="<?php echo esc_attr( $value ); ?>"
+			min="1"
+			max="10"
+			class="small-text"
+		/>
+		<p class="description">
+			<?php esc_html_e( 'Minimum severity for errors (Default: 7)', 'plugin-check' ); ?>
+		</p>
+		<?php
+	}
+
+	/**
+	 * Renders the severity threshold field for warnings.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param array $args Field arguments.
+	 */
+	public function render_severity_warnings_field( $args ) {
+		$settings = get_option( self::OPTION_NAME, array() );
+		$value    = isset( $settings['ai_severity_warnings'] ) ? intval( $settings['ai_severity_warnings'] ) : 6;
+		?>
+		<input
+			type="number"
+			id="<?php echo esc_attr( $args['label_for'] ); ?>"
+			name="<?php echo esc_attr( self::OPTION_NAME . '[ai_severity_warnings]' ); ?>"
+			value="<?php echo esc_attr( $value ); ?>"
+			min="1"
+			max="10"
+			class="small-text"
+		/>
+		<p class="description">
+			<?php esc_html_e( 'Minimum severity for warnings (Default: 6)', 'plugin-check' ); ?>
 		</p>
 		<?php
 	}
@@ -377,6 +473,20 @@ final class Settings_Page {
 			$provider = isset( $sanitized['ai_provider'] ) ? $sanitized['ai_provider'] : ( isset( $input['ai_provider'] ) ? $input['ai_provider'] : '' );
 			$models   = array_keys( $this->get_models_for_provider( $provider ) );
 			$sanitized['ai_model'] = in_array( $input['ai_model'], $models, true ) ? $input['ai_model'] : '';
+		}
+
+		if ( isset( $input['ai_severity_errors'] ) ) {
+			$value = intval( $input['ai_severity_errors'] );
+			$sanitized['ai_severity_errors'] = ( $value >= 1 && $value <= 10 ) ? $value : 7;
+		} else {
+			$sanitized['ai_severity_errors'] = 7;
+		}
+
+		if ( isset( $input['ai_severity_warnings'] ) ) {
+			$value = intval( $input['ai_severity_warnings'] );
+			$sanitized['ai_severity_warnings'] = ( $value >= 1 && $value <= 10 ) ? $value : 6;
+		} else {
+			$sanitized['ai_severity_warnings'] = 6;
 		}
 
 		// Test AI connection if all required fields are provided and settings have changed.
@@ -528,6 +638,30 @@ final class Settings_Page {
 	public static function get_model() {
 		$settings = get_option( self::OPTION_NAME, array() );
 		return isset( $settings['ai_model'] ) ? $settings['ai_model'] : '';
+	}
+
+	/**
+	 * Gets the AI severity threshold for errors.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @return int AI severity threshold for errors.
+	 */
+	public static function get_severity_errors() {
+		$settings = get_option( self::OPTION_NAME, array() );
+		return isset( $settings['ai_severity_errors'] ) ? intval( $settings['ai_severity_errors'] ) : 7;
+	}
+
+	/**
+	 * Gets the AI severity threshold for warnings.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @return int AI severity threshold for warnings.
+	 */
+	public static function get_severity_warnings() {
+		$settings = get_option( self::OPTION_NAME, array() );
+		return isset( $settings['ai_severity_warnings'] ) ? intval( $settings['ai_severity_warnings'] ) : 6;
 	}
 
 	/**
