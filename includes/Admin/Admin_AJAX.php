@@ -236,10 +236,10 @@ final class Admin_AJAX {
 		$plugin               = filter_input( INPUT_POST, 'plugin', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
 		$include_experimental = 1 === filter_input( INPUT_POST, 'include-experimental', FILTER_VALIDATE_INT );
 		$use_ai               = 1 === filter_input( INPUT_POST, 'use-ai', FILTER_VALIDATE_INT );
-		$runner               = Plugin_Request_Utility::get_runner();
+		$runner               = $this->get_ajax_runner();
 
 		if ( is_wp_error( $runner ) ) {
-			wp_send_json_error( $runner, 403 );
+			wp_send_json_error( $runner, 500 );
 		}
 
 		try {

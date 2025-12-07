@@ -56,6 +56,11 @@ class Plugin_Main {
 	 * @global Plugin_Context $context The plugin context instance.
 	 */
 	public function add_hooks() {
+		// Initialize AI Client on init hook if the class exists.
+		if ( class_exists( '\WordPress\AI_Client\AI_Client' ) ) {
+			add_action( 'init', array( '\WordPress\AI_Client\AI_Client', 'init' ) );
+		}
+
 		if ( defined( 'WP_CLI' ) && WP_CLI ) {
 			global $context;
 

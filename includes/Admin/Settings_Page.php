@@ -56,6 +56,28 @@ final class Settings_Page {
 	public function add_hooks() {
 		add_action( 'admin_menu', array( $this, 'add_page' ) );
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
+		add_action( 'admin_init', array( $this, 'maybe_sync_existing_credentials' ) );
+	}
+
+	/**
+	 * Syncs existing credentials to wp-ai-client on init if not already synced.
+	 *
+	 * @since 1.8.0
+	 */
+	public function maybe_sync_existing_credentials() {
+		$settings = get_option( self::OPTION_NAME, array() );
+
+		// Only sync if we have credentials configured.
+		if ( ! empty( $settings['ai_provider'] ) && ! empty( $settings['ai_api_key'] ) ) {
+			// Check if credentials are already in wp-ai-client format.
+			$ai_client_credentials = get_option( 'wp_ai_client_provider_credentials', array() );
+
+			// If our provider's credentials are missing or different, sync them.
+			if ( ! isset( $ai_client_credentials[ $settings['ai_provider'] ] ) ||
+				$ai_client_credentials[ $settings['ai_provider'] ] !== $settings['ai_api_key'] ) {
+				$this->sync_credentials_to_ai_client( $settings );
+			}
+		}
 	}
 
 	/**
@@ -186,7 +208,7 @@ final class Settings_Page {
 	public function render_severity_section_description() {
 		?>
 		<p>
-			<?php esc_html_e( 'Set the minimum severity level (1-10) to be analyzed by AI.', 'plugin-check' ); ?>
+			<?php esc_html_e( 'Set the severity threshold (1-10). AI will analyze issues with severity BELOW this value. Low severity issues are more likely to be false positives.', 'plugin-check' ); ?>
 		</p>
 		<?php
 	}
@@ -324,7 +346,7 @@ final class Settings_Page {
 			class="small-text"
 		/>
 		<p class="description">
-			<?php esc_html_e( 'Minimum severity for errors (Default: 7)', 'plugin-check' ); ?>
+			<?php esc_html_e( 'Analyze errors with severity < this value (Default: 7)', 'plugin-check' ); ?>
 		</p>
 		<?php
 	}
@@ -350,7 +372,7 @@ final class Settings_Page {
 			class="small-text"
 		/>
 		<p class="description">
-			<?php esc_html_e( 'Minimum severity for warnings (Default: 6)', 'plugin-check' ); ?>
+			<?php esc_html_e( 'Analyze warnings with severity < this value (Default: 6)', 'plugin-check' ); ?>
 		</p>
 		<?php
 	}
@@ -513,7 +535,37 @@ final class Settings_Page {
 			}
 		}
 
+		// Sync credentials to wp-ai-client's credential storage.
+		$this->sync_credentials_to_ai_client( $sanitized );
+
 		return $sanitized;
+	}
+
+	/**
+	 * Syncs our credentials to the wp-ai-client credential storage.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param array $settings Settings array with provider and api_key.
+	 */
+	protected function sync_credentials_to_ai_client( $settings ) {
+		// Get current wp-ai-client credentials.
+		$ai_client_credentials = get_option( 'wp_ai_client_provider_credentials', array() );
+
+		if ( ! is_array( $ai_client_credentials ) ) {
+			$ai_client_credentials = array();
+		}
+
+		// Update credentials for our provider.
+		if ( ! empty( $settings['ai_provider'] ) && ! empty( $settings['ai_api_key'] ) ) {
+			$ai_client_credentials[ $settings['ai_provider'] ] = $settings['ai_api_key'];
+		} elseif ( ! empty( $settings['ai_provider'] ) && empty( $settings['ai_api_key'] ) ) {
+			// Remove credentials if API key is empty.
+			unset( $ai_client_credentials[ $settings['ai_provider'] ] );
+		}
+
+		// Save updated credentials.
+		update_option( 'wp_ai_client_provider_credentials', $ai_client_credentials );
 	}
 
 	/**
@@ -527,7 +579,7 @@ final class Settings_Page {
 	 * @return bool|WP_Error True if connection successful, WP_Error on failure.
 	 */
 	protected function test_ai_connection( $provider, $api_key, $model ) {
-		if ( ! class_exists( '\WordPress\AI_Client\Client' ) ) {
+		if ( ! class_exists( '\WordPress\AI_Client\AI_Client' ) ) {
 			return new WP_Error(
 				'ai_client_not_available',
 				__( 'AI client library is not available. Please ensure wp-ai-client is installed.', 'plugin-check' )
@@ -543,7 +595,7 @@ final class Settings_Page {
 		}
 
 		try {
-			$ai_client = new \WordPress\AI_Client\Client(
+			$ai_client = new \WordPress\AI_Client\AI_Client(
 				array(
 					'provider' => $provider,
 					'api_key'  => $api_key,
@@ -551,15 +603,15 @@ final class Settings_Page {
 				)
 			);
 
-			// Test with a simple prompt to verify connection works.
-			$test_prompt = __( 'Test connection. Respond with "OK" only.', 'plugin-check' );
-			$response    = $ai_client->request(
-				$test_prompt,
-				array(
-					'temperature' => 0.3,
-					'max_tokens'  => 10,
-				)
-			);
+		// Test with a simple prompt to verify connection works.
+		$test_prompt = __( 'Test connection. Respond with "OK" only.', 'plugin-check' );
+		$response    = $ai_client->request(
+			$test_prompt,
+			array(
+				'temperature'           => 0.3,
+				'max_completion_tokens' => 10,
+			)
+		);
 
 			// Check if we got a valid response.
 			if ( is_wp_error( $response ) ) {
