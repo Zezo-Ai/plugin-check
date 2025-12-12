@@ -18,6 +18,7 @@ use WordPress\Plugin_Check\Traits\Stable_Check;
  * Check to detect disallowed file types.
  *
  * @since 1.0.0
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
 class File_Type_Check extends Abstract_File_Check {
 
