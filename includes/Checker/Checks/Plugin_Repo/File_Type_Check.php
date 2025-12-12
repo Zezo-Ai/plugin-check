@@ -213,11 +213,32 @@ class File_Type_Check extends Abstract_File_Check {
 	 */
 	protected function look_for_hidden_files( Check_Result $result, array $files ) {
 		// Any files outside of 'vendor' or 'vendor_prefixed' or 'vendor-prefixed' or 'node_modules' directories that start with a period.
-		$hidden_files = self::filter_files_by_regex( $files, '/^((?!\/vendor\/|\/node_modules\/|\/vendor_prefixed\/|\/vendor-prefixed\/).)*\/\.\w+(\.\w+)*$/' );
+		$hidden_files = self::filter_files_by_regex( $files, '/^((?!\/vendor\/|\/node_modules\/|\/vendor_prefixed\/|\/vendor-prefixed\/).)*\/\.[\w\.\-_]+$/' );
+
+		// Allow development-only files that are commonly used in plugin development workflows.
+		$allowed_dev_files = array( '.distignore', '.gitignore' );
+
 		if ( $hidden_files ) {
+			$is_error_dev_files = ( ! defined( 'WP_DEBUG' ) || ! WP_DEBUG ) && 'production' === wp_get_environment_type();
+
+			var_dump( wp_get_environment_type() );
+			print_r( 'is_error_dev_files' );
+			var_dump( $is_error_dev_files );
+
+			$plugin_path = $result->plugin()->path();
 			foreach ( $hidden_files as $file ) {
-				$this->add_result_error_for_file(
+				// Get the relative file path from the plugin root.
+				$relative_file = str_replace( $plugin_path, '', $file );
+				$basename      = basename( $relative_file );
+
+				print_r( 'file' );
+				var_dump( $file );
+
+				$is_error = in_array( $basename, $allowed_dev_files, true ) && ! $is_error_dev_files ? false : true;
+
+				$this->add_result_message_for_file(
 					$result,
+					$is_error,
 					__( 'Hidden files are not permitted.', 'plugin-check' ),
 					'hidden_files',
 					$file,
