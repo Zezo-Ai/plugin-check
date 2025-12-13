@@ -7,7 +7,7 @@
 
 namespace WordPress\Plugin_Check\Admin;
 
-use WP_Error;
+use WordPress\Plugin_Check\Traits\AI_Connect;
 
 /**
  * Class to handle the Settings page for Plugin Check.
@@ -15,6 +15,8 @@ use WP_Error;
  * @since 1.8.0
  */
 final class Settings_Page {
+
+	use AI_Connect;
 
 	/**
 	 * Option group name.
@@ -57,6 +59,70 @@ final class Settings_Page {
 		add_action( 'admin_menu', array( $this, 'add_page' ) );
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
 		add_action( 'admin_init', array( $this, 'maybe_sync_existing_credentials' ) );
+		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_scripts' ) );
+		add_action( 'wp_ajax_plugin_check_get_models', array( $this, 'ajax_get_models' ) );
+	}
+
+	/**
+	 * Enqueues admin scripts and styles.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param string $hook_suffix Current admin page hook suffix.
+	 */
+	public function enqueue_admin_scripts( $hook_suffix ) {
+		if ( $hook_suffix !== $this->hook_suffix ) {
+			return;
+		}
+
+		wp_enqueue_script(
+			'plugin-check-admin-settings',
+			plugins_url( 'assets/js/admin-settings.js', WP_PLUGIN_CHECK_MAIN_FILE ),
+			array(),
+			WP_PLUGIN_CHECK_VERSION,
+			true
+		);
+
+		wp_localize_script(
+			'plugin-check-admin-settings',
+			'pluginCheckSettings',
+			array(
+				'ajaxUrl'         => admin_url( 'admin-ajax.php' ),
+				'nonce'           => wp_create_nonce( 'plugin_check_get_models' ),
+				'loadingText'     => __( 'Loading models...', 'plugin-check' ),
+				'selectModelText' => __( '-- Select Model --', 'plugin-check' ),
+				'noModelsText'    => __( 'No models available. Please check your API key.', 'plugin-check' ),
+				'errorText'       => __( 'Error loading models', 'plugin-check' ),
+			)
+		);
+	}
+
+	/**
+	 * AJAX handler to get models for a provider.
+	 *
+	 * @since 1.8.0
+	 */
+	public function ajax_get_models() {
+		check_ajax_referer( 'plugin_check_get_models', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Insufficient permissions', 'plugin-check' ) ) );
+		}
+
+		$provider = isset( $_POST['provider'] ) ? sanitize_text_field( wp_unslash( $_POST['provider'] ) ) : '';
+		$api_key  = isset( $_POST['api_key'] ) ? sanitize_text_field( wp_unslash( $_POST['api_key'] ) ) : '';
+
+		if ( empty( $provider ) ) {
+			wp_send_json_error( array( 'message' => __( 'Provider is required', 'plugin-check' ) ) );
+		}
+
+		$models = $this->get_models_for_provider( $provider, $api_key );
+
+		if ( empty( $models ) ) {
+			wp_send_json_success( array() );
+		}
+
+		wp_send_json_success( $models );
 	}
 
 	/**
@@ -67,12 +133,9 @@ final class Settings_Page {
 	public function maybe_sync_existing_credentials() {
 		$settings = get_option( self::OPTION_NAME, array() );
 
-		// Only sync if we have credentials configured.
 		if ( ! empty( $settings['ai_provider'] ) && ! empty( $settings['ai_api_key'] ) ) {
-			// Check if credentials are already in wp-ai-client format.
-			$ai_client_credentials = get_option( 'wp_ai_client_provider_credentials', array() );
+			$ai_client_credentials = $this->get_stored_credentials();
 
-			// If our provider's credentials are missing or different, sync them.
 			if ( ! isset( $ai_client_credentials[ $settings['ai_provider'] ] ) ||
 				$ai_client_credentials[ $settings['ai_provider'] ] !== $settings['ai_api_key'] ) {
 				$this->sync_credentials_to_ai_client( $settings );
@@ -108,11 +171,9 @@ final class Settings_Page {
 			array(
 				'sanitize_callback' => array( $this, 'sanitize_settings' ),
 				'default'           => array(
-					'ai_provider'         => '',
-					'ai_api_key'          => '',
-					'ai_model'            => '',
-					'ai_severity_errors'   => 7,
-					'ai_severity_warnings' => 6,
+					'ai_provider' => '',
+					'ai_api_key'  => '',
+					'ai_model'    => '',
 				),
 			)
 		);
@@ -126,7 +187,7 @@ final class Settings_Page {
 
 		add_settings_field(
 			'ai_provider',
-			__( 'AI Provider', 'plugin-check' ),
+			__( 'Provider', 'plugin-check' ),
 			array( $this, 'render_provider_field' ),
 			self::PAGE_SLUG,
 			'ai_settings_section',
@@ -148,41 +209,12 @@ final class Settings_Page {
 
 		add_settings_field(
 			'ai_model',
-			__( 'AI Model', 'plugin-check' ),
+			__( 'Model', 'plugin-check' ),
 			array( $this, 'render_model_field' ),
 			self::PAGE_SLUG,
 			'ai_settings_section',
 			array(
 				'label_for' => 'ai_model',
-			)
-		);
-
-		add_settings_section(
-			'ai_severity_section',
-			__( 'Severity Threshold', 'plugin-check' ),
-			array( $this, 'render_severity_section_description' ),
-			self::PAGE_SLUG
-		);
-
-		add_settings_field(
-			'ai_severity_errors',
-			__( 'Errors', 'plugin-check' ),
-			array( $this, 'render_severity_errors_field' ),
-			self::PAGE_SLUG,
-			'ai_severity_section',
-			array(
-				'label_for' => 'ai_severity_errors',
-			)
-		);
-
-		add_settings_field(
-			'ai_severity_warnings',
-			__( 'Warnings', 'plugin-check' ),
-			array( $this, 'render_severity_warnings_field' ),
-			self::PAGE_SLUG,
-			'ai_severity_section',
-			array(
-				'label_for' => 'ai_severity_warnings',
 			)
 		);
 	}
@@ -196,19 +228,6 @@ final class Settings_Page {
 		?>
 		<p>
 			<?php esc_html_e( 'Configure AI integration settings for false positive detection. Select your AI provider, enter your credentials, and choose the model to use for analysis.', 'plugin-check' ); ?>
-		</p>
-		<?php
-	}
-
-	/**
-	 * Renders the severity section description.
-	 *
-	 * @since 1.8.0
-	 */
-	public function render_severity_section_description() {
-		?>
-		<p>
-			<?php esc_html_e( 'Set the severity threshold (1-10). AI will analyze issues with severity BELOW this value. Low severity issues are more likely to be false positives.', 'plugin-check' ); ?>
 		</p>
 		<?php
 	}
@@ -304,6 +323,7 @@ final class Settings_Page {
 			id="<?php echo esc_attr( $args['label_for'] ); ?>"
 			name="<?php echo esc_attr( self::OPTION_NAME . '[ai_model]' ); ?>"
 			class="regular-text"
+			data-initial-value="<?php echo esc_attr( $value ); ?>"
 			<?php echo empty( $provider ) ? 'disabled' : ''; ?>
 		>
 			<option value=""><?php esc_html_e( '-- Select Model --', 'plugin-check' ); ?></option>
@@ -325,137 +345,6 @@ final class Settings_Page {
 		<?php
 	}
 
-	/**
-	 * Renders the severity threshold field for errors.
-	 *
-	 * @since 1.8.0
-	 *
-	 * @param array $args Field arguments.
-	 */
-	public function render_severity_errors_field( $args ) {
-		$settings = get_option( self::OPTION_NAME, array() );
-		$value    = isset( $settings['ai_severity_errors'] ) ? intval( $settings['ai_severity_errors'] ) : 7;
-		?>
-		<input
-			type="number"
-			id="<?php echo esc_attr( $args['label_for'] ); ?>"
-			name="<?php echo esc_attr( self::OPTION_NAME . '[ai_severity_errors]' ); ?>"
-			value="<?php echo esc_attr( $value ); ?>"
-			min="1"
-			max="10"
-			class="small-text"
-		/>
-		<p class="description">
-			<?php esc_html_e( 'Analyze errors with severity < this value (Default: 7)', 'plugin-check' ); ?>
-		</p>
-		<?php
-	}
-
-	/**
-	 * Renders the severity threshold field for warnings.
-	 *
-	 * @since 1.8.0
-	 *
-	 * @param array $args Field arguments.
-	 */
-	public function render_severity_warnings_field( $args ) {
-		$settings = get_option( self::OPTION_NAME, array() );
-		$value    = isset( $settings['ai_severity_warnings'] ) ? intval( $settings['ai_severity_warnings'] ) : 6;
-		?>
-		<input
-			type="number"
-			id="<?php echo esc_attr( $args['label_for'] ); ?>"
-			name="<?php echo esc_attr( self::OPTION_NAME . '[ai_severity_warnings]' ); ?>"
-			value="<?php echo esc_attr( $value ); ?>"
-			min="1"
-			max="10"
-			class="small-text"
-		/>
-		<p class="description">
-			<?php esc_html_e( 'Analyze warnings with severity < this value (Default: 6)', 'plugin-check' ); ?>
-		</p>
-		<?php
-	}
-
-	/**
-	 * Gets available AI providers.
-	 *
-	 * @since 1.8.0
-	 *
-	 * @return array Array of provider keys and labels.
-	 */
-	protected function get_available_providers() {
-		return array(
-			'openai'     => __( 'OpenAI (ChatGPT)', 'plugin-check' ),
-			'anthropic'  => __( 'Anthropic (Claude)', 'plugin-check' ),
-			'google'     => __( 'Google (Gemini)', 'plugin-check' ),
-			'azure'      => __( 'Microsoft Azure OpenAI', 'plugin-check' ),
-		);
-	}
-
-	/**
-	 * Gets available models for a provider.
-	 *
-	 * @since 1.8.0
-	 *
-	 * @param string $provider Provider key.
-	 * @return array Array of model keys and labels.
-	 */
-	protected function get_models_for_provider( $provider ) {
-		$models = array();
-
-		switch ( $provider ) {
-			case 'openai':
-				$models = array(
-					'gpt-4o'         => __( 'GPT-4o', 'plugin-check' ),
-					'gpt-4-turbo'    => __( 'GPT-4 Turbo', 'plugin-check' ),
-					'gpt-4'          => __( 'GPT-4', 'plugin-check' ),
-					'gpt-3.5-turbo'  => __( 'GPT-3.5 Turbo', 'plugin-check' ),
-				);
-				break;
-
-			case 'anthropic':
-				$models = array(
-					'claude-3-5-sonnet-20241022' => __( 'Claude 3.5 Sonnet', 'plugin-check' ),
-					'claude-3-opus-20240229'     => __( 'Claude 3 Opus', 'plugin-check' ),
-					'claude-3-sonnet-20240229'   => __( 'Claude 3 Sonnet', 'plugin-check' ),
-					'claude-3-haiku-20240307'    => __( 'Claude 3 Haiku', 'plugin-check' ),
-				);
-				break;
-
-			case 'google':
-				$models = array(
-					'gemini-1.5-pro'  => __( 'Gemini 1.5 Pro', 'plugin-check' ),
-					'gemini-1.5-flash' => __( 'Gemini 1.5 Flash', 'plugin-check' ),
-					'gemini-pro'      => __( 'Gemini Pro', 'plugin-check' ),
-				);
-				break;
-
-			case 'azure':
-				$models = array(
-					'gpt-4o'         => __( 'GPT-4o (Azure)', 'plugin-check' ),
-					'gpt-4-turbo'    => __( 'GPT-4 Turbo (Azure)', 'plugin-check' ),
-					'gpt-4'          => __( 'GPT-4 (Azure)', 'plugin-check' ),
-					'gpt-35-turbo'   => __( 'GPT-3.5 Turbo (Azure)', 'plugin-check' ),
-				);
-				break;
-		}
-
-		return $models;
-	}
-
-	/**
-	 * Gets the label for a provider.
-	 *
-	 * @since 1.8.0
-	 *
-	 * @param string $provider Provider key.
-	 * @return string Provider label.
-	 */
-	protected function get_provider_label( $provider ) {
-		$providers = $this->get_available_providers();
-		return isset( $providers[ $provider ] ) ? $providers[ $provider ] : $provider;
-	}
 
 	/**
 	 * Sanitizes settings input.
@@ -469,46 +358,28 @@ final class Settings_Page {
 		$sanitized = array();
 
 		if ( isset( $input['ai_provider'] ) ) {
-			$providers = array_keys( $this->get_available_providers() );
+			$providers                = array_keys( $this->get_available_providers() );
 			$sanitized['ai_provider'] = in_array( $input['ai_provider'], $providers, true ) ? $input['ai_provider'] : '';
 		}
 
-		// Get current settings to handle password field behavior.
 		$current_settings = get_option( self::OPTION_NAME, array() );
 
 		if ( isset( $input['ai_api_key'] ) ) {
-			// If empty, keep existing key (password field unchanged).
 			if ( ! empty( $input['ai_api_key'] ) ) {
 				$sanitized['ai_api_key'] = sanitize_text_field( $input['ai_api_key'] );
 			} elseif ( isset( $current_settings['ai_api_key'] ) && ! empty( $current_settings['ai_api_key'] ) ) {
-				// Keep existing if not explicitly changed.
 				$sanitized['ai_api_key'] = $current_settings['ai_api_key'];
 			} else {
 				$sanitized['ai_api_key'] = '';
 			}
 		} elseif ( isset( $current_settings['ai_api_key'] ) ) {
-			// Keep existing if not in input.
 			$sanitized['ai_api_key'] = $current_settings['ai_api_key'];
 		}
 
 		if ( isset( $input['ai_model'] ) ) {
-			$provider = isset( $sanitized['ai_provider'] ) ? $sanitized['ai_provider'] : ( isset( $input['ai_provider'] ) ? $input['ai_provider'] : '' );
-			$models   = array_keys( $this->get_models_for_provider( $provider ) );
-			$sanitized['ai_model'] = in_array( $input['ai_model'], $models, true ) ? $input['ai_model'] : '';
-		}
-
-		if ( isset( $input['ai_severity_errors'] ) ) {
-			$value = intval( $input['ai_severity_errors'] );
-			$sanitized['ai_severity_errors'] = ( $value >= 1 && $value <= 10 ) ? $value : 7;
-		} else {
-			$sanitized['ai_severity_errors'] = 7;
-		}
-
-		if ( isset( $input['ai_severity_warnings'] ) ) {
-			$value = intval( $input['ai_severity_warnings'] );
-			$sanitized['ai_severity_warnings'] = ( $value >= 1 && $value <= 10 ) ? $value : 6;
-		} else {
-			$sanitized['ai_severity_warnings'] = 6;
+			$sanitized['ai_model'] = $input['ai_model'];
+		} elseif ( isset( $current_settings['ai_model'] ) ) {
+			$sanitized['ai_model'] = $current_settings['ai_model'];
 		}
 
 		// Test AI connection if all required fields are provided and settings have changed.
@@ -517,9 +388,9 @@ final class Settings_Page {
 		$model_changed    = ! isset( $current_settings['ai_model'] ) || $current_settings['ai_model'] !== $sanitized['ai_model'];
 
 		if ( ! empty( $sanitized['ai_provider'] ) && ! empty( $sanitized['ai_api_key'] ) && ! empty( $sanitized['ai_model'] ) && ( $provider_changed || $api_key_changed || $model_changed ) ) {
+
 			$connection_test = $this->test_ai_connection( $sanitized['ai_provider'], $sanitized['ai_api_key'], $sanitized['ai_model'] );
 			if ( is_wp_error( $connection_test ) ) {
-				// Add settings error to prevent saving.
 				add_settings_error(
 					self::OPTION_NAME,
 					'ai_connection_failed',
@@ -530,7 +401,6 @@ final class Settings_Page {
 					),
 					'error'
 				);
-				// Return current settings instead of new ones to prevent saving invalid settings.
 				return $current_settings;
 			}
 		}
@@ -549,111 +419,19 @@ final class Settings_Page {
 	 * @param array $settings Settings array with provider and api_key.
 	 */
 	protected function sync_credentials_to_ai_client( $settings ) {
-		// Get current wp-ai-client credentials.
-		$ai_client_credentials = get_option( 'wp_ai_client_provider_credentials', array() );
+		$ai_client_credentials = $this->get_stored_credentials();
 
 		if ( ! is_array( $ai_client_credentials ) ) {
 			$ai_client_credentials = array();
 		}
 
-		// Update credentials for our provider.
 		if ( ! empty( $settings['ai_provider'] ) && ! empty( $settings['ai_api_key'] ) ) {
 			$ai_client_credentials[ $settings['ai_provider'] ] = $settings['ai_api_key'];
 		} elseif ( ! empty( $settings['ai_provider'] ) && empty( $settings['ai_api_key'] ) ) {
-			// Remove credentials if API key is empty.
 			unset( $ai_client_credentials[ $settings['ai_provider'] ] );
 		}
 
-		// Save updated credentials.
-		update_option( 'wp_ai_client_provider_credentials', $ai_client_credentials );
-	}
-
-	/**
-	 * Tests the AI connection with provided credentials.
-	 *
-	 * @since 1.8.0
-	 *
-	 * @param string $provider Provider key.
-	 * @param string $api_key  API key.
-	 * @param string $model    Model name.
-	 * @return bool|WP_Error True if connection successful, WP_Error on failure.
-	 */
-	protected function test_ai_connection( $provider, $api_key, $model ) {
-		if ( ! class_exists( '\WordPress\AI_Client\AI_Client' ) ) {
-			return new WP_Error(
-				'ai_client_not_available',
-				__( 'AI client library is not available. Please ensure wp-ai-client is installed.', 'plugin-check' )
-			);
-		}
-
-		// Validate required parameters.
-		if ( empty( $provider ) || empty( $api_key ) || empty( $model ) ) {
-			return new WP_Error(
-				'ai_missing_parameters',
-				__( 'Provider, API key, and model are required to test the connection.', 'plugin-check' )
-			);
-		}
-
-		try {
-			$ai_client = new \WordPress\AI_Client\AI_Client(
-				array(
-					'provider' => $provider,
-					'api_key'  => $api_key,
-					'model'    => $model,
-				)
-			);
-
-		// Test with a simple prompt to verify connection works.
-		$test_prompt = __( 'Test connection. Respond with "OK" only.', 'plugin-check' );
-		$response    = $ai_client->request(
-			$test_prompt,
-			array(
-				'temperature'           => 0.3,
-				'max_completion_tokens' => 10,
-			)
-		);
-
-			// Check if we got a valid response.
-			if ( is_wp_error( $response ) ) {
-				return $response;
-			}
-
-			// If we got a response (array or string), the connection works.
-			if ( is_array( $response ) || is_string( $response ) ) {
-				return true;
-			}
-
-			return new WP_Error(
-				'ai_invalid_response',
-				__( 'Received invalid response from AI service. Please check your API key and model.', 'plugin-check' )
-			);
-		} catch ( \Exception $e ) {
-			$error_message = $e->getMessage();
-
-			// Provide more user-friendly error messages for common issues.
-			if ( false !== strpos( strtolower( $error_message ), 'authentication' ) || false !== strpos( strtolower( $error_message ), 'unauthorized' ) ) {
-				return new WP_Error(
-					'ai_authentication_failed',
-					__( 'Authentication failed. Please check your API key.', 'plugin-check' )
-				);
-			}
-
-			if ( false !== strpos( strtolower( $error_message ), 'model' ) || false !== strpos( strtolower( $error_message ), 'not found' ) ) {
-				return new WP_Error(
-					'ai_model_not_found',
-					__( 'The selected model is not available. Please check your model selection.', 'plugin-check' )
-				);
-			}
-
-			return new WP_Error(
-				'ai_connection_error',
-				sprintf(
-					/* translators: %s: Error message */
-					__( 'Connection error: %s', 'plugin-check' ),
-					$error_message
-				)
-			);
-		}
+		$this->update_stored_credentials( $ai_client_credentials );
 	}
 
 	/**
@@ -693,30 +471,6 @@ final class Settings_Page {
 	}
 
 	/**
-	 * Gets the AI severity threshold for errors.
-	 *
-	 * @since 1.8.0
-	 *
-	 * @return int AI severity threshold for errors.
-	 */
-	public static function get_severity_errors() {
-		$settings = get_option( self::OPTION_NAME, array() );
-		return isset( $settings['ai_severity_errors'] ) ? intval( $settings['ai_severity_errors'] ) : 7;
-	}
-
-	/**
-	 * Gets the AI severity threshold for warnings.
-	 *
-	 * @since 1.8.0
-	 *
-	 * @return int AI severity threshold for warnings.
-	 */
-	public static function get_severity_warnings() {
-		$settings = get_option( self::OPTION_NAME, array() );
-		return isset( $settings['ai_severity_warnings'] ) ? intval( $settings['ai_severity_warnings'] ) : 6;
-	}
-
-	/**
 	 * Renders the settings page.
 	 *
 	 * @since 1.8.0
@@ -726,7 +480,6 @@ final class Settings_Page {
 			wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'plugin-check' ) );
 		}
 
-		// Show updated message.
 		if ( isset( $_GET['settings-updated'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			// Check if there are any error messages already set.
 			$settings_errors = get_settings_errors( self::OPTION_NAME );
@@ -777,67 +530,6 @@ final class Settings_Page {
 				?>
 			</form>
 		</div>
-		<script type="text/javascript">
-		jQuery( document ).ready( function( $ ) {
-			var $provider = $( '#ai_provider' );
-			var $apiKey = $( '#ai_api_key' );
-			var $model = $( '#ai_model' );
-
-			function updateFields() {
-				var provider = $provider.val();
-				if ( provider ) {
-					$apiKey.prop( 'disabled', false );
-					$model.prop( 'disabled', false );
-					updateModelOptions( provider );
-				} else {
-					$apiKey.prop( 'disabled', true );
-					$model.prop( 'disabled', true ).val( '' );
-				}
-			}
-
-			function updateModelOptions( provider ) {
-				var models = {
-					'openai': {
-						'gpt-4o': '<?php echo esc_js( __( 'GPT-4o', 'plugin-check' ) ); ?>',
-						'gpt-4-turbo': '<?php echo esc_js( __( 'GPT-4 Turbo', 'plugin-check' ) ); ?>',
-						'gpt-4': '<?php echo esc_js( __( 'GPT-4', 'plugin-check' ) ); ?>',
-						'gpt-3.5-turbo': '<?php echo esc_js( __( 'GPT-3.5 Turbo', 'plugin-check' ) ); ?>'
-					},
-					'anthropic': {
-						'claude-3-5-sonnet-20241022': '<?php echo esc_js( __( 'Claude 3.5 Sonnet', 'plugin-check' ) ); ?>',
-						'claude-3-opus-20240229': '<?php echo esc_js( __( 'Claude 3 Opus', 'plugin-check' ) ); ?>',
-						'claude-3-sonnet-20240229': '<?php echo esc_js( __( 'Claude 3 Sonnet', 'plugin-check' ) ); ?>',
-						'claude-3-haiku-20240307': '<?php echo esc_js( __( 'Claude 3 Haiku', 'plugin-check' ) ); ?>'
-					},
-					'google': {
-						'gemini-1.5-pro': '<?php echo esc_js( __( 'Gemini 1.5 Pro', 'plugin-check' ) ); ?>',
-						'gemini-1.5-flash': '<?php echo esc_js( __( 'Gemini 1.5 Flash', 'plugin-check' ) ); ?>',
-						'gemini-pro': '<?php echo esc_js( __( 'Gemini Pro', 'plugin-check' ) ); ?>'
-					},
-					'azure': {
-						'gpt-4o': '<?php echo esc_js( __( 'GPT-4o (Azure)', 'plugin-check' ) ); ?>',
-						'gpt-4-turbo': '<?php echo esc_js( __( 'GPT-4 Turbo (Azure)', 'plugin-check' ) ); ?>',
-						'gpt-4': '<?php echo esc_js( __( 'GPT-4 (Azure)', 'plugin-check' ) ); ?>',
-						'gpt-35-turbo': '<?php echo esc_js( __( 'GPT-3.5 Turbo (Azure)', 'plugin-check' ) ); ?>'
-					}
-				};
-
-				var providerModels = models[ provider ] || {};
-				var currentValue = $model.val();
-
-				$model.empty();
-				$model.append( '<option value=""><?php echo esc_js( __( '-- Select Model --', 'plugin-check' ) ); ?></option>' );
-
-				$.each( providerModels, function( key, label ) {
-					var selected = currentValue === key ? ' selected' : '';
-					$model.append( '<option value="' + key + '"' + selected + '>' + label + '</option>' );
-				} );
-			}
-
-			$provider.on( 'change', updateFields );
-			updateFields();
-		} );
-		</script>
 		<?php
 	}
 
@@ -851,6 +543,4 @@ final class Settings_Page {
 	public function get_hook_suffix() {
 		return $this->hook_suffix;
 	}
-
 }
-
