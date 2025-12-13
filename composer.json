@@ -10,9 +10,10 @@
     "composer/installers": "^2.2",
     "dealerdirect/phpcodesniffer-composer-installer": "^1.0.0",
     "nikic/php-parser": "^4",
+    "patrickschur/language-detection": "^5.3",
     "plugin-check/phpcs-sniffs": "@dev",
-    "wp-coding-standards/wpcs": "^3.2.0",
-    "patrickschur/language-detection": "^5.3"
+    "wordpress/wp-ai-client": "^0.2.1",
+    "wp-coding-standards/wpcs": "^3.2.0"
   },
   "require-dev": {
     "phpcompatibility/php-compatibility": "dev-develop",
