@@ -104,64 +104,13 @@ trait AI_Check_Names {
 		}
 
 		// Try JSON first (some models respond with JSON despite instructions).
-		if ( '{' === $analysis_trim[0] || '[' === $analysis_trim[0] ) {
-			$decoded = json_decode( $analysis_trim, true );
-			if ( is_array( $decoded ) && isset( $decoded['name_similarity_percentage'] ) ) {
-				$percentage  = (int) $decoded['name_similarity_percentage'];
-				$explanation = isset( $decoded['similarity_explanation'] ) ? trim( (string) $decoded['similarity_explanation'] ) : '';
-
-				if ( empty( $explanation ) ) {
-					$explanation = __( 'See the full AI output below.', 'plugin-check' );
-				}
-
-				return $this->verdict_from_percentage( $percentage, $explanation );
-			}
+		$json_result = $this->parse_json_analysis( $analysis_trim );
+		if ( null !== $json_result ) {
+			return $json_result;
 		}
 
-		// Try to find percentage with various formats.
-		$percentage = null;
-
-		// Format: name_similarity_percentage: 50.
-		if ( preg_match( '/name_similarity_percentage\s*:\s*(\d{1,3})/i', $analysis_trim, $matches ) ) {
-			$percentage = (int) $matches[1];
-		} elseif ( preg_match( '/[-*]\s*name_similarity_percentage\s*:\s*(\d{1,3})/i', $analysis_trim, $matches ) ) {
-			// Format: - name_similarity_percentage: 50 (checklist format).
-			$percentage = (int) $matches[1];
-		} elseif ( preg_match( '/"name_similarity_percentage"\s*:\s*(\d{1,3})/i', $analysis_trim, $matches ) ) {
-			// Format: "name_similarity_percentage": 50 (JSON-like).
-			$percentage = (int) $matches[1];
-		} elseif ( preg_match( '/(?:similarity|percentage)[\s:]+(\d{1,3})/i', $analysis_trim, $matches ) ) {
-			// Format: Percentage: 50 or Similarity: 50.
-			$percentage = (int) $matches[1];
-		}
-
-		// Try to find explanation.
-		$explanation = '';
-		if ( preg_match( '/similarity_explanation\s*:\s*(.+?)(?:\n\s*(?:confusion_existing_plugins|confusion_existing_others)\s*:|\z)/is', $analysis_trim, $matches ) ) {
-			$explanation = trim( preg_replace( '/\s+/', ' ', $matches[1] ) );
-			// Remove quotes if present.
-			$explanation = trim( $explanation, '"\'`' );
-		} elseif ( preg_match( '/[-*]\s*similarity_explanation\s*:\s*(.+?)(?:\n\s*[-*]|\z)/is', $analysis_trim, $matches ) ) {
-			$explanation = trim( preg_replace( '/\s+/', ' ', $matches[1] ) );
-			// Remove quotes if present.
-			$explanation = trim( $explanation, '"\'`' );
-		}
-
-		if ( empty( $explanation ) ) {
-			// Try to extract first meaningful paragraph.
-			$lines = explode( "\n", $analysis_trim );
-			foreach ( $lines as $line ) {
-				$line = trim( $line );
-				if ( strlen( $line ) > 50 && ! preg_match( '/^(name_similarity|similarity_explanation|confusion_|[-*]\s*$)/i', $line ) ) {
-					$explanation = $line;
-					break;
-				}
-			}
-
-			if ( empty( $explanation ) ) {
-				$explanation = __( 'See the full AI output below.', 'plugin-check' );
-			}
-		}
+		$percentage  = $this->extract_percentage( $analysis_trim );
+		$explanation = $this->extract_explanation( $analysis_trim );
 
 		if ( null === $percentage ) {
 			return array(
@@ -171,6 +120,95 @@ trait AI_Check_Names {
 		}
 
 		return $this->verdict_from_percentage( $percentage, $explanation );
+	}
+
+	/**
+	 * Parses JSON analysis response.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param string $analysis_trim Trimmed analysis text.
+	 * @return array{verdict:string,explanation:string}|null Parsed result or null if not JSON.
+	 */
+	protected function parse_json_analysis( $analysis_trim ) {
+		if ( '{' !== $analysis_trim[0] && '[' !== $analysis_trim[0] ) {
+			return null;
+		}
+
+		$decoded = json_decode( $analysis_trim, true );
+		if ( ! is_array( $decoded ) || ! isset( $decoded['name_similarity_percentage'] ) ) {
+			return null;
+		}
+
+		$percentage  = (int) $decoded['name_similarity_percentage'];
+		$explanation = isset( $decoded['similarity_explanation'] ) ? trim( (string) $decoded['similarity_explanation'] ) : '';
+
+		if ( empty( $explanation ) ) {
+			$explanation = __( 'See the full AI output below.', 'plugin-check' );
+		}
+
+		return $this->verdict_from_percentage( $percentage, $explanation );
+	}
+
+	/**
+	 * Extracts percentage from analysis text.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param string $analysis_trim Trimmed analysis text.
+	 * @return int|null Percentage or null if not found.
+	 */
+	protected function extract_percentage( $analysis_trim ) {
+		$patterns = array(
+			'/name_similarity_percentage\s*:\s*(\d{1,3})/i',
+			'/[-*]\s*name_similarity_percentage\s*:\s*(\d{1,3})/i',
+			'/"name_similarity_percentage"\s*:\s*(\d{1,3})/i',
+			'/(?:similarity|percentage)[\s:]+(\d{1,3})/i',
+		);
+
+		foreach ( $patterns as $pattern ) {
+			if ( preg_match( $pattern, $analysis_trim, $matches ) ) {
+				return (int) $matches[1];
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Extracts explanation from analysis text.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param string $analysis_trim Trimmed analysis text.
+	 * @return string Explanation text.
+	 */
+	protected function extract_explanation( $analysis_trim ) {
+		$patterns = array(
+			'/similarity_explanation\s*:\s*(.+?)(?:\n\s*(?:confusion_existing_plugins|confusion_existing_others)\s*:|\z)/is',
+			'/[-*]\s*similarity_explanation\s*:\s*(.+?)(?:\n\s*[-*]|\z)/is',
+		);
+
+		foreach ( $patterns as $pattern ) {
+			if ( preg_match( $pattern, $analysis_trim, $matches ) ) {
+				$explanation = trim( preg_replace( '/\s+/', ' ', $matches[1] ) );
+				$explanation = trim( $explanation, '"\'`' );
+				if ( ! empty( $explanation ) ) {
+					return $explanation;
+				}
+			}
+		}
+
+		// Try to extract first meaningful paragraph.
+		$lines = explode( "\n", $analysis_trim );
+		foreach ( $lines as $line ) {
+			$line = trim( $line );
+			if ( strlen( $line ) > 50 && ! preg_match( '/^(name_similarity|similarity_explanation|confusion_|[-*]\s*$)/i', $line ) ) {
+				return $line;
+			}
+		}
+
+		return __( 'See the full AI output below.', 'plugin-check' );
 	}
 
 	/**

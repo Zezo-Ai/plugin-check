@@ -4,10 +4,10 @@
 
 /* global pluginCheckSettings */
 
-( function() {
+( function () {
 	'use strict';
 
-	document.addEventListener( 'DOMContentLoaded', function() {
+	document.addEventListener( 'DOMContentLoaded', function () {
 		const providerSelect = document.getElementById( 'ai_provider' );
 		const apiKeyInput = document.getElementById( 'ai_api_key' );
 		const modelSelect = document.getElementById( 'ai_model' );
@@ -74,10 +74,10 @@
 				credentials: 'same-origin',
 				body: formData,
 			} )
-				.then( function( response ) {
+				.then( function ( response ) {
 					return response.json();
 				} )
-				.then( function( response ) {
+				.then( function ( response ) {
 					modelSelect.innerHTML = '';
 
 					// Add default option.
@@ -91,7 +91,7 @@
 						let modelFound = false;
 
 						// Add model options.
-						Object.keys( response.data ).forEach( function( key ) {
+						Object.keys( response.data ).forEach( function ( key ) {
 							const option = document.createElement( 'option' );
 							option.value = key;
 							option.textContent = response.data[ key ];
@@ -124,7 +124,7 @@
 					// Mark that we've completed the first load.
 					isFirstLoad = false;
 				} )
-				.catch( function( error ) {
+				.catch( function ( error ) {
 					console.error( 'Error fetching models:', error );
 
 					modelSelect.innerHTML = '';
@@ -142,12 +142,12 @@
 
 		// Bind events.
 		providerSelect.addEventListener( 'change', updateFields );
-		apiKeyInput.addEventListener( 'change', function() {
+		apiKeyInput.addEventListener( 'change', function () {
 			if ( providerSelect.value ) {
 				updateModelOptions( providerSelect.value );
 			}
 		} );
-		modelSelect.addEventListener( 'change', function() {
+		modelSelect.addEventListener( 'change', function () {
 			savedModelValue = modelSelect.value || '';
 		} );
 

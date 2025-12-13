@@ -4,7 +4,7 @@
 
 /* global pluginCheckNamer */
 
-( function() {
+( function () {
 	'use strict';
 
 	function setText( el, text ) {
@@ -14,7 +14,7 @@
 		el.textContent = text;
 	}
 
-	document.addEventListener( 'DOMContentLoaded', function() {
+	document.addEventListener( 'DOMContentLoaded', function () {
 		const form = document.getElementById( 'plugin-check-namer-form' );
 		const input = document.getElementById( 'plugin_check_namer_input' );
 
@@ -47,7 +47,7 @@
 			submitBtn.disabled = isLoading;
 		}
 
-		form.addEventListener( 'submit', function( event ) {
+		form.addEventListener( 'submit', function ( event ) {
 			event.preventDefault();
 
 			const name = ( input.value || '' ).trim();
@@ -76,15 +76,13 @@
 				credentials: 'same-origin',
 				body: formData,
 			} )
-				.then( function( response ) {
+				.then( function ( response ) {
 					return response.json();
 				} )
-				.then( function( payload ) {
+				.then( function ( payload ) {
 					if ( ! payload || ! payload.success ) {
 						throw new Error(
-							payload &&
-								payload.data &&
-								payload.data.message
+							payload && payload.data && payload.data.message
 								? payload.data.message
 								: pluginCheckNamer.messages.genericError
 						);
@@ -98,7 +96,7 @@
 						resultWrap.style.display = 'block';
 					}
 				} )
-				.catch( function( err ) {
+				.catch( function ( err ) {
 					setText(
 						errorEl,
 						err && err.message
@@ -109,7 +107,7 @@
 						errorEl.style.display = 'block';
 					}
 				} )
-				.finally( function() {
+				.finally( function () {
 					setLoading( false );
 				} );
 		} );

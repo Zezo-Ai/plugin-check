@@ -126,27 +126,17 @@ final class Namer_Page {
 			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'plugin-check' ) ) );
 		}
 
-		$name = isset( $_POST['plugin_name'] ) ? sanitize_text_field( wp_unslash( $_POST['plugin_name'] ) ) : '';
-		$name = trim( $name );
-
+		$name = $this->get_plugin_name_from_request();
 		if ( empty( $name ) ) {
 			wp_send_json_error( array( 'message' => __( 'Please enter a plugin name.', 'plugin-check' ) ) );
 		}
 
-		$settings = get_option( self::OPTION_NAME, array() );
-		$provider = isset( $settings['ai_provider'] ) ? (string) $settings['ai_provider'] : '';
-		$api_key  = isset( $settings['ai_api_key'] ) ? (string) $settings['ai_api_key'] : '';
-		$model    = isset( $settings['ai_model'] ) ? (string) $settings['ai_model'] : '';
-
-		if ( empty( $provider ) || empty( $api_key ) || empty( $model ) ) {
-			wp_send_json_error(
-				array(
-					'message' => __( 'AI settings are not configured. Please configure Provider, API key, and Model in Plugin Check settings first.', 'plugin-check' ),
-				)
-			);
+		$ai_config = $this->get_ai_config();
+		if ( is_wp_error( $ai_config ) ) {
+			wp_send_json_error( array( 'message' => $ai_config->get_error_message() ) );
 		}
 
-		$analysis = $this->run_name_analysis( $provider, $api_key, $model, $name );
+		$analysis = $this->run_name_analysis( $ai_config['provider'], $ai_config['api_key'], $ai_config['model'], $name );
 		if ( is_wp_error( $analysis ) ) {
 			wp_send_json_error( array( 'message' => $analysis->get_error_message() ) );
 		}
@@ -159,6 +149,45 @@ final class Namer_Page {
 				'explanation' => $parsed['explanation'],
 				'raw'         => $analysis,
 			)
+		);
+	}
+
+	/**
+	 * Gets plugin name from request.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @return string Plugin name or empty string.
+	 */
+	protected function get_plugin_name_from_request() {
+		$name = isset( $_POST['plugin_name'] ) ? sanitize_text_field( wp_unslash( $_POST['plugin_name'] ) ) : '';
+		return trim( $name );
+	}
+
+	/**
+	 * Gets AI configuration from settings.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @return array|WP_Error AI config array or error.
+	 */
+	protected function get_ai_config() {
+		$settings = get_option( self::OPTION_NAME, array() );
+		$provider = isset( $settings['ai_provider'] ) ? (string) $settings['ai_provider'] : '';
+		$api_key  = isset( $settings['ai_api_key'] ) ? (string) $settings['ai_api_key'] : '';
+		$model    = isset( $settings['ai_model'] ) ? (string) $settings['ai_model'] : '';
+
+		if ( empty( $provider ) || empty( $api_key ) || empty( $model ) ) {
+			return new WP_Error(
+				'missing_ai_config',
+				__( 'AI settings are not configured. Please configure Provider, API key, and Model in Plugin Check settings first.', 'plugin-check' )
+			);
+		}
+
+		return array(
+			'provider' => $provider,
+			'api_key'  => $api_key,
+			'model'    => $model,
 		);
 	}
 
@@ -250,49 +279,21 @@ final class Namer_Page {
 		$user_id = get_current_user_id();
 
 		if ( empty( $input ) ) {
-			$this->store_result(
-				$user_id,
-				array(
-					'input' => '',
-					'error' => new WP_Error(
-						'missing_input',
-						__( 'Please enter a plugin name.', 'plugin-check' )
-					),
-				)
-			);
-			wp_safe_redirect( $this->get_page_url() );
-			exit;
+			$this->handle_analyze_error( $user_id, '', new WP_Error( 'missing_input', __( 'Please enter a plugin name.', 'plugin-check' ) ) );
+			return;
 		}
 
-		$settings = get_option( self::OPTION_NAME, array() );
-		$provider = isset( $settings['ai_provider'] ) ? (string) $settings['ai_provider'] : '';
-		$api_key  = isset( $settings['ai_api_key'] ) ? (string) $settings['ai_api_key'] : '';
-		$model    = isset( $settings['ai_model'] ) ? (string) $settings['ai_model'] : '';
-
-		if ( empty( $provider ) || empty( $api_key ) || empty( $model ) ) {
-			$this->store_result(
-				$user_id,
-				array(
-					'input' => $input,
-					'error' => new WP_Error( 'missing_ai_config', __( 'AI settings are not configured. Please configure Provider, API key, and Model in Plugin Check settings first.', 'plugin-check' ) ),
-				)
-			);
-			wp_safe_redirect( $this->get_page_url() );
-			exit;
+		$ai_config = $this->get_ai_config();
+		if ( is_wp_error( $ai_config ) ) {
+			$this->handle_analyze_error( $user_id, $input, $ai_config );
+			return;
 		}
 
-		$analysis = $this->run_name_analysis( $provider, $api_key, $model, $input );
+		$analysis = $this->run_name_analysis( $ai_config['provider'], $ai_config['api_key'], $ai_config['model'], $input );
 
 		if ( is_wp_error( $analysis ) ) {
-			$this->store_result(
-				$user_id,
-				array(
-					'input' => $input,
-					'error' => $analysis,
-				)
-			);
-			wp_safe_redirect( $this->get_page_url() );
-			exit;
+			$this->handle_analyze_error( $user_id, $input, $analysis );
+			return;
 		}
 
 		$this->store_result(
@@ -300,6 +301,27 @@ final class Namer_Page {
 			array(
 				'input'    => $input,
 				'analysis' => $analysis,
+			)
+		);
+		wp_safe_redirect( $this->get_page_url() );
+		exit;
+	}
+
+	/**
+	 * Handles analyze error and redirects.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param int      $user_id User ID.
+	 * @param string   $input   Input value.
+	 * @param WP_Error $error   Error object.
+	 */
+	protected function handle_analyze_error( $user_id, $input, $error ) {
+		$this->store_result(
+			$user_id,
+			array(
+				'input' => $input,
+				'error' => $error,
 			)
 		);
 		wp_safe_redirect( $this->get_page_url() );

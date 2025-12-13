@@ -355,52 +355,17 @@ final class Settings_Page {
 	 * @return array Sanitized settings.
 	 */
 	public function sanitize_settings( $input ) {
-		$sanitized = array();
-
-		if ( isset( $input['ai_provider'] ) ) {
-			$providers                = array_keys( $this->get_available_providers() );
-			$sanitized['ai_provider'] = in_array( $input['ai_provider'], $providers, true ) ? $input['ai_provider'] : '';
-		}
-
 		$current_settings = get_option( self::OPTION_NAME, array() );
+		$sanitized        = array();
 
-		if ( isset( $input['ai_api_key'] ) ) {
-			if ( ! empty( $input['ai_api_key'] ) ) {
-				$sanitized['ai_api_key'] = sanitize_text_field( $input['ai_api_key'] );
-			} elseif ( isset( $current_settings['ai_api_key'] ) && ! empty( $current_settings['ai_api_key'] ) ) {
-				$sanitized['ai_api_key'] = $current_settings['ai_api_key'];
-			} else {
-				$sanitized['ai_api_key'] = '';
-			}
-		} elseif ( isset( $current_settings['ai_api_key'] ) ) {
-			$sanitized['ai_api_key'] = $current_settings['ai_api_key'];
-		}
+		$sanitized['ai_provider'] = $this->sanitize_provider( $input, $current_settings );
+		$sanitized['ai_api_key']  = $this->sanitize_api_key( $input, $current_settings );
+		$sanitized['ai_model']    = $this->sanitize_model( $input, $current_settings );
 
-		if ( isset( $input['ai_model'] ) ) {
-			$sanitized['ai_model'] = $input['ai_model'];
-		} elseif ( isset( $current_settings['ai_model'] ) ) {
-			$sanitized['ai_model'] = $current_settings['ai_model'];
-		}
-
-		// Test AI connection if all required fields are provided and settings have changed.
-		$provider_changed = ! isset( $current_settings['ai_provider'] ) || $current_settings['ai_provider'] !== $sanitized['ai_provider'];
-		$api_key_changed  = ! isset( $current_settings['ai_api_key'] ) || $current_settings['ai_api_key'] !== $sanitized['ai_api_key'];
-		$model_changed    = ! isset( $current_settings['ai_model'] ) || $current_settings['ai_model'] !== $sanitized['ai_model'];
-
-		if ( ! empty( $sanitized['ai_provider'] ) && ! empty( $sanitized['ai_api_key'] ) && ! empty( $sanitized['ai_model'] ) && ( $provider_changed || $api_key_changed || $model_changed ) ) {
-
+		if ( $this->should_test_connection( $sanitized, $current_settings ) ) {
 			$connection_test = $this->test_ai_connection( $sanitized['ai_provider'], $sanitized['ai_api_key'], $sanitized['ai_model'] );
 			if ( is_wp_error( $connection_test ) ) {
-				add_settings_error(
-					self::OPTION_NAME,
-					'ai_connection_failed',
-					sprintf(
-						/* translators: %s: Error message */
-						__( 'AI connection test failed: %s. Settings were not saved.', 'plugin-check' ),
-						$connection_test->get_error_message()
-					),
-					'error'
-				);
+				$this->add_connection_error( $connection_test );
 				return $current_settings;
 			}
 		}
@@ -409,6 +374,105 @@ final class Settings_Page {
 		$this->sync_credentials_to_ai_client( $sanitized );
 
 		return $sanitized;
+	}
+
+	/**
+	 * Sanitizes provider setting.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param array $input            Input array.
+	 * @param array $current_settings Current settings.
+	 * @return string Sanitized provider.
+	 */
+	protected function sanitize_provider( $input, $current_settings ) {
+		if ( ! isset( $input['ai_provider'] ) ) {
+			return isset( $current_settings['ai_provider'] ) ? $current_settings['ai_provider'] : '';
+		}
+
+		$providers = array_keys( $this->get_available_providers() );
+		return in_array( $input['ai_provider'], $providers, true ) ? $input['ai_provider'] : '';
+	}
+
+	/**
+	 * Sanitizes API key setting.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param array $input            Input array.
+	 * @param array $current_settings Current settings.
+	 * @return string Sanitized API key.
+	 */
+	protected function sanitize_api_key( $input, $current_settings ) {
+		if ( ! isset( $input['ai_api_key'] ) ) {
+			return isset( $current_settings['ai_api_key'] ) ? $current_settings['ai_api_key'] : '';
+		}
+
+		if ( ! empty( $input['ai_api_key'] ) ) {
+			return sanitize_text_field( $input['ai_api_key'] );
+		}
+
+		return isset( $current_settings['ai_api_key'] ) && ! empty( $current_settings['ai_api_key'] )
+			? $current_settings['ai_api_key']
+			: '';
+	}
+
+	/**
+	 * Sanitizes model setting.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param array $input            Input array.
+	 * @param array $current_settings Current settings.
+	 * @return string Sanitized model.
+	 */
+	protected function sanitize_model( $input, $current_settings ) {
+		if ( isset( $input['ai_model'] ) ) {
+			return $input['ai_model'];
+		}
+
+		return isset( $current_settings['ai_model'] ) ? $current_settings['ai_model'] : '';
+	}
+
+	/**
+	 * Checks if connection should be tested.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param array $sanitized        Sanitized settings.
+	 * @param array $current_settings Current settings.
+	 * @return bool True if should test connection.
+	 */
+	protected function should_test_connection( $sanitized, $current_settings ) {
+		if ( empty( $sanitized['ai_provider'] ) || empty( $sanitized['ai_api_key'] ) || empty( $sanitized['ai_model'] ) ) {
+			return false;
+		}
+
+		$provider_changed = ! isset( $current_settings['ai_provider'] ) || $current_settings['ai_provider'] !== $sanitized['ai_provider'];
+		$api_key_changed  = ! isset( $current_settings['ai_api_key'] ) || $current_settings['ai_api_key'] !== $sanitized['ai_api_key'];
+		$model_changed    = ! isset( $current_settings['ai_model'] ) || $current_settings['ai_model'] !== $sanitized['ai_model'];
+
+		return $provider_changed || $api_key_changed || $model_changed;
+	}
+
+	/**
+	 * Adds connection error to settings errors.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param WP_Error $error Error object.
+	 */
+	protected function add_connection_error( $error ) {
+		add_settings_error(
+			self::OPTION_NAME,
+			'ai_connection_failed',
+			sprintf(
+				/* translators: %s: Error message */
+				__( 'AI connection test failed: %s. Settings were not saved.', 'plugin-check' ),
+				$error->get_error_message()
+			),
+			'error'
+		);
 	}
 
 	/**
