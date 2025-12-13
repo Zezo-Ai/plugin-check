@@ -460,9 +460,9 @@ final class Settings_Page {
 	 *
 	 * @since 1.8.0
 	 *
-	 * @param WP_Error $error Error object.
+	 * @param \WP_Error $error Error object.
 	 */
-	protected function add_connection_error( $error ) {
+	protected function add_connection_error( \WP_Error $error ) {
 		add_settings_error(
 			self::OPTION_NAME,
 			'ai_connection_failed',
