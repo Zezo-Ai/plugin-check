@@ -1,8 +1,8 @@
 /**
  * Plugin Check Namer tool.
- *
- * @package plugin-check
  */
+
+/* global pluginCheckNamer */
 
 ( function() {
 	'use strict';
@@ -15,21 +15,30 @@
 	}
 
 	document.addEventListener( 'DOMContentLoaded', function() {
-		const form      = document.getElementById( 'plugin-check-namer-form' );
-		const input     = document.getElementById( 'plugin_check_namer_input' );
-		const submitBtn = document.getElementById( 'plugin-check-namer-submit' );
-		const spinner   = document.getElementById( 'plugin-check-namer-spinner' );
+		const form = document.getElementById( 'plugin-check-namer-form' );
+		const input = document.getElementById( 'plugin_check_namer_input' );
 
-		const resultWrap = document.getElementById( 'plugin-check-namer-result' );
-		const verdictEl  = document.getElementById( 'plugin-check-namer-verdict' );
-		const explainEl  = document.getElementById( 'plugin-check-namer-explanation' );
-		const rawEl      = document.getElementById( 'plugin-check-namer-raw' );
-		const errorDiv   = document.getElementById( 'plugin-check-namer-error' );
-		const errorEl    = errorDiv ? errorDiv.querySelector( 'p' ) : null;
-
-		if ( ! form || ! input || ! submitBtn || ! window.pluginCheckNamer ) {
+		if ( ! form || ! input || ! window.pluginCheckNamer ) {
 			return;
 		}
+
+		const submitBtn = document.getElementById(
+			'plugin-check-namer-submit'
+		);
+		const spinner = document.getElementById( 'plugin-check-namer-spinner' );
+
+		const resultWrap = document.getElementById(
+			'plugin-check-namer-result'
+		);
+		const verdictEl = document.getElementById(
+			'plugin-check-namer-verdict'
+		);
+		const explainEl = document.getElementById(
+			'plugin-check-namer-explanation'
+		);
+		const rawEl = document.getElementById( 'plugin-check-namer-raw' );
+		const errorDiv = document.getElementById( 'plugin-check-namer-error' );
+		const errorEl = errorDiv ? errorDiv.querySelector( 'p' ) : null;
 
 		function setLoading( isLoading ) {
 			if ( spinner ) {
@@ -65,33 +74,44 @@
 			fetch( pluginCheckNamer.ajaxUrl, {
 				method: 'POST',
 				credentials: 'same-origin',
-				body: formData
+				body: formData,
 			} )
-			.then( function( response ) {
-				return response.json();
-			} )
-			.then( function( payload ) {
-				if ( ! payload || ! payload.success ) {
-					throw new Error( ( payload && payload.data && payload.data.message ) ? payload.data.message : pluginCheckNamer.messages.genericError );
-				}
+				.then( function( response ) {
+					return response.json();
+				} )
+				.then( function( payload ) {
+					if ( ! payload || ! payload.success ) {
+						throw new Error(
+							payload &&
+								payload.data &&
+								payload.data.message
+								? payload.data.message
+								: pluginCheckNamer.messages.genericError
+						);
+					}
 
-				setText( verdictEl, payload.data.verdict || '' );
-				setText( explainEl, payload.data.explanation || '' );
-				setText( rawEl, payload.data.raw || '' );
+					setText( verdictEl, payload.data.verdict || '' );
+					setText( explainEl, payload.data.explanation || '' );
+					setText( rawEl, payload.data.raw || '' );
 
-				if ( resultWrap ) {
-					resultWrap.style.display = 'block';
-				}
-			} )
-			.catch( function( err ) {
-				setText( errorEl, err && err.message ? err.message : pluginCheckNamer.messages.genericError );
-				if ( errorEl ) {
-					errorEl.style.display = 'block';
-				}
-			} )
-			.finally( function() {
-				setLoading( false );
-			} );
+					if ( resultWrap ) {
+						resultWrap.style.display = 'block';
+					}
+				} )
+				.catch( function( err ) {
+					setText(
+						errorEl,
+						err && err.message
+							? err.message
+							: pluginCheckNamer.messages.genericError
+					);
+					if ( errorEl ) {
+						errorEl.style.display = 'block';
+					}
+				} )
+				.finally( function() {
+					setLoading( false );
+				} );
 		} );
 	} );
 } )();

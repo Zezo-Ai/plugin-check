@@ -7,7 +7,6 @@
 
 namespace WordPress\Plugin_Check\Traits;
 
-use WordPress\AI_Client\AI_Client;
 use WordPress\AiClient\AiClient;
 use WordPress\AiClient\ProviderImplementations\Anthropic\AnthropicApiKeyRequestAuthentication;
 use WordPress\AiClient\ProviderImplementations\Google\GoogleApiKeyRequestAuthentication;
