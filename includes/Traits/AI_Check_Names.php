@@ -124,8 +124,8 @@ trait AI_Check_Names {
 		if ( null !== $json_result ) {
 			// Add enriched data from processed response.
 			if ( ! empty( $json_result['processed_data'] ) ) {
-				$processed           = $json_result['processed_data'];
-				$json_result['raw']  = wp_json_encode( $processed, JSON_PRETTY_PRINT );
+				$processed          = $json_result['processed_data'];
+				$json_result['raw'] = wp_json_encode( $processed, JSON_PRETTY_PRINT );
 				if ( ! empty( $processed['confusion_existing_plugins'] ) ) {
 					$json_result['confusion_existing_plugins'] = $processed['confusion_existing_plugins'];
 				}
@@ -204,8 +204,8 @@ trait AI_Check_Names {
 			$explanation = __( 'See the full AI output below.', 'plugin-check' );
 		}
 
-		$result                    = $this->verdict_from_percentage( $percentage, $explanation );
-		$result['processed_data']  = $processed_data;
+		$result                   = $this->verdict_from_percentage( $percentage, $explanation );
+		$result['processed_data'] = $processed_data;
 
 		return $result;
 	}
@@ -464,8 +464,8 @@ trait AI_Check_Names {
 	protected function maybe_set_structured_output( $builder ) {
 		// Define the JSON schema for structured output.
 		$json_schema = array(
-			'type'       => 'object',
-			'properties' => array(
+			'type'                 => 'object',
+			'properties'           => array(
 				'name_similarity_percentage' => array( 'type' => 'number' ),
 				'similarity_explanation'     => array( 'type' => 'string' ),
 				'confusion_existing_plugins' => array(
@@ -473,7 +473,7 @@ trait AI_Check_Names {
 					'items' => array(
 						'type'                 => 'object',
 						'properties'           => array(
-							'name'                => array( 'type' => 'string' ),
+							'name'                 => array( 'type' => 'string' ),
 							'similarity_level'     => array( 'type' => 'string' ),
 							'explanation'          => array( 'type' => 'string' ),
 							'active_installations' => array( 'type' => 'string' ),
