@@ -20,7 +20,6 @@
 		return div.innerHTML;
 	}
 
-
 	document.addEventListener( 'DOMContentLoaded', function () {
 		const form = document.getElementById( 'plugin-check-namer-form' );
 		const input = document.getElementById( 'plugin_check_namer_input' );
@@ -58,7 +57,9 @@
 		const confusionOthersList = document.getElementById(
 			'plugin-check-namer-confusion-others-list'
 		);
-		const timingDiv = document.getElementById( 'plugin-check-namer-timing' );
+		const timingDiv = document.getElementById(
+			'plugin-check-namer-timing'
+		);
 		const timingValue = document.getElementById(
 			'plugin-check-namer-timing-value'
 		);
@@ -153,10 +154,15 @@
 
 					// Set border color based on verdict.
 					if ( verdictContainer ) {
-						const verdict = ( payload.data.verdict || '' ).toLowerCase();
+						const verdict = (
+							payload.data.verdict || ''
+						).toLowerCase();
 						let borderColor = '#2271b1'; // Default blue.
 
-						if ( verdict.indexOf( 'good' ) !== -1 || verdict.indexOf( 'low' ) !== -1 ) {
+						if (
+							verdict.indexOf( 'good' ) !== -1 ||
+							verdict.indexOf( 'low' ) !== -1
+						) {
 							borderColor = '#00a32a'; // Green for good.
 						} else if (
 							verdict.indexOf( 'review' ) !== -1 ||
@@ -177,8 +183,11 @@
 					// Calculate and display elapsed time.
 					if ( timingDiv && timingValue ) {
 						const endTime = Date.now();
-						const elapsedSeconds = Math.round( ( endTime - startTime ) / 1000 );
-						timingValue.textContent = elapsedSeconds + ' ' + 'seconds';
+						const elapsedSeconds = Math.round(
+							( endTime - startTime ) / 1000
+						);
+						timingValue.textContent =
+							elapsedSeconds + ' ' + 'seconds';
 						timingDiv.style.display = 'block';
 					}
 

@@ -124,8 +124,8 @@ trait AI_Check_Names {
 		if ( null !== $json_result ) {
 			// Add enriched data from processed response.
 			if ( ! empty( $json_result['processed_data'] ) ) {
-				$processed = $json_result['processed_data'];
-				$json_result['raw'] = wp_json_encode( $processed, JSON_PRETTY_PRINT );
+				$processed           = $json_result['processed_data'];
+				$json_result['raw']  = wp_json_encode( $processed, JSON_PRETTY_PRINT );
 				if ( ! empty( $processed['confusion_existing_plugins'] ) ) {
 					$json_result['confusion_existing_plugins'] = $processed['confusion_existing_plugins'];
 				}
@@ -204,8 +204,8 @@ trait AI_Check_Names {
 			$explanation = __( 'See the full AI output below.', 'plugin-check' );
 		}
 
-		$result = $this->verdict_from_percentage( $percentage, $explanation );
-		$result['processed_data'] = $processed_data;
+		$result                    = $this->verdict_from_percentage( $percentage, $explanation );
+		$result['processed_data']  = $processed_data;
 
 		return $result;
 	}
@@ -258,7 +258,7 @@ trait AI_Check_Names {
 						}
 
 						// Extract author username from profile URL.
-						if ( ! empty( $plugin_data['author_profile'] ) && preg_match( '#https?://profiles\.wordpress\.org/([^/]+)/?#i', $plugin_data['author_profile'], $author_matches ) ) {
+						if ( ! empty( $plugin_data['author_profile'] ) && preg_match( '#https?://profiles\.WordPress\.org/([^/]+)/?#i', $plugin_data['author_profile'], $author_matches ) ) {
 							$completion_array['confusion_existing_plugins'][ $key ]['owner_username'] = $author_matches[1];
 						}
 					} else {
@@ -348,7 +348,7 @@ trait AI_Check_Names {
 			$response = wp_remote_get(
 				$api_url,
 				array(
-					'timeout'     => 5,
+					'timeout'    => 5,
 					'user-agent' => 'Plugin Check Internal Script',
 				)
 			);
@@ -409,7 +409,7 @@ trait AI_Check_Names {
 			$response = wp_remote_head(
 				$url,
 				array(
-					'timeout'     => 5,
+					'timeout'    => 5,
 					'user-agent' => 'Plugin Check Internal Script',
 				)
 			);
@@ -471,13 +471,13 @@ trait AI_Check_Names {
 				'confusion_existing_plugins' => array(
 					'type'  => 'array',
 					'items' => array(
-						'type'       => 'object',
-						'properties' => array(
+						'type'                 => 'object',
+						'properties'           => array(
 							'name'                => array( 'type' => 'string' ),
-							'similarity_level'    => array( 'type' => 'string' ),
-							'explanation'         => array( 'type' => 'string' ),
+							'similarity_level'     => array( 'type' => 'string' ),
+							'explanation'          => array( 'type' => 'string' ),
 							'active_installations' => array( 'type' => 'string' ),
-							'link'                => array( 'type' => 'string' ),
+							'link'                 => array( 'type' => 'string' ),
 						),
 						'required'             => array( 'name', 'similarity_level', 'explanation', 'active_installations', 'link' ),
 						'additionalProperties' => false,
@@ -486,8 +486,8 @@ trait AI_Check_Names {
 				'confusion_existing_others'  => array(
 					'type'  => 'array',
 					'items' => array(
-						'type'       => 'object',
-						'properties' => array(
+						'type'                 => 'object',
+						'properties'           => array(
 							'name'             => array( 'type' => 'string' ),
 							'similarity_level' => array( 'type' => 'string' ),
 							'explanation'      => array( 'type' => 'string' ),

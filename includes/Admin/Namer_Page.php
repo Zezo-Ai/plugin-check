@@ -396,11 +396,11 @@ final class Namer_Page {
 		}
 
 		// Try to extract JSON object/array if wrapped in other text.
-		$json_text = $trimmed;
-		$first_brace = strpos( $trimmed, '{' );
+		$json_text     = $trimmed;
+		$first_brace   = strpos( $trimmed, '{' );
 		$first_bracket = strpos( $trimmed, '[' );
-		$start = -1;
-		$end   = -1;
+		$start         = -1;
+		$end           = -1;
 
 		if ( false !== $first_brace && ( false === $first_bracket || $first_brace < $first_bracket ) ) {
 			// Looks like an object.
