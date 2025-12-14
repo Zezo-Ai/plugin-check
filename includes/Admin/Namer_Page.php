@@ -143,13 +143,34 @@ final class Namer_Page {
 
 		$parsed = $this->parse_analysis( $analysis );
 
-		wp_send_json_success(
-			array(
-				'verdict'     => $parsed['verdict'],
-				'explanation' => $parsed['explanation'],
-				'raw'         => $analysis,
-			)
+		// Use formatted raw from parsed if available, otherwise use original.
+		$raw_output = '';
+		if ( ! empty( $parsed['raw'] ) ) {
+			$raw_output = $parsed['raw'];
+		} elseif ( is_array( $analysis ) && isset( $analysis['text'] ) ) {
+			$raw_output = $analysis['text'];
+		} elseif ( is_string( $analysis ) ) {
+			$raw_output = $analysis;
+		}
+
+		// Format JSON if the raw output is JSON.
+		$raw_output = $this->format_json_output( $raw_output );
+
+		$response = array(
+			'verdict'     => $parsed['verdict'],
+			'explanation' => $parsed['explanation'],
+			'raw'         => $raw_output,
 		);
+
+		// Add confusion arrays if available.
+		if ( ! empty( $parsed['confusion_existing_plugins'] ) ) {
+			$response['confusion_existing_plugins'] = $parsed['confusion_existing_plugins'];
+		}
+		if ( ! empty( $parsed['confusion_existing_others'] ) ) {
+			$response['confusion_existing_others'] = $parsed['confusion_existing_others'];
+		}
+
+		wp_send_json_success( $response );
 	}
 
 	/**
@@ -243,19 +264,29 @@ final class Namer_Page {
 
 			<div id="plugin-check-namer-result" style="display: none;">
 				<h2><?php echo esc_html__( 'Result', 'plugin-check' ); ?></h2>
-				<p>
-					<strong><?php echo esc_html__( 'Verdict:', 'plugin-check' ); ?></strong>
-					<span id="plugin-check-namer-verdict"></span>
-				</p>
-				<p>
-					<strong><?php echo esc_html__( 'Explanation:', 'plugin-check' ); ?></strong>
-					<span id="plugin-check-namer-explanation"></span>
-				</p>
+				<div id="plugin-check-namer-verdict-container" style="display: none; margin-bottom: 20px; padding: 15px; background: #fff; border-left: 4px solid #2271b1;">
+					<p style="margin: 0 0 10px 0;">
+						<strong><?php echo esc_html__( 'Verdict:', 'plugin-check' ); ?></strong>
+						<span id="plugin-check-namer-verdict"></span>
+					</p>
+					<p style="margin: 0 0 10px 0;">
+						<strong><?php echo esc_html__( 'Explanation:', 'plugin-check' ); ?></strong>
+						<span id="plugin-check-namer-explanation"></span>
+					</p>
+					<p id="plugin-check-namer-timing" style="display: none; margin: 0; color: #646970; font-style: italic; font-size: 0.9em;">
+						<strong><?php echo esc_html__( 'Analysis completed in:', 'plugin-check' ); ?></strong>
+						<span id="plugin-check-namer-timing-value"></span>
+					</p>
+				</div>
+				<div id="plugin-check-namer-confusion-plugins" style="display: none; margin-top: 20px;">
+					<p><strong><?php echo esc_html__( 'Similar Existing Plugins', 'plugin-check' ); ?></strong></p>
+					<div id="plugin-check-namer-confusion-plugins-list"></div>
+				</div>
 
-				<details>
-					<summary><?php echo esc_html__( 'Full AI output', 'plugin-check' ); ?></summary>
-					<pre id="plugin-check-namer-raw" style="white-space: pre-wrap;"></pre>
-				</details>
+				<div id="plugin-check-namer-confusion-others" style="display: none; margin-top: 20px;">
+					<h3><?php echo esc_html__( 'Similar Existing Projects/Trademarks', 'plugin-check' ); ?></h3>
+					<div id="plugin-check-namer-confusion-others-list"></div>
+				</div>
 			</div>
 		</div>
 		<?php
@@ -337,5 +368,61 @@ final class Namer_Page {
 	 */
 	protected function get_page_url() {
 		return add_query_arg( array( 'page' => self::MENU_SLUG ), admin_url( 'tools.php' ) );
+	}
+
+	/**
+	 * Formats JSON output with proper indentation if the text is valid JSON.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param string $text Text that might be JSON.
+	 * @return string Formatted JSON or original text.
+	 */
+	protected function format_json_output( $text ) {
+		if ( empty( $text ) || ! is_string( $text ) ) {
+			return $text;
+		}
+
+		$trimmed = trim( $text );
+
+		// Remove markdown code fences if present.
+		$trimmed = preg_replace( '/^```(?:json)?\s*\n?/m', '', $trimmed );
+		$trimmed = preg_replace( '/\n?```\s*$/m', '', $trimmed );
+		$trimmed = trim( $trimmed );
+
+		// Check if it looks like JSON (starts with { or [).
+		if ( '{' !== $trimmed[0] && '[' !== $trimmed[0] ) {
+			return $text;
+		}
+
+		// Try to extract JSON object/array if wrapped in other text.
+		$json_text = $trimmed;
+		$first_brace = strpos( $trimmed, '{' );
+		$first_bracket = strpos( $trimmed, '[' );
+		$start = -1;
+		$end   = -1;
+
+		if ( false !== $first_brace && ( false === $first_bracket || $first_brace < $first_bracket ) ) {
+			// Looks like an object.
+			$start = $first_brace;
+			$end   = strrpos( $trimmed, '}' );
+		} elseif ( false !== $first_bracket ) {
+			// Looks like an array.
+			$start = $first_bracket;
+			$end   = strrpos( $trimmed, ']' );
+		}
+
+		if ( -1 !== $start && -1 !== $end && $end > $start ) {
+			$json_text = substr( $trimmed, $start, $end - $start + 1 );
+		}
+
+		// Try to parse and format as JSON.
+		$decoded = json_decode( $json_text, true );
+		if ( json_last_error() === JSON_ERROR_NONE && is_array( $decoded ) ) {
+			return wp_json_encode( $decoded, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES );
+		}
+
+		// Not valid JSON, return original.
+		return $text;
 	}
 }
