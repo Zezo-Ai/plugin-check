@@ -229,60 +229,81 @@ trait AI_Check_Names {
 		$lines  = explode( "\n", $text );
 
 		foreach ( $lines as $line ) {
-			$line = trim( $line );
-
-			// Skip empty lines and lines that don't start with '-'.
-			if ( empty( $line ) ) {
-				continue;
+			$parsed = $this->parse_markdown_line( trim( $line ) );
+			if ( null !== $parsed ) {
+				$result[ $parsed['key'] ] = $parsed['value'];
 			}
-
-			// Remove leading '- ' and parse key: value.
-			$line = ltrim( $line, '- ' );
-
-			// Find the first colon to split key and value.
-			$colon_pos = strpos( $line, ':' );
-			if ( false === $colon_pos ) {
-				continue;
-			}
-
-			$key   = trim( substr( $line, 0, $colon_pos ) );
-			$value = trim( substr( $line, $colon_pos + 1 ) );
-
-			// Skip if key is empty.
-			if ( empty( $key ) ) {
-				continue;
-			}
-
-			// Try to parse value as JSON array if it starts with '['.
-			if ( 0 === strpos( $value, '[' ) ) {
-				$decoded = json_decode( $value, true );
-				if ( is_array( $decoded ) ) {
-					$result[ $key ] = $decoded;
-					continue;
-				}
-			}
-
-			// Parse boolean values.
-			if ( 'true' === strtolower( $value ) ) {
-				$result[ $key ] = true;
-				continue;
-			}
-			if ( 'false' === strtolower( $value ) ) {
-				$result[ $key ] = false;
-				continue;
-			}
-
-			// Parse comma-separated values (for disallowed_type).
-			if ( false !== strpos( $value, ',' ) && 'disallowed_type' === $key ) {
-				$result[ $key ] = array_map( 'trim', explode( ',', $value ) );
-				continue;
-			}
-
-			// Store as string.
-			$result[ $key ] = $value;
 		}
 
 		return $result;
+	}
+
+	/**
+	 * Parses a single markdown line into key-value pair.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param string $line Line to parse.
+	 * @return array|null Array with 'key' and 'value', or null if line should be skipped.
+	 */
+	protected function parse_markdown_line( $line ) {
+		if ( empty( $line ) ) {
+			return null;
+		}
+
+		$line      = ltrim( $line, '- ' );
+		$colon_pos = strpos( $line, ':' );
+
+		if ( false === $colon_pos ) {
+			return null;
+		}
+
+		$key   = trim( substr( $line, 0, $colon_pos ) );
+		$value = trim( substr( $line, $colon_pos + 1 ) );
+
+		if ( empty( $key ) ) {
+			return null;
+		}
+
+		return array(
+			'key'   => $key,
+			'value' => $this->parse_markdown_value( $key, $value ),
+		);
+	}
+
+	/**
+	 * Parses markdown value based on format.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param string $key   Field key.
+	 * @param string $value Field value.
+	 * @return mixed Parsed value (string, bool, or array).
+	 */
+	protected function parse_markdown_value( $key, $value ) {
+		// Try JSON array.
+		if ( 0 === strpos( $value, '[' ) ) {
+			$decoded = json_decode( $value, true );
+			if ( is_array( $decoded ) ) {
+				return $decoded;
+			}
+		}
+
+		// Parse booleans.
+		$lower = strtolower( $value );
+		if ( 'true' === $lower ) {
+			return true;
+		}
+		if ( 'false' === $lower ) {
+			return false;
+		}
+
+		// Parse comma-separated for disallowed_type.
+		if ( 'disallowed_type' === $key && false !== strpos( $value, ',' ) ) {
+			return array_map( 'trim', explode( ',', $value ) );
+		}
+
+		return $value;
 	}
 
 	/**
@@ -294,9 +315,51 @@ trait AI_Check_Names {
 	 * @return array{verdict:string,explanation:string,processed_data:array} Parsed result.
 	 */
 	protected function parse_prereview_response( $decoded ) {
+		$verdict           = $this->build_verdict( $decoded );
+		$explanation_parts = $this->build_explanation_parts( $decoded );
+		$explanation       = ! empty( $explanation_parts ) ? implode( '<br><br>', $explanation_parts ) : __( 'No detailed analysis available.', 'plugin-check' );
+
+		return array(
+			'verdict'        => $verdict,
+			'explanation'    => wp_kses_post( $explanation ),
+			'processed_data' => $decoded,
+		);
+	}
+
+	/**
+	 * Builds verdict from decoded data.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param array $decoded Decoded data.
+	 * @return string Verdict string.
+	 */
+	protected function build_verdict( $decoded ) {
+		$issues        = $this->collect_issues( $decoded );
+		$is_disallowed = ! empty( $decoded['disallowed'] );
+
+		if ( $is_disallowed ) {
+			return '❌ ' . __( 'Disallowed', 'plugin-check' );
+		}
+
+		if ( ! empty( $issues ) ) {
+			return '⚠️ ' . __( 'Issues Found', 'plugin-check' ) . ': ' . implode( ', ', $issues );
+		}
+
+		return '✅ ' . __( 'No Issues Detected', 'plugin-check' );
+	}
+
+	/**
+	 * Collects issues from decoded data.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param array $decoded Decoded data.
+	 * @return array List of issues.
+	 */
+	protected function collect_issues( $decoded ) {
 		$issues = array();
 
-		// Collect issues.
 		if ( ! empty( $decoded['possible_naming_issues'] ) ) {
 			$issues[] = __( 'Naming', 'plugin-check' );
 		}
@@ -307,57 +370,130 @@ trait AI_Check_Names {
 			$issues[] = __( 'Description', 'plugin-check' );
 		}
 
-		// Build verdict.
-		$is_disallowed = ! empty( $decoded['disallowed'] );
+		return $issues;
+	}
 
-		if ( $is_disallowed ) {
-			$verdict = '❌ ' . __( 'Disallowed', 'plugin-check' );
-		} elseif ( ! empty( $issues ) ) {
-			$verdict = '⚠️ ' . __( 'Issues Found', 'plugin-check' ) . ': ' . implode( ', ', $issues );
-		} else {
-			$verdict = '✅ ' . __( 'No Issues Detected', 'plugin-check' );
+	/**
+	 * Builds explanation parts from decoded data.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param array $decoded Decoded data.
+	 * @return array Explanation parts.
+	 */
+	protected function build_explanation_parts( $decoded ) {
+		$parts = array();
+
+		$this->add_disallowed_section( $parts, $decoded );
+		$this->add_naming_section( $parts, $decoded );
+		$this->add_owner_section( $parts, $decoded );
+		$this->add_description_section( $parts, $decoded );
+		$this->add_trademarks_section( $parts, $decoded );
+		$this->add_suggestions_section( $parts, $decoded );
+		$this->add_language_section( $parts, $decoded );
+
+		return $parts;
+	}
+
+	/**
+	 * Adds disallowed section to explanation parts.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param array $parts   Explanation parts array (passed by reference).
+	 * @param array $decoded Decoded data.
+	 * @return void
+	 */
+	protected function add_disallowed_section( &$parts, $decoded ) {
+		if ( empty( $decoded['disallowed'] ) ) {
+			return;
 		}
 
-		// Build user-friendly explanation with sections.
-		$explanation_parts = array();
-
-		// Disallowed section (highest priority).
-		if ( $is_disallowed ) {
-			$disallowed_text = '';
-			if ( ! empty( $decoded['disallowed_explanation'] ) ) {
-				$disallowed_text .= $decoded['disallowed_explanation'];
-			}
-			if ( ! empty( $decoded['disallowed_type'] ) && is_array( $decoded['disallowed_type'] ) ) {
-				$disallowed_text .= ' (' . implode( ', ', $decoded['disallowed_type'] ) . ')';
-			}
-			if ( ! empty( $disallowed_text ) ) {
-				$explanation_parts[] = '<strong>' . __( '🚫 Disallowed:', 'plugin-check' ) . '</strong> ' . $disallowed_text;
-			}
+		$text = '';
+		if ( ! empty( $decoded['disallowed_explanation'] ) ) {
+			$text .= $decoded['disallowed_explanation'];
 		}
+		if ( ! empty( $decoded['disallowed_type'] ) && is_array( $decoded['disallowed_type'] ) ) {
+			$text .= ' (' . implode( ', ', $decoded['disallowed_type'] ) . ')';
+		}
+		if ( ! empty( $text ) ) {
+			$parts[] = '<strong>' . __( '🚫 Disallowed:', 'plugin-check' ) . '</strong> ' . $text;
+		}
+	}
 
-		// Naming issues section.
+	/**
+	 * Adds naming section to explanation parts.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param array $parts   Explanation parts array (passed by reference).
+	 * @param array $decoded Decoded data.
+	 * @return void
+	 */
+	protected function add_naming_section( &$parts, $decoded ) {
 		if ( ! empty( $decoded['possible_naming_issues'] ) && ! empty( $decoded['naming_explanation'] ) ) {
-			$explanation_parts[] = '<strong>' . __( '📝 Naming:', 'plugin-check' ) . '</strong> ' . $decoded['naming_explanation'];
+			$parts[] = '<strong>' . __( '📝 Naming:', 'plugin-check' ) . '</strong> ' . $decoded['naming_explanation'];
 		}
+	}
 
-		// Owner/Trademark issues section.
+	/**
+	 * Adds owner/trademark section to explanation parts.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param array $parts   Explanation parts array (passed by reference).
+	 * @param array $decoded Decoded data.
+	 * @return void
+	 */
+	protected function add_owner_section( &$parts, $decoded ) {
 		if ( ! empty( $decoded['possible_owner_issues'] ) && ! empty( $decoded['owner_explanation'] ) ) {
-			$explanation_parts[] = '<strong>' . __( '©️ Owner/Trademark:', 'plugin-check' ) . '</strong> ' . $decoded['owner_explanation'];
+			$parts[] = '<strong>' . __( '©️ Owner/Trademark:', 'plugin-check' ) . '</strong> ' . $decoded['owner_explanation'];
 		}
+	}
 
-		// Description issues section.
+	/**
+	 * Adds description section to explanation parts.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param array $parts   Explanation parts array (passed by reference).
+	 * @param array $decoded Decoded data.
+	 * @return void
+	 */
+	protected function add_description_section( &$parts, $decoded ) {
 		if ( ! empty( $decoded['possible_description_issues'] ) && ! empty( $decoded['description_explanation'] ) ) {
-			$explanation_parts[] = '<strong>' . __( '📄 Description:', 'plugin-check' ) . '</strong> ' . $decoded['description_explanation'];
+			$parts[] = '<strong>' . __( '📄 Description:', 'plugin-check' ) . '</strong> ' . $decoded['description_explanation'];
 		}
+	}
 
-		// Trademarks detected.
+	/**
+	 * Adds trademarks section to explanation parts.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param array $parts   Explanation parts array (passed by reference).
+	 * @param array $decoded Decoded data.
+	 * @return void
+	 */
+	protected function add_trademarks_section( &$parts, $decoded ) {
 		if ( ! empty( $decoded['trademarks_or_project_names_array'] ) && is_array( $decoded['trademarks_or_project_names_array'] ) ) {
-			$trademarks          = implode( ', ', array_map( 'esc_html', $decoded['trademarks_or_project_names_array'] ) );
-			$explanation_parts[] = '<strong>' . __( '™️ Trademarks Detected:', 'plugin-check' ) . '</strong> ' . $trademarks;
+			$trademarks = implode( ', ', array_map( 'esc_html', $decoded['trademarks_or_project_names_array'] ) );
+			$parts[]    = '<strong>' . __( '™️ Trademarks Detected:', 'plugin-check' ) . '</strong> ' . $trademarks;
 		}
+	}
 
-		// Suggestions section (always helpful).
+	/**
+	 * Adds suggestions section to explanation parts.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param array $parts   Explanation parts array (passed by reference).
+	 * @param array $decoded Decoded data.
+	 * @return void
+	 */
+	protected function add_suggestions_section( &$parts, $decoded ) {
 		$suggestions = array();
+
 		if ( ! empty( $decoded['suggested_display_name'] ) ) {
 			$suggestions[] = '<strong>' . __( 'Display Name:', 'plugin-check' ) . '</strong> ' . esc_html( $decoded['suggested_display_name'] );
 		}
@@ -372,23 +508,25 @@ trait AI_Check_Names {
 		}
 
 		if ( ! empty( $suggestions ) ) {
-			$explanation_parts[] = '<br><strong>' . __( '💡 Suggestions:', 'plugin-check' ) . '</strong><br>' . implode( '<br>', $suggestions );
+			$parts[] = '<br><strong>' . __( '💡 Suggestions:', 'plugin-check' ) . '</strong><br>' . implode( '<br>', $suggestions );
 		}
+	}
 
-		// Language check.
+	/**
+	 * Adds language section to explanation parts.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param array $parts   Explanation parts array (passed by reference).
+	 * @param array $decoded Decoded data.
+	 * @return void
+	 */
+	protected function add_language_section( &$parts, $decoded ) {
 		if ( isset( $decoded['description_language_is_in_english'] ) && false === $decoded['description_language_is_in_english'] ) {
 			if ( ! empty( $decoded['description_what_is_not_in_english'] ) ) {
-				$explanation_parts[] = '<strong>' . __( '🌐 Language:', 'plugin-check' ) . '</strong> ' . $decoded['description_what_is_not_in_english'];
+				$parts[] = '<strong>' . __( '🌐 Language:', 'plugin-check' ) . '</strong> ' . $decoded['description_what_is_not_in_english'];
 			}
 		}
-
-		$explanation = ! empty( $explanation_parts ) ? implode( '<br><br>', $explanation_parts ) : __( 'No detailed analysis available.', 'plugin-check' );
-
-		return array(
-			'verdict'        => $verdict,
-			'explanation'    => wp_kses_post( $explanation ),
-			'processed_data' => $decoded,
-		);
 	}
 
 	/**

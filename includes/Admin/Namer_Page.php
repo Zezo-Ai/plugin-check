@@ -141,19 +141,23 @@ final class Namer_Page {
 			wp_send_json_error( array( 'message' => $analysis->get_error_message() ) );
 		}
 
-		$parsed = $this->parse_analysis( $analysis );
+		$parsed   = $this->parse_analysis( $analysis );
+		$response = $this->build_ajax_response( $parsed, $analysis );
 
-		// Use formatted raw from parsed if available, otherwise use original.
-		$raw_output = '';
-		if ( ! empty( $parsed['raw'] ) ) {
-			$raw_output = $parsed['raw'];
-		} elseif ( is_array( $analysis ) && isset( $analysis['text'] ) ) {
-			$raw_output = $analysis['text'];
-		} elseif ( is_string( $analysis ) ) {
-			$raw_output = $analysis;
-		}
+		wp_send_json_success( $response );
+	}
 
-		// Format JSON if the raw output is JSON.
+	/**
+	 * Builds AJAX response from parsed analysis.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param array        $parsed   Parsed analysis.
+	 * @param string|array $analysis Raw analysis.
+	 * @return array Response array.
+	 */
+	protected function build_ajax_response( $parsed, $analysis ) {
+		$raw_output = $this->get_raw_output( $parsed, $analysis );
 		$raw_output = $this->format_json_output( $raw_output );
 
 		$response = array(
@@ -162,7 +166,6 @@ final class Namer_Page {
 			'raw'         => $raw_output,
 		);
 
-		// Add confusion arrays if available.
 		if ( ! empty( $parsed['confusion_existing_plugins'] ) ) {
 			$response['confusion_existing_plugins'] = $parsed['confusion_existing_plugins'];
 		}
@@ -170,7 +173,32 @@ final class Namer_Page {
 			$response['confusion_existing_others'] = $parsed['confusion_existing_others'];
 		}
 
-		wp_send_json_success( $response );
+		return $response;
+	}
+
+	/**
+	 * Gets raw output from parsed or analysis data.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param array        $parsed   Parsed analysis.
+	 * @param string|array $analysis Raw analysis.
+	 * @return string Raw output.
+	 */
+	protected function get_raw_output( $parsed, $analysis ) {
+		if ( ! empty( $parsed['raw'] ) ) {
+			return $parsed['raw'];
+		}
+
+		if ( is_array( $analysis ) && isset( $analysis['text'] ) ) {
+			return $analysis['text'];
+		}
+
+		if ( is_string( $analysis ) ) {
+			return $analysis;
+		}
+
+		return '';
 	}
 
 	/**
@@ -383,46 +411,95 @@ final class Namer_Page {
 			return $text;
 		}
 
-		$trimmed = trim( $text );
+		$trimmed = $this->remove_markdown_fences( trim( $text ) );
 
-		// Remove markdown code fences if present.
-		$trimmed = preg_replace( '/^```(?:json)?\s*\n?/m', '', $trimmed );
-		$trimmed = preg_replace( '/\n?```\s*$/m', '', $trimmed );
-		$trimmed = trim( $trimmed );
-
-		// Check if it looks like JSON (starts with { or [).
-		if ( '{' !== $trimmed[0] && '[' !== $trimmed[0] ) {
+		if ( ! $this->looks_like_json( $trimmed ) ) {
 			return $text;
 		}
 
-		// Try to extract JSON object/array if wrapped in other text.
-		$json_text     = $trimmed;
-		$first_brace   = strpos( $trimmed, '{' );
-		$first_bracket = strpos( $trimmed, '[' );
-		$start         = -1;
-		$end           = -1;
+		$json_text = $this->extract_json_text( $trimmed );
+		$decoded   = json_decode( $json_text, true );
 
-		if ( false !== $first_brace && ( false === $first_bracket || $first_brace < $first_bracket ) ) {
-			// Looks like an object.
-			$start = $first_brace;
-			$end   = strrpos( $trimmed, '}' );
-		} elseif ( false !== $first_bracket ) {
-			// Looks like an array.
-			$start = $first_bracket;
-			$end   = strrpos( $trimmed, ']' );
-		}
-
-		if ( -1 !== $start && -1 !== $end && $end > $start ) {
-			$json_text = substr( $trimmed, $start, $end - $start + 1 );
-		}
-
-		// Try to parse and format as JSON.
-		$decoded = json_decode( $json_text, true );
-		if ( json_last_error() === JSON_ERROR_NONE && is_array( $decoded ) ) {
+		if ( JSON_ERROR_NONE === json_last_error() && is_array( $decoded ) ) {
 			return wp_json_encode( $decoded, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES );
 		}
 
-		// Not valid JSON, return original.
 		return $text;
+	}
+
+	/**
+	 * Removes markdown code fences from text.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param string $text Text with possible markdown fences.
+	 * @return string Text without markdown fences.
+	 */
+	protected function remove_markdown_fences( $text ) {
+		$text = preg_replace( '/^```(?:json)?\s*\n?/m', '', $text );
+		$text = preg_replace( '/\n?```\s*$/m', '', $text );
+		return trim( $text );
+	}
+
+	/**
+	 * Checks if text looks like JSON.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param string $text Text to check.
+	 * @return bool True if looks like JSON.
+	 */
+	protected function looks_like_json( $text ) {
+		return ! empty( $text ) && ( '{' === $text[0] || '[' === $text[0] );
+	}
+
+	/**
+	 * Extracts JSON text from mixed content.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param string $text Text containing JSON.
+	 * @return string Extracted JSON text.
+	 */
+	protected function extract_json_text( $text ) {
+		$bounds = $this->find_json_bounds( $text );
+
+		if ( -1 !== $bounds['start'] && -1 !== $bounds['end'] && $bounds['end'] > $bounds['start'] ) {
+			return substr( $text, $bounds['start'], $bounds['end'] - $bounds['start'] + 1 );
+		}
+
+		return $text;
+	}
+
+	/**
+	 * Finds JSON boundaries in text.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param string $text Text to search.
+	 * @return array Array with 'start' and 'end' positions.
+	 */
+	protected function find_json_bounds( $text ) {
+		$first_brace   = strpos( $text, '{' );
+		$first_bracket = strpos( $text, '[' );
+
+		if ( false !== $first_brace && ( false === $first_bracket || $first_brace < $first_bracket ) ) {
+			return array(
+				'start' => $first_brace,
+				'end'   => strrpos( $text, '}' ),
+			);
+		}
+
+		if ( false !== $first_bracket ) {
+			return array(
+				'start' => $first_bracket,
+				'end'   => strrpos( $text, ']' ),
+			);
+		}
+
+		return array(
+			'start' => -1,
+			'end'   => -1,
+		);
 	}
 }

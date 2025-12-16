@@ -156,8 +156,8 @@
 						);
 					}
 
-					setText( verdictEl, payload.data.verdict || '' );
-					setHtml( explainEl, payload.data.explanation || '' );
+				setText( verdictEl, payload.data.verdict || '' );
+				setHtml( explainEl, payload.data.explanation || '' );
 
 				// Set border color based on verdict.
 				if ( verdictContainer ) {
@@ -166,9 +166,7 @@
 					).toLowerCase();
 					let borderColor = '#2271b1'; // Default blue.
 
-					if (
-						verdict.indexOf( 'disallowed' ) !== -1
-					) {
+					if ( verdict.indexOf( 'disallowed' ) !== -1 ) {
 						borderColor = '#d63638'; // Red for disallowed.
 					} else if (
 						verdict.indexOf( 'good' ) !== -1 ||
