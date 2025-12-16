@@ -134,7 +134,7 @@ class AI_Check_Names_Tests extends WP_UnitTestCase {
 	 */
 	public function test_parse_markdown_format_json_arrays() {
 		$text = 'array1: ["item1", "item2", "item3"]' . "\n" .
-		        'array2: [1, 2, 3]';
+				'array2: [1, 2, 3]';
 
 		$result = $this->parse_markdown_format( $text );
 
@@ -225,11 +225,11 @@ class AI_Check_Names_Tests extends WP_UnitTestCase {
 	 */
 	public function test_parse_markdown_format_mixed_types() {
 		$text = 'string_value: hello world' . "\n" .
-		        'bool_true: true' . "\n" .
-		        'bool_false: false' . "\n" .
-		        'json_array: ["a", "b", "c"]' . "\n" .
-		        'disallowed_type: type1, type2' . "\n" .
-		        'number_as_string: 42';
+				'bool_true: true' . "\n" .
+				'bool_false: false' . "\n" .
+				'json_array: ["a", "b", "c"]' . "\n" .
+				'disallowed_type: type1, type2' . "\n" .
+				'number_as_string: 42';
 
 		$result = $this->parse_markdown_format( $text );
 
@@ -279,18 +279,18 @@ class AI_Check_Names_Tests extends WP_UnitTestCase {
 	 */
 	public function test_parse_markdown_format_realistic_ai_response() {
 		$text = 'possible_naming_issues: true' . "\n" .
-		        'possible_owner_issues: false' . "\n" .
-		        'possible_description_issues: false' . "\n" .
-		        'naming_explanation: The plugin name may be too generic' . "\n" .
-		        'owner_explanation: No trademark issues detected' . "\n" .
-		        'description_explanation: Description is clear and appropriate' . "\n" .
-		        'trademarks_or_project_names_array: ["WordPress", "WooCommerce"]' . "\n" .
-		        'suggested_display_name: My Custom Integration for WooCommerce' . "\n" .
-		        'suggested_slug: my-custom-integration-woocommerce' . "\n" .
-		        'short_description: Integrates custom features with WooCommerce' . "\n" .
-		        'description_language_is_in_english: true' . "\n" .
-		        'description_what_is_not_in_english: None' . "\n" .
-		        'plugin_category: E-commerce';
+				'possible_owner_issues: false' . "\n" .
+				'possible_description_issues: false' . "\n" .
+				'naming_explanation: The plugin name may be too generic' . "\n" .
+				'owner_explanation: No trademark issues detected' . "\n" .
+				'description_explanation: Description is clear and appropriate' . "\n" .
+				'trademarks_or_project_names_array: ["WordPress", "WooCommerce"]' . "\n" .
+				'suggested_display_name: My Custom Integration for WooCommerce' . "\n" .
+				'suggested_slug: my-custom-integration-woocommerce' . "\n" .
+				'short_description: Integrates custom features with WooCommerce' . "\n" .
+				'description_language_is_in_english: true' . "\n" .
+				'description_what_is_not_in_english: None' . "\n" .
+				'plugin_category: E-commerce';
 
 		$result = $this->parse_markdown_format( $text );
 
@@ -335,8 +335,8 @@ class AI_Check_Names_Tests extends WP_UnitTestCase {
 	 */
 	public function test_parse_markdown_format_special_characters() {
 		$text = 'special: value with @#$%^&*() characters' . "\n" .
-		        'emoji: 🚀 rocket ship' . "\n" .
-		        'quotes: "quoted value"';
+				'emoji: 🚀 rocket ship' . "\n" .
+				'quotes: "quoted value"';
 
 		$result = $this->parse_markdown_format( $text );
 

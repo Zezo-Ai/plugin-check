@@ -8,6 +8,7 @@
 namespace WordPress\Plugin_Check\Traits;
 
 use WordPress\AiClient\AiClient;
+use WordPress\AiClient\Builders\PromptBuilder;
 use WP_Error;
 
 /**
@@ -395,7 +396,7 @@ trait AI_Check_Names {
 	 *
 	 * @since 1.8.0
 	 *
-	 * @param PromptBuilder $builder    The PromptBuilder instance.
+	 * @param PromptBuilder $builder The PromptBuilder instance.
 	 * @param string        $query_type Type of query: 'similar_name' or 'prereview'.
 	 * @return void
 	 */
@@ -419,6 +420,7 @@ trait AI_Check_Names {
 
 		// Try setting response format as a property if it exists.
 		// Note: Using reflection to set property as it may not be public.
+		// phpcs:disable WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
 		if ( property_exists( $builder, 'responseFormat' ) || property_exists( $builder, 'response_format' ) ) {
 			$prop_name = property_exists( $builder, 'responseFormat' ) ? 'responseFormat' : 'response_format';
 			try {
@@ -442,6 +444,7 @@ trait AI_Check_Names {
 				}
 			}
 		}
+		// phpcs:enable WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
 	}
 
 	/**
