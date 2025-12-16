@@ -83,6 +83,26 @@ class Plugin_Request_Utility {
 	}
 
 	/**
+	 * Returns the plugin slug based on the input provided.
+	 *
+	 * @since 1.3.0
+	 *
+	 * @param string $plugin_url The plugin url.
+	 * @return string The plugin slug.
+	 */
+	public static function get_slug_from_url( $plugin_url ) {
+		$plugin_slug = '';
+
+		if ( false !== strpos( $plugin_url, '#wporgapi:' ) ) {
+			$plugin_url = substr( $plugin_url, 0, strpos( $plugin_url, '#' ) );
+		}
+		$plugin_slug = basename( $plugin_url );
+		$plugin_slug = str_replace( '.zip', '', $plugin_slug );
+
+		return $plugin_slug;
+	}
+
+	/**
 	 * Initializes the runner classes.
 	 *
 	 * @since 1.0.0
