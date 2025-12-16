@@ -223,6 +223,13 @@ final class Plugin_Check_Command {
 			);
 		}
 
+		// Ensure the correct slug.
+		if ( is_dir( $plugin ) && empty( $options['slug'] ) ) {
+			$options['slug'] = basename( $plugin );
+		} elseif ( filter_var( $plugin, FILTER_VALIDATE_URL ) && empty( $options['slug'] ) ) {
+			$options['slug'] = Plugin_Request_Utility::get_slug_from_url( $plugin );
+		}
+
 		try {
 			$runner->set_experimental_flag( $options['include-experimental'] );
 			$runner->set_check_slugs( $checks );
