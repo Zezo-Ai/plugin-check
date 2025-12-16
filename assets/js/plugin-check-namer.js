@@ -14,6 +14,13 @@
 		el.textContent = text;
 	}
 
+	function setHtml( el, html ) {
+		if ( ! el ) {
+			return;
+		}
+		el.innerHTML = html;
+	}
+
 	function escapeHtml( text ) {
 		const div = document.createElement( 'div' );
 		div.textContent = text;
@@ -93,7 +100,7 @@
 				setText( verdictEl, '' );
 			}
 			if ( explainEl ) {
-				setText( explainEl, '' );
+				setHtml( explainEl, '' );
 			}
 			if ( errorEl ) {
 				errorEl.style.display = 'none';
@@ -150,35 +157,41 @@
 					}
 
 					setText( verdictEl, payload.data.verdict || '' );
-					setText( explainEl, payload.data.explanation || '' );
+					setHtml( explainEl, payload.data.explanation || '' );
 
-					// Set border color based on verdict.
-					if ( verdictContainer ) {
-						const verdict = (
-							payload.data.verdict || ''
-						).toLowerCase();
-						let borderColor = '#2271b1'; // Default blue.
+				// Set border color based on verdict.
+				if ( verdictContainer ) {
+					const verdict = (
+						payload.data.verdict || ''
+					).toLowerCase();
+					let borderColor = '#2271b1'; // Default blue.
 
-						if (
-							verdict.indexOf( 'good' ) !== -1 ||
-							verdict.indexOf( 'low' ) !== -1
-						) {
-							borderColor = '#00a32a'; // Green for good.
-						} else if (
-							verdict.indexOf( 'review' ) !== -1 ||
-							verdict.indexOf( 'medium' ) !== -1
-						) {
-							borderColor = '#dba617'; // Yellow/orange for needs review.
-						} else if (
-							verdict.indexOf( 'problematic' ) !== -1 ||
-							verdict.indexOf( 'high' ) !== -1
-						) {
-							borderColor = '#d63638'; // Red for problematic.
-						}
-
-						verdictContainer.style.borderLeftColor = borderColor;
-						verdictContainer.style.display = 'block';
+					if (
+						verdict.indexOf( 'disallowed' ) !== -1
+					) {
+						borderColor = '#d63638'; // Red for disallowed.
+					} else if (
+						verdict.indexOf( 'good' ) !== -1 ||
+						verdict.indexOf( 'low' ) !== -1 ||
+						verdict.indexOf( 'no issues' ) !== -1
+					) {
+						borderColor = '#00a32a'; // Green for good.
+					} else if (
+						verdict.indexOf( 'review' ) !== -1 ||
+						verdict.indexOf( 'medium' ) !== -1 ||
+						verdict.indexOf( 'issues found' ) !== -1
+					) {
+						borderColor = '#dba617'; // Yellow/orange for needs review.
+					} else if (
+						verdict.indexOf( 'problematic' ) !== -1 ||
+						verdict.indexOf( 'high' ) !== -1
+					) {
+						borderColor = '#d63638'; // Red for problematic.
 					}
+
+					verdictContainer.style.borderLeftColor = borderColor;
+					verdictContainer.style.display = 'block';
+				}
 
 					// Calculate and display elapsed time.
 					if ( timingDiv && timingValue ) {

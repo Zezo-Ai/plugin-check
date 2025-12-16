@@ -8,6 +8,7 @@
 namespace WordPress\Plugin_Check\Traits;
 
 use WordPress\AiClient\AiClient;
+use WordPress\AiClient\Builders\PromptBuilder;
 use WordPress\AiClient\ProviderImplementations\Anthropic\AnthropicApiKeyRequestAuthentication;
 use WordPress\AiClient\ProviderImplementations\Google\GoogleApiKeyRequestAuthentication;
 use WordPress\AiClient\Providers\Http\DTO\ApiKeyRequestAuthentication;
@@ -271,6 +272,54 @@ trait AI_Connect {
 					$error_message
 				)
 			);
+		}
+	}
+
+	/**
+	 * Executes an AI request with the provided parameters.
+	 *
+	 * This method centralizes the common AI request logic to follow DRY principles.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param string        $provider       Provider key.
+	 * @param string        $api_key        API key.
+	 * @param string        $model          Model ID.
+	 * @param string        $prompt         The prompt to send to the AI.
+	 * @param callable|null $builder_config Optional callback to configure the PromptBuilder before execution.
+	 *                                      Receives the PromptBuilder instance as parameter.
+	 * @return string|WP_Error Generated text or WP_Error on failure.
+	 */
+	protected function execute_ai_request( $provider, $api_key, $model, $prompt, $builder_config = null ) {
+		if ( ! class_exists( '\WordPress\AiClient\AiClient' ) ) {
+			return new WP_Error(
+				'ai_client_not_available',
+				__( 'AI client library is not available.', 'plugin-check' )
+			);
+		}
+
+		try {
+			$registry = AiClient::defaultRegistry();
+			$registry->setHttpTransporter( HttpTransporterFactory::createTransporter() );
+			$registry->setProviderRequestAuthentication(
+				$provider,
+				$this->get_request_authentication_for_provider( $provider, $api_key )
+			);
+
+			$model_instance = $registry->getProviderModel( $provider, $model );
+
+			$builder = new PromptBuilder( $registry, $prompt );
+			$builder->usingModel( $model_instance );
+
+			// Allow custom configuration of the builder.
+			if ( is_callable( $builder_config ) ) {
+				call_user_func( $builder_config, $builder );
+			}
+
+			return $builder->generateText();
+
+		} catch ( \Throwable $e ) {
+			return new WP_Error( 'ai_request_failed', $e->getMessage() );
 		}
 	}
 }
