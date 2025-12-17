@@ -58,9 +58,11 @@ class Direct_File_Access_Check extends Abstract_File_Check {
 		// Only check PHP files.
 		$php_files = self::filter_files_by_extension( $files, 'php' );
 
+		$plugin_path = $result->plugin()->path();
+
 		foreach ( $php_files as $file ) {
 			// Skip uninstall.php files - they have their own check.
-			if ( $this->is_uninstall_file( $file, $result->plugin()->path() ) ) {
+			if ( $this->is_uninstall_file( $file, $plugin_path ) ) {
 				continue;
 			}
 

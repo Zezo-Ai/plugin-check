@@ -56,6 +56,7 @@ Feature: Test that the WP-CLI command works.
     Then STDOUT should contain:
       """
       line,column,type,code,message,docs
+      0,0,ERROR,missing_direct_file_access_protection,"PHP file should prevent direct access. Add a check like: if ( ! defined( 'ABSPATH' ) ) exit;",https://developer.wordpress.org/plugins/wordpress-org/common-issues/#direct-file-access
       16,15,ERROR,WordPress.WP.AlternativeFunctions.rand_mt_rand,"mt_rand() is discouraged. Use the far less predictable wp_rand() instead.",
       """
 
@@ -660,6 +661,10 @@ Feature: Test that the WP-CLI command works.
        * License: GPL-2.0+
        * License URI: http://www.gnu.org/licenses/gpl-2.0.txt
        */
+
+      if ( ! defined( 'ABSPATH' ) ) {
+        exit;
+      }
 
       add_action(
         'init',
