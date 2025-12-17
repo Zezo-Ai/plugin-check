@@ -56,8 +56,9 @@ Feature: Test that the WP-CLI command works.
     Then STDOUT should contain:
       """
       line,column,type,code,message,docs
-      0,0,ERROR,missing_direct_file_access_protection,"PHP file should prevent direct access. Add a check like: if ( ! defined( 'ABSPATH' ) ) exit;",https://developer.wordpress.org/plugins/wordpress-org/common-issues/#direct-file-access
-      16,15,ERROR,WordPress.WP.AlternativeFunctions.rand_mt_rand,"mt_rand() is discouraged. Use the far less predictable wp_rand() instead.",
+			0,0,missing_direct_file_access_protection
+			16,21,WordPress.WP.AlternativeFunctions.rand_mt_rand
+			17,16,WordPress.Security.EscapeOutput.OutputNotEscaped
       """
 
     When I run the WP-CLI command `plugin check foo-single.php --format=csv --fields=line,column,code`
