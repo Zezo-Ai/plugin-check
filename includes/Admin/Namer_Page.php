@@ -255,7 +255,7 @@ final class Namer_Page {
 			<h1><?php echo esc_html__( 'Plugin Check Namer Tool', 'plugin-check' ); ?></h1>
 
 			<p class="description">
-				<?php echo esc_html__( 'Disclaimer: This tool provides guidance only and is not definitive. It contains a prompt that is used to evaluate the similarity of a plugin name to other plugin names and complish with trademark regulations.', 'plugin-check' ); ?>
+				<?php echo esc_html__( 'Disclaimer: This tool provides guidance only and is not definitive. It contains a prompt that is used to evaluate the similarity of a plugin name to other plugin names and ensure compliance with trademark regulations.', 'plugin-check' ); ?>
 			</p>
 
 			<form id="plugin-check-namer-form" method="post">
