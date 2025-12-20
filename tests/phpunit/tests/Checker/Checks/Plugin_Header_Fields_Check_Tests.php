@@ -78,6 +78,9 @@ class Plugin_Header_Fields_Check_Tests extends WP_UnitTestCase {
 
 		if ( is_wp_version_compatible( '6.5' ) ) {
 			$this->assertCount( 0, wp_list_filter( $errors['load.php'][0][0], array( 'code' => 'plugin_header_invalid_requires_plugins' ) ) );
+		} else {
+			// For WordPress < 6.5, the check doesn't run.
+			$this->assertTrue( true );
 		}
 	}
 
@@ -115,6 +118,9 @@ class Plugin_Header_Fields_Check_Tests extends WP_UnitTestCase {
 		// Should not have mismatched tested up to error.
 		if ( isset( $errors['load.php'][0][0] ) ) {
 			$this->assertCount( 0, wp_list_filter( $errors['load.php'][0][0], array( 'code' => 'mismatched_tested_up_to_header' ) ) );
+		} else {
+			// If no errors at all, that's also correct.
+			$this->assertTrue( true );
 		}
 	}
 
