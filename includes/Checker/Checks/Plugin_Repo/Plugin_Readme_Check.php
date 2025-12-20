@@ -12,9 +12,9 @@ use WordPress\Plugin_Check\Checker\Check_Result;
 use WordPress\Plugin_Check\Checker\Checks\Abstract_File_Check;
 use WordPress\Plugin_Check\Lib\Readme\Parser as PCPParser;
 use WordPress\Plugin_Check\Traits\Amend_Check_Result;
-use WordPress\Plugin_Check\Traits\Find_Readme;
 use WordPress\Plugin_Check\Traits\Language_Utils;
 use WordPress\Plugin_Check\Traits\License_Utils;
+use WordPress\Plugin_Check\Traits\Readme_Utils;
 use WordPress\Plugin_Check\Traits\Stable_Check;
 use WordPress\Plugin_Check\Traits\URL_Utils;
 use WordPress\Plugin_Check\Traits\Version_Utils;
@@ -31,7 +31,7 @@ use WordPressdotorg\Plugin_Directory\Readme\Parser as DotorgParser;
 class Plugin_Readme_Check extends Abstract_File_Check {
 
 	use Amend_Check_Result;
-	use Find_Readme;
+	use Readme_Utils;
 	use Stable_Check;
 	use License_Utils;
 	use URL_Utils;

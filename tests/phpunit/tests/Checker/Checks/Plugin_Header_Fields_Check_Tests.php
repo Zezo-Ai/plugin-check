@@ -81,6 +81,43 @@ class Plugin_Header_Fields_Check_Tests extends WP_UnitTestCase {
 		}
 	}
 
+	public function test_run_with_mismatched_tested_up_to() {
+		$check         = new Plugin_Header_Fields_Check();
+		$check_context = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-tested-up-to-mismatch/load.php' );
+		$check_result  = new Check_Result( $check_context );
+
+		$check->run( $check_result );
+
+		$errors = $check_result->get_errors();
+
+		$this->assertNotEmpty( $errors );
+		$this->assertArrayHasKey( 'load.php', $errors );
+
+		// Check for mismatched "Tested up to" error.
+		$this->assertCount( 1, wp_list_filter( $errors['load.php'][0][0], array( 'code' => 'mismatched_tested_up_to_header' ) ) );
+
+		// Verify the error message contains the correct versions.
+		$error_items   = wp_list_filter( $errors['load.php'][0][0], array( 'code' => 'mismatched_tested_up_to_header' ) );
+		$error_message = reset( $error_items )['message'];
+		$this->assertStringContainsString( '6.7', $error_message );
+		$this->assertStringContainsString( '6.5', $error_message );
+	}
+
+	public function test_run_with_matching_tested_up_to() {
+		$check         = new Plugin_Header_Fields_Check();
+		$check_context = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-tested-up-to-match/load.php' );
+		$check_result  = new Check_Result( $check_context );
+
+		$check->run( $check_result );
+
+		$errors = $check_result->get_errors();
+
+		// Should not have mismatched tested up to error.
+		if ( isset( $errors['load.php'][0][0] ) ) {
+			$this->assertCount( 0, wp_list_filter( $errors['load.php'][0][0], array( 'code' => 'mismatched_tested_up_to_header' ) ) );
+		}
+	}
+
 	public function test_run_with_invalid_mpl1_license() {
 		$check         = new Plugin_Header_Fields_Check();
 		$check_context = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-plugin-readme-mpl1-license-with-errors/load.php' );

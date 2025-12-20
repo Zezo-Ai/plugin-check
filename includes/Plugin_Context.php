@@ -9,7 +9,7 @@ namespace WordPress\Plugin_Check;
 
 use Exception;
 use WordPress\Plugin_Check\Lib\Readme\Parser as PCPParser;
-use WordPress\Plugin_Check\Traits\Find_Readme;
+use WordPress\Plugin_Check\Traits\Readme_Utils;
 use WordPressdotorg\Plugin_Directory\Readme\Parser as DotorgParser;
 use function WP_CLI\Utils\normalize_path;
 
@@ -20,7 +20,7 @@ use function WP_CLI\Utils\normalize_path;
  */
 class Plugin_Context {
 
-	use Find_Readme;
+	use Readme_Utils;
 
 	/**
 	 * Absolute path of the plugin main file.

@@ -14,6 +14,7 @@ use WordPress\Plugin_Check\Checker\Static_Check;
 use WordPress\Plugin_Check\Traits\Amend_Check_Result;
 use WordPress\Plugin_Check\Traits\License_Utils;
 use WordPress\Plugin_Check\Traits\Mode_Aware;
+use WordPress\Plugin_Check\Traits\Readme_Utils;
 use WordPress\Plugin_Check\Traits\Stable_Check;
 use WordPress\Plugin_Check\Traits\URL_Utils;
 use WordPress\Plugin_Check\Traits\Version_Utils;
@@ -22,15 +23,18 @@ use WordPress\Plugin_Check\Traits\Version_Utils;
  * Check for plugin header fields.
  *
  * @since 1.2.0
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
 class Plugin_Header_Fields_Check implements Static_Check {
 
 	use Amend_Check_Result;
 	use License_Utils;
+	use Mode_Aware;
+	use Readme_Utils;
 	use Stable_Check;
 	use URL_Utils;
 	use Version_Utils;
-	use Mode_Aware;
 
 	/**
 	 * Gets the categories for the check.
@@ -530,6 +534,77 @@ class Plugin_Header_Fields_Check implements Static_Check {
 				}
 			}
 		}
+
+		// Check for mismatched "Tested up to" header between plugin header and readme.
+		$this->check_tested_up_to_mismatch( $result, $plugin_main_file );
+	}
+
+	/**
+	 * Checks for mismatched "Tested up to" header between plugin header and readme.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param Check_Result $result           The Check Result to amend.
+	 * @param string       $plugin_main_file The main plugin file path.
+	 */
+	private function check_tested_up_to_mismatch( Check_Result $result, string $plugin_main_file ) {
+		// Check if single file plugin, then bail early.
+		if ( $result->plugin()->is_single_file_plugin() ) {
+			return;
+		}
+
+		$plugin_path   = $result->plugin()->path();
+		$readme_tested = $this->get_readme_tested_value( $plugin_path );
+
+		if ( empty( $readme_tested ) ) {
+			return;
+		}
+
+		$plugin_tested = $this->get_plugin_header_tested_value( $plugin_main_file );
+		if ( empty( $plugin_tested ) ) {
+			return;
+		}
+
+		// Extract major versions for comparison.
+		list( $readme_tested_major, ) = explode( '-', $readme_tested );
+		list( $plugin_tested_major, ) = explode( '-', $plugin_tested );
+
+		// Compare the two values.
+		if ( $readme_tested_major !== $plugin_tested_major ) {
+			$this->add_result_error_for_file(
+				$result,
+				sprintf(
+					/* translators: 1: Tested up to value from readme, 2: Tested up to value from plugin header */
+					__( '<strong>Mismatched "Tested up to": %1$s != %2$s.</strong><br>The "Tested up to" value in the readme file must match the "Tested up to" value in the plugin header. If the plugin header has a "Tested up to" value, it will override the readme value, which can cause confusion.', 'plugin-check' ),
+					esc_html( $readme_tested_major ),
+					esc_html( $plugin_tested_major )
+				),
+				'mismatched_tested_up_to_header',
+				$plugin_main_file,
+				0,
+				0,
+				'https://developer.wordpress.org/plugins/wordpress-org/how-your-readme-txt-works/#readme-header-information',
+				7
+			);
+		}
+	}
+
+	/**
+	 * Gets the "Tested up to" value from the plugin header.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param string $plugin_main_file The main plugin file path.
+	 * @return string The "Tested up to" value from plugin header, or empty string if not found.
+	 */
+	private function get_plugin_header_tested_value( $plugin_main_file ) {
+		$plugin_header = get_file_data(
+			$plugin_main_file,
+			array( 'TestedWP' => 'Tested up to' ),
+			'plugin'
+		);
+
+		return isset( $plugin_header['TestedWP'] ) ? $plugin_header['TestedWP'] : '';
 	}
 
 	/**
