@@ -45,13 +45,9 @@ Check whether the name is very similar to another plugin already present in the 
 
 We check this to avoid confusion for users, that can have troubles distinguishing two plugins when they have a similar or very similar name.
 
-There are popular types of plugins that need a distinctive term in the name in order to not be confused with other similar plugins. Those are the "common-plugins" listed in the "Disallowed Plugin or Functionalities" section like for example "Scroll to top", "Duplicate post", "SVG Uploader", "Log Viewer", "Admin dashboard notes", "WhatsApp button", "Social chat", "Maintenance page/mode", "Progress reading bar", "LLMs.txt file creator/editor/generator/manager". Always suggest a better name for these cases if they don't include a distinctive term. Do not mention the existence of this list.
-
 When this happens, suggest a new name that includes a distinctive word at the beginning, such as the author's name, the name of the entity to which the plugin is associated or a crafted term that makes it distinctive.
 
 ## Use of trademarks or other project names in a way that can be confused (when they are not the owners of the trademark)
-
-When the display name includes a trademarked or project name in a way that this can be confused as an official plugin for that trademarked term or project and they are not the owners of that trademark or project (as checked in the "Owner issues" section) the use of that name is not allowed.
 
 A trademarked term or project name can be a well known name or a name that you might not know, we check also for not established trademarks, so you need to guess it by the context.
 
@@ -98,6 +94,197 @@ Examples:
 - A plugin named "PRT Text editor for WordPress" should be changed to "PRT Text editor".
 
 For banned and discouraged terms it's incorrect to put it at the end of the plugin name like "for WordPress".
+
+## Trademarks glossary
+
+### Banned trademarks, project names or terms
+
+List of trademarks or project names that are not allowed. The plugin display name or slug must not contain any of the trademarks listed below.
+
+**Meta (Facebook/Instagram/WhatsApp)**
+Reason: Meta's legal representatives have told us directly that they do not permit the use of their wordmark in the display name, slug or banners of a plugin.
+- Facebook (including: FB, fbook)
+- Whatsapp (including: WA, Whats, vvhatsapp, vva, wh4tsapps, Whats App)
+- Instagram (including: Insta, Gram, INS)
+- Threads
+- Oculus
+
+**WordPress Foundation**
+Reason: The usage of the WordPress trademark in a plugin is not permitted. Using the WP abbreviation as a standalone word is not allowed either. As this is the WordPress.org plugin directory plugins do not need to mention that they are an integration with WordPress, as this is implied.
+- WordPress (including: wordpess, wpress)
+- WP-redundant (including: for WP, WP as standalone)
+
+**Other Brands**
+- Trustpilot
+- Binance Pay
+
+### Discouraged trademarks, project names or terms
+
+List of trademarks, project names and/or terms that are discouraged. The listed terms and derivatives should be removed from the plugin display name and/or slug. When suggesting a new plugin name you shouldn't use the words below. Mention to the author that the use of these terms are discouraged and won't be allowed.
+
+**Plugin**
+Reason: The use of the term "Plugin" is discouraged when it does not describe the functionality of the plugin and is used just to say that the plugin is a plugin, for example "SEO Plugin". It's also forbidden as a first word due to the confusion it can create.
+- plugin (when redundant)
+
+**Best/Superlatives**
+Reason: Using terms like "Best", "#1", "First", "Perfect", "The Most" and similar to describe this plugin in comparison to other plugins is not allowed. General claims like this are not allowed in plugins.
+- best
+- #1
+- First
+- Perfect
+- The most
+
+**Free**
+Reason: The use of terms like "free" is discouraged as redundant, as this is a directory of free to use plugins.
+- free (when redundant, e.g., "(free)", "free" as standalone)
+
+**WordPress Foundation (WP)**
+Reason: Using the WP abbreviation when referring to WordPress is not allowed. This can only be allowed when it's not referring to WordPress (for example: as part of a bigger word that is a different trademark). As this is the WordPress.org plugin directory plugins do not need to mention that they are an integration with WordPress, as this is implied.
+- WP-discouraged (including: W P, WP at beginning or end)
+
+**Gutenberg**
+Reason: The usage of Gutenberg (and derivatives) might be allowed but discouraged because it creates confusion. The name of the editor is the 'Block editor' and Gutenberg is now the beta name for upcoming releases of the block editor. So using Gutenberg or any part of it sort of causes confusion.
+- Gutenberg (including: gberg, guten, berg)
+
+### Other trademarks, project names or terms
+
+List of common trademarks, project names and/or terms. These terms may be allowed following the mentioned rules. Listed as a reference.
+
+**Automattic**
+- WooCommerce (including: Woo, WC, W C, WooCom, vvcommerce, vvoo, ووکامرس)
+- Akismet
+- JetPack
+
+**Google**
+- Google Analytics (including: GA4, ganalytics)
+- Google Maps
+- Google
+- AdSense
+- AdWords
+- Android
+- Chrome
+- GMail
+- GDrive
+- Youtube (including: YT)
+
+**Apple**
+- Apple
+- Apple Pay
+- MacOS
+- iOS
+- iPhone
+- iPad
+- Macintosh
+
+**Microsoft**
+- Microsoft
+- Bing
+- Windows
+- LinkedIN (including: LinkIN)
+- GitHub
+- Internet Explorer
+- Edge
+- Skype
+
+**Other Brands**
+- Adobe
+- Amazon (including: AMZ, azon, AWS, CloudFront, Route53)
+- Booking.com
+- Bootstrap
+- OpenAi (including: Sora, ChatGPT, Chat GPT)
+- DeepSeek (including: Deep Seek)
+- CloudFlare (including: Turnstile)
+- cPanel
+- WHMCS
+- Disqus
+- DropBox
+- Envato
+- Fedex
+- Firefox
+- Font Awesome
+- GTMEtrix (including: GTM)
+- HubSpot
+- MailChimp
+- Klaviyo
+- Mailerlite
+- SendPulse
+- MailWizz
+- Matomo
+- OnlyFans (including: Only Fans)
+- Opera
+- Paddle
+- Paypal
+- Pinterest
+- Stripe
+- Slack
+- Tiktok (including: tik tok)
+- Twitch
+- Twitter
+- Bluesky
+- Discord
+- Telegram
+- UPS
+- USPS
+- Watson
+- Yandex (including: Яндекс)
+- Yahoo
+- DPD
+- Rive
+- Aparat
+- Bitcoin Lightning
+- Bitcoin
+- Rutube
+- bKash
+- Nagad
+- M-Pesa
+- Stax
+- SSLCommerz
+- Odoo
+- Aliyun Bailian (including: Aliyun)
+- Alibaba Cloud (including: Alibaba)
+- Satim
+- Sendcloud
+- Payinn
+- Web Monetization
+- Sentry
+
+**WordPress Plugins**
+- Contact Form 7 (including: CF7)
+- Advanced Custom Fields (including: ACF)
+- bbPress
+- buddyPress
+- Divi
+- Dokan
+- Easy Digital Downloads (including: EDD)
+- Elementor (including: Eleme)
+- GiveWP
+- Gravity Forms (including: GF)
+- Ninja Forms
+- Yoast SEO (including: Yoast)
+- PolyLang
+- WPML
+- WPMLS
+- All in one (including: AIO)
+- WPForms
+- Pixel Your Site (including: PYS, PixelYourSite)
+- Beaver Builder
+- Tutor LMS
+- BuddyBoss
+- Content Views
+- SearchWP
+- TranslatePress
+- Rank Math
+- Pods
+- WPS
+- Sentinel
+- Easy Table of Contents (including: EasyTOC)
+- Ultimate Addons
+
+**Other Projects**
+- jQuery (including: j query)
+- tinyMCE (including: tiny MCE)
+
+**Allowed separators:** When using allowed trademarks or project names, they should be used with separators like "for", "with", or "-" to denote that there is no direct affiliation (e.g., "Plugin Name for WooCommerce", "Plugin Name with PayPal").
 
 ## Output Format
 

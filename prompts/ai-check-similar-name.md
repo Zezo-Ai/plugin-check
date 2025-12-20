@@ -28,7 +28,6 @@ Begin with a concise checklist (3-7 bullets) of what you will do; keep items con
 
 ### Compliance
 - Only reference plugins with valid, working URLs and verifiable active install counts. Do not include any other plugins.
-- If the plugin was already approved, do not include it in your results.
 
 ## Response Format
 Respond in English with the following structure:
