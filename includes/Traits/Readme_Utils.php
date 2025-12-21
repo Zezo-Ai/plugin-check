@@ -7,9 +7,6 @@
 
 namespace WordPress\Plugin_Check\Traits;
 
-use WordPress\Plugin_Check\Lib\Readme\Parser as PCPParser;
-use WordPressdotorg\Plugin_Directory\Readme\Parser as DotorgParser;
-
 /**
  * Trait for readme utilities.
  *
