@@ -390,4 +390,24 @@ class File_Type_Check_Tests extends WP_UnitTestCase {
 		$this->assertEmpty( $errors );
 		$this->assertEmpty( $warnings );
 	}
+
+	public function test_markdown_files_in_subfolders_allowed() {
+		$check_context = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-ai-instructions-without-errors/load.php' );
+		$check_result  = new Check_Result( $check_context );
+
+		$check = new File_Type_Check( File_Type_Check::TYPE_AI_INSTRUCTIONS );
+		$check->run( $check_result );
+
+		$errors   = $check_result->get_errors();
+		$warnings = $check_result->get_warnings();
+
+		$this->assertEmpty( $errors, 'Markdown files in subfolders should not trigger errors' );
+		$this->assertEmpty( $warnings, 'Markdown files in subfolders should not trigger warnings' );
+
+		foreach ( array_merge( $errors, $warnings ) as $file => $messages ) {
+			$this->assertStringNotContainsString( 'docs/', $file, 'Files in docs/ subfolder should not be flagged' );
+			$this->assertStringNotContainsString( 'GUIDE.md', $file, 'GUIDE.md in subfolder should not be flagged' );
+			$this->assertStringNotContainsString( 'API.md', $file, 'API.md in subfolder should not be flagged' );
+		}
+	}
 }
