@@ -61,9 +61,9 @@
 		const confusionOthersDiv = document.getElementById(
 			'plugin-check-namer-confusion-others'
 		);
-	const confusionOthersList = document.getElementById(
-		'plugin-check-namer-confusion-others-list'
-	);
+		const confusionOthersList = document.getElementById(
+			'plugin-check-namer-confusion-others-list'
+		);
 		const timingDiv = document.getElementById(
 			'plugin-check-namer-timing'
 		);
@@ -122,9 +122,9 @@
 			if ( confusionOthersDiv ) {
 				confusionOthersDiv.style.display = 'none';
 			}
-		if ( confusionOthersList ) {
-			confusionOthersList.innerHTML = '';
-		}
+			if ( confusionOthersList ) {
+				confusionOthersList.innerHTML = '';
+			}
 			if ( timingDiv ) {
 				timingDiv.style.display = 'none';
 			}
@@ -221,7 +221,18 @@
 						payload.data.token_usage
 					) {
 						const tokenUsage = payload.data.token_usage;
-						let tokensText = tokenUsage.total_tokens + ' total';
+						let tokensText = '';
+
+						// Add AI provider and model info if available.
+						if ( payload.data.ai_info ) {
+							tokensText =
+								payload.data.ai_info.provider +
+								' (' +
+								payload.data.ai_info.model +
+								') - ';
+						}
+
+						tokensText += tokenUsage.total_tokens + ' total';
 
 						// Add breakdown with prompt and completion tokens.
 						if (

@@ -142,7 +142,7 @@ final class Namer_Page {
 		}
 
 		$parsed   = $this->parse_analysis( $analysis );
-		$response = $this->build_ajax_response( $parsed, $analysis );
+		$response = $this->build_ajax_response( $parsed, $analysis, $ai_config );
 
 		wp_send_json_success( $response );
 	}
@@ -152,11 +152,12 @@ final class Namer_Page {
 	 *
 	 * @since 1.8.0
 	 *
-	 * @param array        $parsed   Parsed analysis.
-	 * @param string|array $analysis Raw analysis.
+	 * @param array        $parsed    Parsed analysis.
+	 * @param string|array $analysis  Raw analysis.
+	 * @param array        $ai_config AI configuration with provider and model info.
 	 * @return array Response array.
 	 */
-	protected function build_ajax_response( $parsed, $analysis ) {
+	protected function build_ajax_response( $parsed, $analysis, $ai_config = array() ) {
 		$raw_output = $this->get_raw_output( $parsed, $analysis );
 		$raw_output = $this->format_json_output( $raw_output );
 
@@ -174,6 +175,14 @@ final class Namer_Page {
 		}
 		if ( ! empty( $parsed['token_usage'] ) ) {
 			$response['token_usage'] = $parsed['token_usage'];
+		}
+
+		// Add AI model and provider information.
+		if ( ! empty( $ai_config ) ) {
+			$response['ai_info'] = array(
+				'provider' => $ai_config['provider'],
+				'model'    => $ai_config['model'],
+			);
 		}
 
 		return $response;
