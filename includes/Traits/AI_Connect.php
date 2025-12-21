@@ -288,7 +288,8 @@ trait AI_Connect {
 	 * @param string        $prompt         The prompt to send to the AI.
 	 * @param callable|null $builder_config Optional callback to configure the PromptBuilder before execution.
 	 *                                      Receives the PromptBuilder instance as parameter.
-	 * @return string|WP_Error Generated text or WP_Error on failure.
+	 * @return array|WP_Error Array with 'text' and 'token_usage' keys, or WP_Error on failure.
+	 *                        token_usage contains: prompt_tokens, completion_tokens, total_tokens.
 	 */
 	protected function execute_ai_request( $provider, $api_key, $model, $prompt, $builder_config = null ) {
 		if ( ! class_exists( '\WordPress\AiClient\AiClient' ) ) {
@@ -316,7 +317,18 @@ trait AI_Connect {
 				call_user_func( $builder_config, $builder );
 			}
 
-			return $builder->generateText();
+			// Generate result to get both text and token usage.
+			$result      = $builder->generateTextResult();
+			$token_usage = $result->getTokenUsage();
+
+			return array(
+				'text'        => $result->toText(),
+				'token_usage' => array(
+					'prompt_tokens'     => $token_usage->getPromptTokens(),
+					'completion_tokens' => $token_usage->getCompletionTokens(),
+					'total_tokens'      => $token_usage->getTotalTokens(),
+				),
+			);
 
 		} catch ( \Throwable $e ) {
 			return new WP_Error( 'ai_request_failed', $e->getMessage() );

@@ -172,6 +172,9 @@ final class Namer_Page {
 		if ( ! empty( $parsed['confusion_existing_others'] ) ) {
 			$response['confusion_existing_others'] = $parsed['confusion_existing_others'];
 		}
+		if ( ! empty( $parsed['token_usage'] ) ) {
+			$response['token_usage'] = $parsed['token_usage'];
+		}
 
 		return $response;
 	}
@@ -301,11 +304,15 @@ final class Namer_Page {
 						<strong><?php echo esc_html__( 'Explanation:', 'plugin-check' ); ?></strong>
 						<span id="plugin-check-namer-explanation"></span>
 					</p>
-					<p id="plugin-check-namer-timing" style="display: none; margin: 0; color: #646970; font-style: italic; font-size: 0.9em;">
-						<strong><?php echo esc_html__( 'Analysis completed in:', 'plugin-check' ); ?></strong>
-						<span id="plugin-check-namer-timing-value"></span>
-					</p>
-				</div>
+				<p id="plugin-check-namer-timing" style="display: none; margin: 0 0 5px 0; color: #646970; font-style: italic; font-size: 0.9em;">
+					<strong><?php echo esc_html__( 'Analysis completed in:', 'plugin-check' ); ?></strong>
+					<span id="plugin-check-namer-timing-value"></span>
+				</p>
+				<p id="plugin-check-namer-tokens" style="display: none; margin: 0; color: #646970; font-style: italic; font-size: 0.9em;">
+					<strong><?php echo esc_html__( 'Tokens used:', 'plugin-check' ); ?></strong>
+					<span id="plugin-check-namer-tokens-value"></span>
+				</p>
+			</div>
 				<div id="plugin-check-namer-confusion-plugins" style="display: none; margin-top: 20px;">
 					<p><strong><?php echo esc_html__( 'Similar Existing Plugins', 'plugin-check' ); ?></strong></p>
 					<div id="plugin-check-namer-confusion-plugins-list"></div>

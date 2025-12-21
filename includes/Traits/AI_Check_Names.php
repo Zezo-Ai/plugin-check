@@ -29,7 +29,7 @@ trait AI_Check_Names {
 	 * @param string $api_key  API key.
 	 * @param string $model    Model ID.
 	 * @param string $name     Plugin name to evaluate.
-	 * @return string|WP_Error Analysis output or WP_Error.
+	 * @return array|WP_Error Array with 'text' and 'token_usage' keys, or WP_Error.
 	 */
 	protected function run_name_analysis( $provider, $api_key, $model, $name ) {
 		if ( ! class_exists( AiClient::class ) ) {
@@ -43,13 +43,16 @@ trait AI_Check_Names {
 		}
 
 		// Build additional context from similar name results.
-		$additional_context = $this->build_similar_name_context( $similar_name_result );
+		$additional_context = $this->build_similar_name_context( $similar_name_result['text'] );
 
 		// Second query: Pre-review with similar name results as context.
 		$prereview_result = $this->run_prereview_query( $provider, $api_key, $model, $name, $additional_context );
 		if ( is_wp_error( $prereview_result ) ) {
 			return $prereview_result;
 		}
+
+		// Combine token usage from both queries.
+		$prereview_result['token_usage']['similar_name'] = $similar_name_result['token_usage'];
 
 		return $prereview_result;
 	}
@@ -63,7 +66,7 @@ trait AI_Check_Names {
 	 * @param string $api_key  API key.
 	 * @param string $model    Model ID.
 	 * @param string $name     Plugin name to evaluate.
-	 * @return string|WP_Error Analysis output or WP_Error.
+	 * @return array|WP_Error Array with 'text' and 'token_usage' keys, or WP_Error.
 	 */
 	protected function run_similar_name_query( $provider, $api_key, $model, $name ) {
 		$prompt_template = $this->get_prompt_template( 'ai-check-similar-name.md' );
@@ -95,7 +98,7 @@ trait AI_Check_Names {
 	 * @param string $model              Model ID.
 	 * @param string $name               Plugin name to evaluate.
 	 * @param string $additional_context Additional context from similar name query.
-	 * @return string|WP_Error Analysis output or WP_Error.
+	 * @return array|WP_Error Array with 'text' and 'token_usage' keys, or WP_Error.
 	 */
 	protected function run_prereview_query( $provider, $api_key, $model, $name, $additional_context = '' ) {
 		$prompt_template = $this->get_prompt_template( 'ai-check-prereview.md' );
@@ -188,22 +191,32 @@ trait AI_Check_Names {
 	 *
 	 * @since 1.8.0
 	 *
-	 * @param string $analysis AI output in markdown/YAML format.
+	 * @param array|string $analysis AI output (array with 'text' and 'token_usage', or string for backward compat).
 	 * @return array
 	 */
 	protected function parse_analysis( $analysis ) {
-		if ( empty( $analysis ) ) {
+		// Extract text from array format (new format with token usage).
+		$analysis_text = is_array( $analysis ) && isset( $analysis['text'] ) ? $analysis['text'] : $analysis;
+
+		if ( empty( $analysis_text ) ) {
 			return array(
 				'verdict'     => '❓ ' . __( 'Empty Response', 'plugin-check' ),
 				'explanation' => __( 'The AI did not return any analysis. Please try again.', 'plugin-check' ),
 			);
 		}
 
-		$analysis_trim = trim( (string) $analysis );
+		$analysis_trim = trim( (string) $analysis_text );
 		$parsed_data   = $this->parse_markdown_format( $analysis_trim );
 
 		if ( ! empty( $parsed_data ) && isset( $parsed_data['possible_naming_issues'] ) ) {
-			return $this->parse_prereview_response( $parsed_data );
+			$result = $this->parse_prereview_response( $parsed_data );
+
+			// Add token usage info if available.
+			if ( is_array( $analysis ) && isset( $analysis['token_usage'] ) ) {
+				$result['token_usage'] = $analysis['token_usage'];
+			}
+
+			return $result;
 		}
 
 		// Unable to parse markdown format.

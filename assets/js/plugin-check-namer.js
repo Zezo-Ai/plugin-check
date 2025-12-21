@@ -64,14 +64,20 @@
 		const confusionOthersList = document.getElementById(
 			'plugin-check-namer-confusion-others-list'
 		);
-		const timingDiv = document.getElementById(
-			'plugin-check-namer-timing'
-		);
-		const timingValue = document.getElementById(
-			'plugin-check-namer-timing-value'
-		);
-		const errorDiv = document.getElementById( 'plugin-check-namer-error' );
-		const errorEl = errorDiv ? errorDiv.querySelector( 'p' ) : null;
+	const timingDiv = document.getElementById(
+		'plugin-check-namer-timing'
+	);
+	const timingValue = document.getElementById(
+		'plugin-check-namer-timing-value'
+	);
+	const tokensDiv = document.getElementById(
+		'plugin-check-namer-tokens'
+	);
+	const tokensValue = document.getElementById(
+		'plugin-check-namer-tokens-value'
+	);
+	const errorDiv = document.getElementById( 'plugin-check-namer-error' );
+	const errorEl = errorDiv ? errorDiv.querySelector( 'p' ) : null;
 
 		function setLoading( isLoading ) {
 			if ( spinner ) {
@@ -119,15 +125,21 @@
 			if ( confusionOthersList ) {
 				confusionOthersList.innerHTML = '';
 			}
-			if ( timingDiv ) {
-				timingDiv.style.display = 'none';
-			}
-			if ( timingValue ) {
-				setText( timingValue, '' );
-			}
-			if ( verdictContainer ) {
-				verdictContainer.style.display = 'none';
-			}
+		if ( timingDiv ) {
+			timingDiv.style.display = 'none';
+		}
+		if ( timingValue ) {
+			setText( timingValue, '' );
+		}
+		if ( tokensDiv ) {
+			tokensDiv.style.display = 'none';
+		}
+		if ( tokensValue ) {
+			setText( tokensValue, '' );
+		}
+		if ( verdictContainer ) {
+			verdictContainer.style.display = 'none';
+		}
 
 			// Record start time.
 			const startTime = Date.now();
@@ -191,18 +203,39 @@
 						verdictContainer.style.display = 'block';
 					}
 
-					// Calculate and display elapsed time.
-					if ( timingDiv && timingValue ) {
-						const endTime = Date.now();
-						const elapsedSeconds = Math.round(
-							( endTime - startTime ) / 1000
-						);
-						timingValue.textContent =
-							elapsedSeconds + ' ' + 'seconds';
-						timingDiv.style.display = 'block';
+				// Calculate and display elapsed time.
+				if ( timingDiv && timingValue ) {
+					const endTime = Date.now();
+					const elapsedSeconds = Math.round(
+						( endTime - startTime ) / 1000
+					);
+					timingValue.textContent =
+						elapsedSeconds + ' ' + 'seconds';
+					timingDiv.style.display = 'block';
+				}
+
+				// Display token usage if available.
+				if ( tokensDiv && tokensValue && payload.data.token_usage ) {
+					const tokenUsage = payload.data.token_usage;
+					let tokensText = tokenUsage.total_tokens + ' total';
+
+					// Add breakdown with prompt and completion tokens.
+					if ( tokenUsage.prompt_tokens && tokenUsage.completion_tokens ) {
+						tokensText += ' (' + tokenUsage.prompt_tokens + ' prompt + ' +
+							tokenUsage.completion_tokens + ' completion)';
 					}
 
-					// Display confusion_existing_plugins if available.
+					// Add similar name query tokens if available.
+					if ( tokenUsage.similar_name && tokenUsage.similar_name.total_tokens ) {
+						tokensText += ' [Similar name query: ' +
+							tokenUsage.similar_name.total_tokens + ' tokens]';
+					}
+
+					tokensValue.textContent = tokensText;
+					tokensDiv.style.display = 'block';
+				}
+
+				// Display confusion_existing_plugins if available.
 					if (
 						confusionPluginsDiv &&
 						confusionPluginsList &&
