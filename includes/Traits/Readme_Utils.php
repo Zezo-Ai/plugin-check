@@ -54,43 +54,4 @@ trait Readme_Utils {
 
 		return $readme_txt ? $readme_txt : $potential_readme_files;
 	}
-
-	/**
-	 * Gets the "Tested up to" value from the readme file.
-	 *
-	 * @since 1.8.0
-	 *
-	 * @param string $plugin_path The plugin directory path.
-	 * @return string The "Tested up to" value from readme, or empty string if not found.
-	 */
-	protected function get_readme_tested_value( $plugin_path ) {
-		// Build list of potential readme files.
-		$potential_files = array(
-			$plugin_path . 'readme.txt',
-			$plugin_path . 'readme.md',
-			$plugin_path . 'README.txt',
-			$plugin_path . 'README.md',
-		);
-
-		// Filter to only existing files.
-		$existing_files = array_filter( $potential_files, 'file_exists' );
-
-		if ( empty( $existing_files ) ) {
-			return '';
-		}
-
-		// Use filter_files_for_readme to get the correct readme (prioritizes .txt).
-		$readme = $this->filter_files_for_readme( $existing_files, $plugin_path );
-
-		if ( empty( $readme ) ) {
-			return '';
-		}
-
-		$readme_file = reset( $readme );
-
-		// Parse the readme file.
-		$parser = class_exists( DotorgParser::class ) ? new DotorgParser( $readme_file ) : new PCPParser( $readme_file );
-
-		return isset( $parser->tested ) ? $parser->tested : '';
-	}
 }
