@@ -6,7 +6,7 @@
 | --- | --- | --- | --- |
 | i18n_usage | general, plugin_repo | Checks for various internationalization best practices. | [Learn more](https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/) |
 | code_obfuscation | plugin_repo | Detects the usage of code obfuscation tools. | [Learn more](https://developer.wordpress.org/plugins/wordpress-org/detailed-plugin-guidelines/) |
-| file_type | plugin_repo | Detects the usage of hidden and compressed files, VCS directories, application files and badly named files. | [Learn more](https://developer.wordpress.org/plugins/wordpress-org/detailed-plugin-guidelines/) |
+| file_type | plugin_repo | Detects the usage of hidden and compressed files, VCS directories, application files, badly named files, AI development directories (.cursor, .claude, .aider, .continue, .windsurf, .ai, .github), and unexpected markdown files in plugin root. | [Learn more](https://developer.wordpress.org/plugins/wordpress-org/detailed-plugin-guidelines/) |
 | plugin_header_fields | plugin_repo | Checks adherence to the Headers requirements. | [Learn more](https://developer.wordpress.org/plugins/plugin-basics/header-requirements/) |
 | late_escaping | security, plugin_repo | Checks that all output is escaped before being sent to the browser. | [Learn more](https://developer.wordpress.org/apis/security/escaping/) |
 | safe_redirect | security, plugin_repo | Checks that redirects use wp_safe_redirect() instead of wp_redirect() for security. | [Learn more](https://developer.wordpress.org/reference/functions/wp_safe_redirect/) |
