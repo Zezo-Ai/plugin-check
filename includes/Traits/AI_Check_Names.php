@@ -662,40 +662,28 @@ trait AI_Check_Names {
 		return array(
 			'type'                 => 'object',
 			'properties'           => array(
-				'possible_naming_issues'             => array( 'type' => 'boolean' ),
-				'naming_explanation'                 => array( 'type' => 'string' ),
-				'possible_owner_issues'              => array( 'type' => 'boolean' ),
-				'owner_explanation'                  => array( 'type' => 'string' ),
-				'possible_description_issues'        => array( 'type' => 'boolean' ),
-				'description_explanation'            => array( 'type' => 'string' ),
-				'disallowed'                         => array( 'type' => 'boolean' ),
-				'disallowed_explanation'             => array( 'type' => 'string' ),
-				'disallowed_type'                    => array(
+				'possible_naming_issues'            => array( 'type' => 'boolean' ),
+				'naming_explanation'                => array( 'type' => 'string' ),
+				'disallowed'                        => array( 'type' => 'boolean' ),
+				'disallowed_explanation'            => array( 'type' => 'string' ),
+				'disallowed_type'                   => array(
 					'type'  => 'array',
 					'items' => array(
 						'type' => 'string',
 					),
 				),
-				'trademarks_or_project_names_array'  => array(
+				'trademarks_or_project_names_array' => array(
 					'type'  => 'array',
 					'items' => array(
 						'type' => 'string',
 					),
 				),
-				'suggested_display_name'             => array( 'type' => 'string' ),
-				'suggested_slug'                     => array( 'type' => 'string' ),
-				'short_description'                  => array( 'type' => 'string' ),
-				'description_language_is_in_english' => array( 'type' => 'boolean' ),
-				'description_what_is_not_in_english' => array( 'type' => 'string' ),
-				'plugin_category'                    => array( 'type' => 'string' ),
+				'suggested_display_name'            => array( 'type' => 'string' ),
+				'suggested_slug'                    => array( 'type' => 'string' ),
 			),
 			'required'             => array(
 				'possible_naming_issues',
 				'naming_explanation',
-				'possible_owner_issues',
-				'owner_explanation',
-				'possible_description_issues',
-				'description_explanation',
 				'disallowed',
 				'disallowed_explanation',
 				'disallowed_type',
@@ -703,8 +691,6 @@ trait AI_Check_Names {
 				'suggested_display_name',
 				'suggested_slug',
 				'short_description',
-				'description_language_is_in_english',
-				'description_what_is_not_in_english',
 				'plugin_category',
 			),
 			'additionalProperties' => false,
