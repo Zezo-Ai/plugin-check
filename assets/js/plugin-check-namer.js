@@ -30,6 +30,7 @@
 	document.addEventListener( 'DOMContentLoaded', function () {
 		const form = document.getElementById( 'plugin-check-namer-form' );
 		const input = document.getElementById( 'plugin_check_namer_input' );
+		const authorInput = document.getElementById( 'plugin_check_namer_author' );
 
 		if ( ! form || ! input || ! window.pluginCheckNamer ) {
 			return;
@@ -150,6 +151,9 @@
 			formData.append( 'action', 'plugin_check_namer_analyze' );
 			formData.append( 'nonce', pluginCheckNamer.nonce );
 			formData.append( 'plugin_name', name );
+			if ( authorInput ) {
+				formData.append( 'author_name', ( authorInput.value || '' ).trim() );
+			}
 
 			fetch( pluginCheckNamer.ajaxUrl, {
 				method: 'POST',

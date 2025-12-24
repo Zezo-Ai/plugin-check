@@ -138,12 +138,14 @@ final class Namer_Page {
 			wp_send_json_error( array( 'message' => __( 'Please enter a plugin name.', 'plugin-check' ) ) );
 		}
 
+		$author = $this->get_author_name_from_request();
+
 		$ai_config = $this->get_ai_config();
 		if ( is_wp_error( $ai_config ) ) {
 			wp_send_json_error( array( 'message' => $ai_config->get_error_message() ) );
 		}
 
-		$analysis = $this->run_name_analysis( $ai_config['provider'], $ai_config['api_key'], $ai_config['model'], $name );
+		$analysis = $this->run_name_analysis( $ai_config['provider'], $ai_config['api_key'], $ai_config['model'], $name, $author );
 		if ( is_wp_error( $analysis ) ) {
 			wp_send_json_error( array( 'message' => $analysis->get_error_message() ) );
 		}
@@ -233,6 +235,18 @@ final class Namer_Page {
 	}
 
 	/**
+	 * Gets author name from request.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @return string Author name or empty string.
+	 */
+	protected function get_author_name_from_request() {
+		$author = isset( $_POST['author_name'] ) ? sanitize_text_field( wp_unslash( $_POST['author_name'] ) ) : '';
+		return trim( $author );
+	}
+
+	/**
 	 * Gets AI configuration from settings.
 	 *
 	 * @since 1.8.0
@@ -291,6 +305,23 @@ final class Namer_Page {
 								/>
 								<p class="description">
 									<?php echo esc_html__( 'Enter the plugin name you want to evaluate.', 'plugin-check' ); ?>
+								</p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row">
+								<label for="plugin_check_namer_author"><?php echo esc_html__( 'Author name', 'plugin-check' ); ?></label>
+							</th>
+							<td>
+								<input
+									type="text"
+									id="plugin_check_namer_author"
+									name="plugin_check_namer_author"
+									class="regular-text"
+									value=""
+								/>
+								<p class="description">
+									<?php echo esc_html__( 'Optional: Enter the author or brand name if you own the trademark. This helps avoid unnecessary name change suggestions.', 'plugin-check' ); ?>
 								</p>
 							</td>
 						</tr>
@@ -361,6 +392,9 @@ final class Namer_Page {
 		$input = isset( $_POST['plugin_check_namer_input'] ) ? sanitize_text_field( wp_unslash( $_POST['plugin_check_namer_input'] ) ) : '';
 		$input = trim( $input );
 
+		$author = isset( $_POST['plugin_check_namer_author'] ) ? sanitize_text_field( wp_unslash( $_POST['plugin_check_namer_author'] ) ) : '';
+		$author = trim( $author );
+
 		$user_id = get_current_user_id();
 
 		if ( empty( $input ) ) {
@@ -374,7 +408,7 @@ final class Namer_Page {
 			return;
 		}
 
-		$analysis = $this->run_name_analysis( $ai_config['provider'], $ai_config['api_key'], $ai_config['model'], $input );
+		$analysis = $this->run_name_analysis( $ai_config['provider'], $ai_config['api_key'], $ai_config['model'], $input, $author );
 
 		if ( is_wp_error( $analysis ) ) {
 			$this->handle_analyze_error( $user_id, $input, $analysis );

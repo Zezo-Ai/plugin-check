@@ -29,9 +29,10 @@ trait AI_Check_Names {
 	 * @param string $api_key  API key.
 	 * @param string $model    Model ID.
 	 * @param string $name     Plugin name to evaluate.
+	 * @param string $author   Optional author/brand name.
 	 * @return array|WP_Error Array with 'text' and 'token_usage' keys, or WP_Error.
 	 */
-	protected function run_name_analysis( $provider, $api_key, $model, $name ) {
+	protected function run_name_analysis( $provider, $api_key, $model, $name, $author = '' ) {
 		if ( ! class_exists( AiClient::class ) ) {
 			return new WP_Error( 'ai_client_not_available', __( 'AI client SDK is not available.', 'plugin-check' ) );
 		}
@@ -46,7 +47,7 @@ trait AI_Check_Names {
 		$additional_context = $this->build_similar_name_context( $similar_name_result['text'] );
 
 		// Second query: Pre-review with similar name results as context.
-		$prereview_result = $this->run_prereview_query( $provider, $api_key, $model, $name, $additional_context );
+		$prereview_result = $this->run_prereview_query( $provider, $api_key, $model, $name, $additional_context, $author );
 		if ( is_wp_error( $prereview_result ) ) {
 			return $prereview_result;
 		}
@@ -98,9 +99,10 @@ trait AI_Check_Names {
 	 * @param string $model              Model ID.
 	 * @param string $name               Plugin name to evaluate.
 	 * @param string $additional_context Additional context from similar name query.
+	 * @param string $author             Optional author/brand name.
 	 * @return array|WP_Error Array with 'text' and 'token_usage' keys, or WP_Error.
 	 */
-	protected function run_prereview_query( $provider, $api_key, $model, $name, $additional_context = '' ) {
+	protected function run_prereview_query( $provider, $api_key, $model, $name, $additional_context = '', $author = '' ) {
 		$prompt_template = $this->get_prompt_template( 'ai-check-prereview.md' );
 		if ( is_wp_error( $prompt_template ) ) {
 			return $prompt_template;
@@ -117,6 +119,12 @@ trait AI_Check_Names {
 		// Build user prompt with plugin information.
 		$user_prompt  = "# Plugin basic information\n\n";
 		$user_prompt .= "- Display name for the plugin: {$name}\n";
+
+		// Add author/brand name if provided.
+		if ( ! empty( $author ) ) {
+			$user_prompt .= "- Author/Brand name: {$author}\n";
+			$user_prompt .= "\nNote: The author/brand name provided indicates that the submitter owns or represents this brand. If the plugin name matches or is related to this brand, do not suggest changing the plugin name unless there are other significant conflicts.\n";
+		}
 
 		// Add additional context from similar name query if available.
 		if ( ! empty( $additional_context ) ) {
@@ -206,7 +214,14 @@ trait AI_Check_Names {
 		}
 
 		$analysis_trim = trim( (string) $analysis_text );
-		$parsed_data   = $this->parse_markdown_format( $analysis_trim );
+
+		// Try parsing as JSON first (structured output format).
+		$parsed_data = $this->parse_json_response( $analysis_trim );
+
+		// If JSON parsing failed, try markdown format.
+		if ( empty( $parsed_data ) || ! isset( $parsed_data['possible_naming_issues'] ) ) {
+			$parsed_data = $this->parse_markdown_format( $analysis_trim );
+		}
 
 		if ( ! empty( $parsed_data ) && isset( $parsed_data['possible_naming_issues'] ) ) {
 			$result = $this->parse_prereview_response( $parsed_data );
@@ -219,12 +234,55 @@ trait AI_Check_Names {
 			return $result;
 		}
 
-		// Unable to parse markdown format.
+		// Unable to parse format.
 		return array(
 			'verdict'     => '❓ ' . __( 'Unable to Parse', 'plugin-check' ),
 			'explanation' => wp_kses_post( __( 'The AI response could not be parsed. Raw response:', 'plugin-check' ) . '<br><br>' . esc_html( substr( $analysis_trim, 0, 500 ) ) ),
 			'raw'         => $analysis_trim,
 		);
+	}
+
+	/**
+	 * Parses JSON response from AI.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param string $text AI response text.
+	 * @return array Parsed data array or empty array if not valid JSON.
+	 */
+	protected function parse_json_response( $text ) {
+		if ( empty( $text ) ) {
+			return array();
+		}
+
+		$trimmed = trim( $text );
+
+		// Remove markdown code fences if present.
+		$trimmed = preg_replace( '/^```(?:json)?\s*\n?/m', '', $trimmed );
+		$trimmed = preg_replace( '/\n?```\s*$/m', '', $trimmed );
+		$trimmed = trim( $trimmed );
+
+		// Try to find JSON object boundaries.
+		$first_brace = strpos( $trimmed, '{' );
+		if ( false !== $first_brace ) {
+			$last_brace = strrpos( $trimmed, '}' );
+			if ( false !== $last_brace && $last_brace > $first_brace ) {
+				$json_text = substr( $trimmed, $first_brace, $last_brace - $first_brace + 1 );
+			} else {
+				$json_text = $trimmed;
+			}
+		} else {
+			$json_text = $trimmed;
+		}
+
+		// Try to decode as JSON.
+		$decoded = json_decode( $json_text, true );
+
+		if ( JSON_ERROR_NONE === json_last_error() && is_array( $decoded ) && isset( $decoded['possible_naming_issues'] ) ) {
+			return $decoded;
+		}
+
+		return array();
 	}
 
 	/**
