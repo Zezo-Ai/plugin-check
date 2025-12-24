@@ -93,14 +93,14 @@
 			if ( ! name ) {
 				setText( errorEl, pluginCheckNamer.messages.missingName );
 				if ( errorEl ) {
-					errorEl.style.display = 'block';
+					errorEl.classList.remove( 'plugin-check-namer-hidden' );
 				}
 				return;
 			}
 
 			// Clear previous results.
 			if ( resultWrap ) {
-				resultWrap.style.display = 'none';
+				resultWrap.classList.add( 'plugin-check-namer-hidden' );
 			}
 			if ( verdictEl ) {
 				setText( verdictEl, '' );
@@ -109,36 +109,36 @@
 				setHtml( explainEl, '' );
 			}
 			if ( errorEl ) {
-				errorEl.style.display = 'none';
+				errorEl.classList.add( 'plugin-check-namer-hidden' );
 				setText( errorEl, '' );
 			}
 
 			if ( confusionPluginsDiv ) {
-				confusionPluginsDiv.style.display = 'none';
+				confusionPluginsDiv.classList.add( 'plugin-check-namer-hidden' );
 			}
 			if ( confusionPluginsList ) {
 				confusionPluginsList.innerHTML = '';
 			}
 			if ( confusionOthersDiv ) {
-				confusionOthersDiv.style.display = 'none';
+				confusionOthersDiv.classList.add( 'plugin-check-namer-hidden' );
 			}
 			if ( confusionOthersList ) {
 				confusionOthersList.innerHTML = '';
 			}
 			if ( timingDiv ) {
-				timingDiv.style.display = 'none';
+				timingDiv.classList.add( 'plugin-check-namer-hidden' );
 			}
 			if ( timingValue ) {
 				setText( timingValue, '' );
 			}
 			if ( tokensDiv ) {
-				tokensDiv.style.display = 'none';
+				tokensDiv.classList.add( 'plugin-check-namer-hidden' );
 			}
 			if ( tokensValue ) {
 				setText( tokensValue, '' );
 			}
 			if ( verdictContainer ) {
-				verdictContainer.style.display = 'none';
+				verdictContainer.classList.add( 'plugin-check-namer-hidden' );
 			}
 
 			// Record start time.
@@ -187,6 +187,11 @@
 						) {
 							borderColor = '#00a32a'; // Green for good.
 						} else if (
+							verdict.indexOf( 'generally allowable' ) !== -1 ||
+							verdict.indexOf( 'allowable' ) !== -1
+						) {
+							borderColor = '#2271b1'; // Blue for generally allowable.
+						} else if (
 							verdict.indexOf( 'review' ) !== -1 ||
 							verdict.indexOf( 'medium' ) !== -1 ||
 							verdict.indexOf( 'issues found' ) !== -1
@@ -200,7 +205,7 @@
 						}
 
 						verdictContainer.style.borderLeftColor = borderColor;
-						verdictContainer.style.display = 'block';
+						verdictContainer.classList.remove( 'plugin-check-namer-hidden' );
 					}
 
 					// Calculate and display elapsed time.
@@ -211,7 +216,7 @@
 						);
 						timingValue.textContent =
 							elapsedSeconds + ' ' + 'seconds';
-						timingDiv.style.display = 'block';
+						timingDiv.classList.remove( 'plugin-check-namer-hidden' );
 					}
 
 					// Display token usage if available.
@@ -259,7 +264,7 @@
 						}
 
 						tokensValue.textContent = tokensText;
-						tokensDiv.style.display = 'block';
+						tokensDiv.classList.remove( 'plugin-check-namer-hidden' );
 					}
 
 					// Display confusion_existing_plugins if available.
@@ -273,14 +278,13 @@
 						payload.data.confusion_existing_plugins.forEach(
 							function ( plugin ) {
 								const div = document.createElement( 'div' );
-								div.style.cssText =
-									'margin-bottom: 15px; padding: 10px; background: #fff; border-left: 4px solid #2271b1;';
+								div.className = 'plugin-check-namer-confusion-item';
 								div.innerHTML =
 									'<strong>' +
 									escapeHtml( plugin.name || '' ) +
 									'</strong>' +
 									( plugin.active_installations
-										? ' <span style="color: #646970;">(' +
+										? ' <span class="plugin-check-namer-confusion-meta">(' +
 										  escapeHtml(
 												plugin.active_installations
 										  ) +
@@ -289,12 +293,12 @@
 										  ')</span>'
 										: '' ) +
 									( plugin.owner_username
-										? ' <span style="color: #646970;"> - ' +
+										? ' <span class="plugin-check-namer-confusion-meta"> - ' +
 										  escapeHtml( plugin.owner_username ) +
 										  '</span>'
 										: '' ) +
 									'<br>' +
-									'<span style="color: #646970; font-size: 0.9em;">' +
+									'<span class="plugin-check-namer-confusion-text">' +
 									escapeHtml( plugin.explanation || '' ) +
 									'</span>' +
 									( plugin.link
@@ -307,9 +311,9 @@
 								confusionPluginsList.appendChild( div );
 							}
 						);
-						confusionPluginsDiv.style.display = 'block';
+						confusionPluginsDiv.classList.remove( 'plugin-check-namer-hidden' );
 					} else if ( confusionPluginsDiv ) {
-						confusionPluginsDiv.style.display = 'none';
+						confusionPluginsDiv.classList.add( 'plugin-check-namer-hidden' );
 					}
 
 					// Display confusion_existing_others if available.
@@ -323,14 +327,13 @@
 						payload.data.confusion_existing_others.forEach(
 							function ( item ) {
 								const div = document.createElement( 'div' );
-								div.style.cssText =
-									'margin-bottom: 15px; padding: 10px; background: #fff; border-left: 4px solid #dba617;';
+								div.className = 'plugin-check-namer-confusion-item plugin-check-namer-confusion-item-others';
 								div.innerHTML =
 									'<strong>' +
 									escapeHtml( item.name || '' ) +
 									'</strong>' +
 									'<br>' +
-									'<span style="color: #646970; font-size: 0.9em;">' +
+									'<span class="plugin-check-namer-confusion-text">' +
 									escapeHtml( item.explanation || '' ) +
 									'</span>' +
 									( item.link
@@ -343,13 +346,13 @@
 								confusionOthersList.appendChild( div );
 							}
 						);
-						confusionOthersDiv.style.display = 'block';
+						confusionOthersDiv.classList.remove( 'plugin-check-namer-hidden' );
 					} else if ( confusionOthersDiv ) {
-						confusionOthersDiv.style.display = 'none';
+						confusionOthersDiv.classList.add( 'plugin-check-namer-hidden' );
 					}
 
 					if ( resultWrap ) {
-						resultWrap.style.display = 'block';
+						resultWrap.classList.remove( 'plugin-check-namer-hidden' );
 					}
 				} )
 				.catch( function ( err ) {
@@ -360,7 +363,7 @@
 							: pluginCheckNamer.messages.genericError
 					);
 					if ( errorEl ) {
-						errorEl.style.display = 'block';
+						errorEl.classList.remove( 'plugin-check-namer-hidden' );
 					}
 				} )
 				.finally( function () {

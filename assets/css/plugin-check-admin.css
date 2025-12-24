@@ -85,3 +85,59 @@
 	white-space: pre-wrap;
 	word-wrap: break-word;
 }
+
+/* Plugin Check Namer styles */
+.plugin-check-namer-spinner {
+	float: none;
+	margin-left: 10px;
+}
+
+.plugin-check-namer-hidden {
+	display: none;
+}
+
+.plugin-check-namer-verdict-container {
+	margin-bottom: 20px;
+	padding: 15px;
+	background: #fff;
+	border-left: 4px solid #2271b1;
+}
+
+.plugin-check-namer-verdict-item {
+	margin: 0 0 10px 0;
+}
+
+.plugin-check-namer-meta {
+	margin: 0 0 5px 0;
+	color: #646970;
+	font-style: italic;
+	font-size: 0.9em;
+}
+
+.plugin-check-namer-tokens {
+	margin: 0;
+}
+
+.plugin-check-namer-confusion {
+	margin-top: 20px;
+}
+
+.plugin-check-namer-confusion-item {
+	margin-bottom: 15px;
+	padding: 10px;
+	background: #fff;
+	border-left: 4px solid #2271b1;
+}
+
+.plugin-check-namer-confusion-item-others {
+	border-left-color: #dba617;
+}
+
+.plugin-check-namer-confusion-meta {
+	color: #646970;
+}
+
+.plugin-check-namer-confusion-text {
+	color: #646970;
+	font-size: 0.9em;
+}

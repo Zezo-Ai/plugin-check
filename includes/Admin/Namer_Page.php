@@ -92,6 +92,13 @@ final class Namer_Page {
 			return;
 		}
 
+		wp_enqueue_style(
+			'plugin-check-admin',
+			plugins_url( 'assets/css/plugin-check-admin.css', WP_PLUGIN_CHECK_MAIN_FILE ),
+			array(),
+			WP_PLUGIN_CHECK_VERSION
+		);
+
 		wp_enqueue_script(
 			'plugin-check-namer',
 			plugins_url( 'assets/js/plugin-check-namer.js', WP_PLUGIN_CHECK_MAIN_FILE ),
@@ -266,10 +273,6 @@ final class Namer_Page {
 		<div class="wrap">
 			<h1><?php echo esc_html__( 'Plugin Check Namer Tool', 'plugin-check' ); ?></h1>
 
-			<p class="description">
-				<?php echo esc_html__( 'Disclaimer: This tool provides guidance only and is not definitive. It contains a prompt that is used to evaluate the similarity of a plugin name to other plugin names and ensure compliance with trademark regulations.', 'plugin-check' ); ?>
-			</p>
-
 			<form id="plugin-check-namer-form" method="post">
 				<table class="form-table" role="presentation">
 					<tbody>
@@ -294,40 +297,47 @@ final class Namer_Page {
 					</tbody>
 				</table>
 
-				<p class="submit" style="text-align: left;">
+				<p class="description">
+					<strong><?php echo esc_html__( 'Note:', 'plugin-check' ); ?></strong> 
+					<br/>
+					<?php echo esc_html__( 'This tool provides guidance only and is not definitive. It contains a prompt that is used to evaluate the similarity of a plugin name to other plugin names and ensure compliance with trademark regulations.', 'plugin-check' ); ?>
+					<br/>
+					<?php echo esc_html__( 'This analysis performs two AI checks for similarity and trademark conflicts, which may take a moment to complete.', 'plugin-check' ); ?>
+				</p>
+				<p class="submit">
 					<button type="submit" class="button button-primary" id="plugin-check-namer-submit"><?php echo esc_html__( 'Evaluate name', 'plugin-check' ); ?></button>
-					<span class="spinner" id="plugin-check-namer-spinner" style="float: none; margin-left: 10px;"></span>
+					<span class="spinner plugin-check-namer-spinner" id="plugin-check-namer-spinner"></span>
 				</p>
 			</form>
 
-			<div id="plugin-check-namer-error" class="notice notice-error" style="display: none;"><p></p></div>
+			<div id="plugin-check-namer-error" class="notice notice-error plugin-check-namer-hidden"><p></p></div>
 
-			<div id="plugin-check-namer-result" style="display: none;">
+			<div id="plugin-check-namer-result" class="plugin-check-namer-hidden">
 				<h2><?php echo esc_html__( 'Result', 'plugin-check' ); ?></h2>
-				<div id="plugin-check-namer-verdict-container" style="display: none; margin-bottom: 20px; padding: 15px; background: #fff; border-left: 4px solid #2271b1;">
-					<p style="margin: 0 0 10px 0;">
+				<div id="plugin-check-namer-verdict-container" class="plugin-check-namer-verdict-container plugin-check-namer-hidden">
+					<p class="plugin-check-namer-verdict-item">
 						<strong><?php echo esc_html__( 'Verdict:', 'plugin-check' ); ?></strong>
 						<span id="plugin-check-namer-verdict"></span>
 					</p>
-					<p style="margin: 0 0 10px 0;">
+					<p class="plugin-check-namer-verdict-item">
 						<strong><?php echo esc_html__( 'Explanation:', 'plugin-check' ); ?></strong>
 						<span id="plugin-check-namer-explanation"></span>
 					</p>
-				<p id="plugin-check-namer-timing" style="display: none; margin: 0 0 5px 0; color: #646970; font-style: italic; font-size: 0.9em;">
+				<p id="plugin-check-namer-timing" class="plugin-check-namer-meta plugin-check-namer-hidden">
 					<strong><?php echo esc_html__( 'Analysis completed in:', 'plugin-check' ); ?></strong>
 					<span id="plugin-check-namer-timing-value"></span>
 				</p>
-				<p id="plugin-check-namer-tokens" style="display: none; margin: 0; color: #646970; font-style: italic; font-size: 0.9em;">
+				<p id="plugin-check-namer-tokens" class="plugin-check-namer-meta plugin-check-namer-hidden">
 					<strong><?php echo esc_html__( 'Tokens used:', 'plugin-check' ); ?></strong>
 					<span id="plugin-check-namer-tokens-value"></span>
 				</p>
 			</div>
-				<div id="plugin-check-namer-confusion-plugins" style="display: none; margin-top: 20px;">
+				<div id="plugin-check-namer-confusion-plugins" class="plugin-check-namer-confusion plugin-check-namer-hidden">
 					<p><strong><?php echo esc_html__( 'Similar Existing Plugins', 'plugin-check' ); ?></strong></p>
 					<div id="plugin-check-namer-confusion-plugins-list"></div>
 				</div>
 
-				<div id="plugin-check-namer-confusion-others" style="display: none; margin-top: 20px;">
+				<div id="plugin-check-namer-confusion-others" class="plugin-check-namer-confusion plugin-check-namer-hidden">
 					<h3><?php echo esc_html__( 'Similar Existing Projects/Trademarks', 'plugin-check' ); ?></h3>
 					<div id="plugin-check-namer-confusion-others-list"></div>
 				</div>

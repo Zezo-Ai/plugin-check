@@ -359,6 +359,14 @@ trait AI_Check_Names {
 			return '⚠️ ' . __( 'Issues Found', 'plugin-check' ) . ': ' . implode( ', ', $issues );
 		}
 
+		// Check for suggestions, trademarks, or other indicators that suggest it's not clearly OK.
+		$has_suggestions = ! empty( $decoded['suggested_display_name'] ) || ! empty( $decoded['suggested_slug'] );
+		$has_trademarks  = ! empty( $decoded['trademarks_or_project_names_array'] ) && is_array( $decoded['trademarks_or_project_names_array'] ) && count( $decoded['trademarks_or_project_names_array'] ) > 0;
+
+		if ( $has_suggestions || $has_trademarks ) {
+			return 'ℹ️ ' . __( 'Generally Allowable', 'plugin-check' );
+		}
+
 		return '✅ ' . __( 'No Issues Detected', 'plugin-check' );
 	}
 
