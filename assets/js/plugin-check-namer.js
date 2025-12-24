@@ -30,11 +30,14 @@
 	document.addEventListener( 'DOMContentLoaded', function () {
 		const form = document.getElementById( 'plugin-check-namer-form' );
 		const input = document.getElementById( 'plugin_check_namer_input' );
-		const authorInput = document.getElementById( 'plugin_check_namer_author' );
 
 		if ( ! form || ! input || ! window.pluginCheckNamer ) {
 			return;
 		}
+
+		const authorInput = document.getElementById(
+			'plugin_check_namer_author'
+		);
 
 		const submitBtn = document.getElementById(
 			'plugin-check-namer-submit'
@@ -115,7 +118,9 @@
 			}
 
 			if ( confusionPluginsDiv ) {
-				confusionPluginsDiv.classList.add( 'plugin-check-namer-hidden' );
+				confusionPluginsDiv.classList.add(
+					'plugin-check-namer-hidden'
+				);
 			}
 			if ( confusionPluginsList ) {
 				confusionPluginsList.innerHTML = '';
@@ -152,7 +157,10 @@
 			formData.append( 'nonce', pluginCheckNamer.nonce );
 			formData.append( 'plugin_name', name );
 			if ( authorInput ) {
-				formData.append( 'author_name', ( authorInput.value || '' ).trim() );
+				formData.append(
+					'author_name',
+					( authorInput.value || '' ).trim()
+				);
 			}
 
 			fetch( pluginCheckNamer.ajaxUrl, {
@@ -209,7 +217,9 @@
 						}
 
 						verdictContainer.style.borderLeftColor = borderColor;
-						verdictContainer.classList.remove( 'plugin-check-namer-hidden' );
+						verdictContainer.classList.remove(
+							'plugin-check-namer-hidden'
+						);
 					}
 
 					// Calculate and display elapsed time.
@@ -220,7 +230,9 @@
 						);
 						timingValue.textContent =
 							elapsedSeconds + ' ' + 'seconds';
-						timingDiv.classList.remove( 'plugin-check-namer-hidden' );
+						timingDiv.classList.remove(
+							'plugin-check-namer-hidden'
+						);
 					}
 
 					// Display token usage if available.
@@ -268,7 +280,9 @@
 						}
 
 						tokensValue.textContent = tokensText;
-						tokensDiv.classList.remove( 'plugin-check-namer-hidden' );
+						tokensDiv.classList.remove(
+							'plugin-check-namer-hidden'
+						);
 					}
 
 					// Display confusion_existing_plugins if available.
@@ -282,7 +296,8 @@
 						payload.data.confusion_existing_plugins.forEach(
 							function ( plugin ) {
 								const div = document.createElement( 'div' );
-								div.className = 'plugin-check-namer-confusion-item';
+								div.className =
+									'plugin-check-namer-confusion-item';
 								div.innerHTML =
 									'<strong>' +
 									escapeHtml( plugin.name || '' ) +
@@ -315,9 +330,13 @@
 								confusionPluginsList.appendChild( div );
 							}
 						);
-						confusionPluginsDiv.classList.remove( 'plugin-check-namer-hidden' );
+						confusionPluginsDiv.classList.remove(
+							'plugin-check-namer-hidden'
+						);
 					} else if ( confusionPluginsDiv ) {
-						confusionPluginsDiv.classList.add( 'plugin-check-namer-hidden' );
+						confusionPluginsDiv.classList.add(
+							'plugin-check-namer-hidden'
+						);
 					}
 
 					// Display confusion_existing_others if available.
@@ -331,7 +350,8 @@
 						payload.data.confusion_existing_others.forEach(
 							function ( item ) {
 								const div = document.createElement( 'div' );
-								div.className = 'plugin-check-namer-confusion-item plugin-check-namer-confusion-item-others';
+								div.className =
+									'plugin-check-namer-confusion-item plugin-check-namer-confusion-item-others';
 								div.innerHTML =
 									'<strong>' +
 									escapeHtml( item.name || '' ) +
@@ -350,13 +370,19 @@
 								confusionOthersList.appendChild( div );
 							}
 						);
-						confusionOthersDiv.classList.remove( 'plugin-check-namer-hidden' );
+						confusionOthersDiv.classList.remove(
+							'plugin-check-namer-hidden'
+						);
 					} else if ( confusionOthersDiv ) {
-						confusionOthersDiv.classList.add( 'plugin-check-namer-hidden' );
+						confusionOthersDiv.classList.add(
+							'plugin-check-namer-hidden'
+						);
 					}
 
 					if ( resultWrap ) {
-						resultWrap.classList.remove( 'plugin-check-namer-hidden' );
+						resultWrap.classList.remove(
+							'plugin-check-namer-hidden'
+						);
 					}
 				} )
 				.catch( function ( err ) {
