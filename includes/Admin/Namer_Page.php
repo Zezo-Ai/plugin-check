@@ -321,7 +321,7 @@ final class Namer_Page {
 									value=""
 								/>
 								<p class="description">
-									<?php echo esc_html__( 'Optional: Enter the author or brand name if you own the trademark. This helps avoid unnecessary name change suggestions.', 'plugin-check' ); ?>
+									<?php echo esc_html__( 'Optional: Enter the author or brand name if you own the trademark.', 'plugin-check' ); ?>
 								</p>
 							</td>
 						</tr>
