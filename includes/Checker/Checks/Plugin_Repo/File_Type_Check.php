@@ -585,7 +585,7 @@ class File_Type_Check extends Abstract_File_Check {
 	 */
 	protected function check_unexpected_markdown_files( Check_Result $result, array $files, $is_error ) {
 		$plugin_path           = $result->plugin()->path();
-		$allowed_root_md_files = array( 'README.md', 'readme.txt', 'LICENSE', 'LICENSE.md', 'CHANGELOG.md', 'CONTRIBUTING.md' );
+		$allowed_root_md_files = array( 'README.md', 'readme.txt', 'LICENSE', 'LICENSE.md', 'CHANGELOG.md', 'CONTRIBUTING.md', 'SECURITY.md' );
 		$root_md_files         = array();
 
 		foreach ( $files as $file ) {
