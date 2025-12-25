@@ -606,7 +606,7 @@ class File_Type_Check extends Abstract_File_Check {
 				$is_error,
 				sprintf(
 					/* translators: %s: file name */
-					__( 'Unexpected markdown file "%s" detected in plugin root. Only README.md, readme.txt, LICENSE, LICENSE.md, CHANGELOG.md, and CONTRIBUTING.md are expected in production plugins.', 'plugin-check' ),
+					__( 'Unexpected markdown file "%s" detected in plugin root. Only specific markdown files are expected in production plugins.', 'plugin-check' ),
 					basename( $file )
 				),
 				'unexpected_markdown_file',
