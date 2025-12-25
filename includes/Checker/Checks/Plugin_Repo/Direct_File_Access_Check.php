@@ -35,7 +35,7 @@ class Direct_File_Access_Check extends Abstract_File_Check {
 	 *
 	 * Every check must have at least one category.
 	 *
-	 * @since n.e.x.t
+	 * @since 1.8.0
 	 *
 	 * @return array The categories for the check.
 	 */
