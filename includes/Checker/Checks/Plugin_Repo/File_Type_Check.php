@@ -487,11 +487,9 @@ class File_Type_Check extends Abstract_File_Check {
 	 * @param array        $files  List of absolute file paths.
 	 */
 	protected function look_for_ai_instructions( Check_Result $result, array $files ) {
-		$is_error = ( ! defined( 'WP_DEBUG' ) || ! WP_DEBUG ) && 'production' === wp_get_environment_type();
-
-		$this->check_ai_directories( $result, $files, $is_error );
-		$this->check_github_directory( $result, $files, $is_error );
-		$this->check_unexpected_markdown_files( $result, $files, $is_error );
+		$this->check_ai_directories( $result, $files );
+		$this->check_github_directory( $result, $files );
+		$this->check_unexpected_markdown_files( $result, $files );
 	}
 
 	/**
@@ -499,11 +497,10 @@ class File_Type_Check extends Abstract_File_Check {
 	 *
 	 * @since 1.8.0
 	 *
-	 * @param Check_Result $result   Check result to amend.
-	 * @param array        $files    List of file paths.
-	 * @param bool         $is_error Whether to report as error.
+	 * @param Check_Result $result Check result to amend.
+	 * @param array        $files  List of file paths.
 	 */
-	protected function check_ai_directories( Check_Result $result, array $files, $is_error ) {
+	protected function check_ai_directories( Check_Result $result, array $files ) {
 		$plugin_path    = $result->plugin()->path();
 		$ai_directories = array( '.cursor', '.claude', '.aider', '.continue', '.windsurf', '.ai' );
 		$found_ai_dirs  = array();
@@ -520,9 +517,8 @@ class File_Type_Check extends Abstract_File_Check {
 		}
 
 		foreach ( array_keys( $found_ai_dirs ) as $ai_dir ) {
-			$this->add_result_message_for_file(
+			$this->add_result_warning_for_file(
 				$result,
-				$is_error,
 				sprintf(
 					/* translators: %s: directory name */
 					__( 'AI instruction directory "%s" detected. These directories should not be included in production plugins.', 'plugin-check' ),
@@ -533,7 +529,7 @@ class File_Type_Check extends Abstract_File_Check {
 				0,
 				0,
 				'',
-				8
+				9
 			);
 		}
 	}
@@ -543,11 +539,10 @@ class File_Type_Check extends Abstract_File_Check {
 	 *
 	 * @since 1.8.0
 	 *
-	 * @param Check_Result $result   Check result to amend.
-	 * @param array        $files    List of file paths.
-	 * @param bool         $is_error Whether to report as error.
+	 * @param Check_Result $result Check result to amend.
+	 * @param array        $files  List of file paths.
 	 */
-	protected function check_github_directory( Check_Result $result, array $files, $is_error ) {
+	protected function check_github_directory( Check_Result $result, array $files ) {
 		$plugin_path  = $result->plugin()->path();
 		$found_github = false;
 
@@ -560,16 +555,15 @@ class File_Type_Check extends Abstract_File_Check {
 		}
 
 		if ( $found_github ) {
-			$this->add_result_message_for_file(
+			$this->add_result_warning_for_file(
 				$result,
-				$is_error,
 				__( 'GitHub workflow directory ".github" detected. This directory should not be included in production plugins.', 'plugin-check' ),
 				'github_directory',
 				$plugin_path . '.github',
 				0,
 				0,
 				'',
-				8
+				9
 			);
 		}
 	}
@@ -579,11 +573,10 @@ class File_Type_Check extends Abstract_File_Check {
 	 *
 	 * @since 1.8.0
 	 *
-	 * @param Check_Result $result   Check result to amend.
-	 * @param array        $files    List of file paths.
-	 * @param bool         $is_error Whether to report as error.
+	 * @param Check_Result $result Check result to amend.
+	 * @param array        $files  List of file paths.
 	 */
-	protected function check_unexpected_markdown_files( Check_Result $result, array $files, $is_error ) {
+	protected function check_unexpected_markdown_files( Check_Result $result, array $files ) {
 		$plugin_path           = $result->plugin()->path();
 		$allowed_root_md_files = array( 'README.md', 'readme.txt', 'LICENSE', 'LICENSE.md', 'CHANGELOG.md', 'CONTRIBUTING.md', 'SECURITY.md' );
 		$root_md_files         = array();
@@ -601,9 +594,8 @@ class File_Type_Check extends Abstract_File_Check {
 		}
 
 		foreach ( $root_md_files as $file ) {
-			$this->add_result_message_for_file(
+			$this->add_result_warning_for_file(
 				$result,
-				$is_error,
 				sprintf(
 					/* translators: %s: file name */
 					__( 'Unexpected markdown file "%s" detected in plugin root. Only specific markdown files are expected in production plugins.', 'plugin-check' ),
@@ -614,7 +606,7 @@ class File_Type_Check extends Abstract_File_Check {
 				0,
 				0,
 				'',
-				8
+				9
 			);
 		}
 	}

@@ -313,19 +313,13 @@ class File_Type_Check_Tests extends WP_UnitTestCase {
 		$check = new File_Type_Check( File_Type_Check::TYPE_AI_INSTRUCTIONS );
 		$check->run( $check_result );
 
-		$actual_env = wp_get_environment_type();
-		$is_error   = ( ! defined( 'WP_DEBUG' ) || ! WP_DEBUG ) && 'production' === $actual_env;
-
-		if ( $is_error ) {
-			$problems      = $check_result->get_errors();
-			$problem_count = $check_result->get_error_count();
-		} else {
-			$problems      = $check_result->get_warnings();
-			$problem_count = $check_result->get_warning_count();
-		}
+		$problems      = $check_result->get_warnings();
+		$problem_count = $check_result->get_warning_count();
+		$errors        = $check_result->get_errors();
 
 		$this->assertNotEmpty( $problems );
 		$this->assertGreaterThanOrEqual( 3, $problem_count );
+		$this->assertEmpty( $errors );
 
 		$found_cursor = false;
 		$found_github = false;
