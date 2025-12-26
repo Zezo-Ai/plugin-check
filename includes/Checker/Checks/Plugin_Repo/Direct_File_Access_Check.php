@@ -11,6 +11,7 @@ use WordPress\Plugin_Check\Checker\Check_Categories;
 use WordPress\Plugin_Check\Checker\Check_Result;
 use WordPress\Plugin_Check\Checker\Checks\Abstract_File_Check;
 use WordPress\Plugin_Check\Traits\Amend_Check_Result;
+use WordPress\Plugin_Check\Traits\Find_Uninstall;
 use WordPress\Plugin_Check\Traits\Stable_Check;
 
 /**
@@ -23,11 +24,12 @@ use WordPress\Plugin_Check\Traits\Stable_Check;
  * This check verifies that PHP files have proper guards to prevent direct access,
  * using checks like: if ( ! defined( 'ABSPATH' ) ) exit;
  *
- * @since n.e.x.t
+ * @since 1.8.0
  */
 class Direct_File_Access_Check extends Abstract_File_Check {
 
 	use Amend_Check_Result;
+	use Find_Uninstall;
 	use Stable_Check;
 
 	/**
@@ -49,7 +51,7 @@ class Direct_File_Access_Check extends Abstract_File_Check {
 	/**
 	 * Amends the given result by running the check on the given list of files.
 	 *
-	 * @since n.e.x.t
+	 * @since 1.8.0
 	 *
 	 * @param Check_Result $result The check result to amend, including the plugin context to check.
 	 * @param array        $files  List of absolute file paths.
@@ -84,45 +86,9 @@ class Direct_File_Access_Check extends Abstract_File_Check {
 	}
 
 	/**
-	 * Checks if a file is the uninstall.php file.
-	 *
-	 * @since n.e.x.t
-	 *
-	 * @param string $file       The file path to check.
-	 * @param string $plugin_path The plugin path.
-	 * @return bool True if the file is uninstall.php, false otherwise.
-	 */
-	private function is_uninstall_file( $file, $plugin_path ) {
-		$filename = basename( $file );
-		if ( 'uninstall.php' !== $filename ) {
-			return false;
-		}
-
-		$normalized_file   = wp_normalize_path( $file );
-		$normalized_plugin = wp_normalize_path( $plugin_path );
-
-		// Ensure plugin path ends with slash for proper comparison.
-		if ( ! str_ends_with( $normalized_plugin, '/' ) ) {
-			$normalized_plugin .= '/';
-		}
-
-		// Check if file is within plugin directory.
-		if ( 0 !== strpos( $normalized_file, $normalized_plugin ) ) {
-			return false;
-		}
-
-		$relative_file = str_replace( $normalized_plugin, '', $normalized_file );
-		$relative_file = str_replace( '\\', '/', $relative_file );
-
-		// Check if it's uninstall.php at the root level (no slashes) or one level deep.
-		$depth = substr_count( $relative_file, '/' );
-		return $depth <= 1;
-	}
-
-	/**
 	 * Removes PHP tag, comments, namespace and use statements from file contents.
 	 *
-	 * @since n.e.x.t
+	 * @since 1.8.0
 	 *
 	 * @param string $contents The file contents to clean.
 	 * @return string Cleaned file contents.
@@ -147,7 +113,7 @@ class Direct_File_Access_Check extends Abstract_File_Check {
 	/**
 	 * Checks if a file has proper direct access protection.
 	 *
-	 * @since n.e.x.t
+	 * @since 1.8.0
 	 *
 	 * @param string $file The file path to check.
 	 * @return bool True if the file has protection, false otherwise.
@@ -207,7 +173,7 @@ class Direct_File_Access_Check extends Abstract_File_Check {
 	 * Files that only contain class/namespace definitions are generally safe for direct access.
 	 * Files with procedural code (functions, hooks, defines) should always have guards.
 	 *
-	 * @since n.e.x.t
+	 * @since 1.8.0
 	 *
 	 * @param string $file The file path to check.
 	 * @return bool True if the file is safe for direct access, false otherwise.
@@ -242,7 +208,7 @@ class Direct_File_Access_Check extends Abstract_File_Check {
 	/**
 	 * Checks if file only contains return statements (asset files - safe).
 	 *
-	 * @since n.e.x.t
+	 * @since 1.8.0
 	 *
 	 * @param string $contents The cleaned file contents.
 	 * @return bool True if file is an asset file, false otherwise.
@@ -259,7 +225,7 @@ class Direct_File_Access_Check extends Abstract_File_Check {
 	/**
 	 * Checks if file contains procedural code that should have guards.
 	 *
-	 * @since n.e.x.t
+	 * @since 1.8.0
 	 *
 	 * @param string $contents The cleaned file contents.
 	 * @return bool True if file has procedural code, false otherwise.
@@ -283,7 +249,7 @@ class Direct_File_Access_Check extends Abstract_File_Check {
 	/**
 	 * Checks if file only contains safe function calls with return statements.
 	 *
-	 * @since n.e.x.t
+	 * @since 1.8.0
 	 *
 	 * @param string $contents The cleaned file contents.
 	 * @return bool True if file has only safe function calls, false otherwise.
@@ -299,7 +265,7 @@ class Direct_File_Access_Check extends Abstract_File_Check {
 	/**
 	 * Checks if file contains only class/interface/trait definitions.
 	 *
-	 * @since n.e.x.t
+	 * @since 1.8.0
 	 *
 	 * @param string $contents The cleaned file contents.
 	 * @return bool True if file has only class definitions, false otherwise.
@@ -313,7 +279,7 @@ class Direct_File_Access_Check extends Abstract_File_Check {
 	 *
 	 * Every check must have a short description explaining what the check does.
 	 *
-	 * @since n.e.x.t
+	 * @since 1.8.0
 	 *
 	 * @return string Description.
 	 */
@@ -326,7 +292,7 @@ class Direct_File_Access_Check extends Abstract_File_Check {
 	 *
 	 * Every check must have a URL with further information about the check.
 	 *
-	 * @since n.e.x.t
+	 * @since 1.8.0
 	 *
 	 * @return string The documentation URL.
 	 */
