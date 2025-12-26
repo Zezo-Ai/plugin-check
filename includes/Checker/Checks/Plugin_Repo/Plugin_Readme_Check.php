@@ -981,9 +981,13 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 		}
 
 		// Get the "Tested up to" value from the plugin header.
-		$plugin_header = get_plugin_data( $plugin_main_file );
+		$tested_header = get_file_data(
+			$plugin_main_file,
+			array( 'TestedWP' => 'Tested up to' ),
+			'plugin'
+		);
 
-		$plugin_tested = isset( $plugin_header['TestedWP'] ) ? $plugin_header['TestedWP'] : '';
+		$plugin_tested = isset( $tested_header['TestedWP'] ) ? $tested_header['TestedWP'] : '';
 		if ( empty( $plugin_tested ) ) {
 			return;
 		}
