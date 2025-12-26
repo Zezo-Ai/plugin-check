@@ -95,12 +95,8 @@ class Plugin_Header_Fields_Check_Tests extends WP_UnitTestCase {
 
 		// The "Tested up to" mismatch check has been moved to Plugin_Readme_Check.
 		// This test now verifies that Plugin_Header_Fields_Check does NOT report this error.
-		if ( isset( $errors['load.php'][0][0] ) ) {
-			$this->assertCount( 0, wp_list_filter( $errors['load.php'][0][0], array( 'code' => 'mismatched_tested_up_to_header' ) ) );
-		}
-
-		// Explicitly assert that we checked for the error code.
-		$this->assertTrue( true );
+		$error_items = wp_list_filter( $errors['load.php'][0][0] ?? array(), array( 'code' => 'mismatched_tested_up_to_header' ) );
+		$this->assertCount( 0, $error_items );
 	}
 
 	public function test_run_with_matching_tested_up_to() {
@@ -113,12 +109,8 @@ class Plugin_Header_Fields_Check_Tests extends WP_UnitTestCase {
 		$errors = $check_result->get_errors();
 
 		// Should not have mismatched tested up to error.
-		if ( isset( $errors['load.php'][0][0] ) ) {
-			$this->assertCount( 0, wp_list_filter( $errors['load.php'][0][0], array( 'code' => 'mismatched_tested_up_to_header' ) ) );
-		} else {
-			// If no errors at all, that's also correct.
-			$this->assertTrue( true );
-		}
+		$error_items = wp_list_filter( $errors['load.php'][0][0] ?? array(), array( 'code' => 'mismatched_tested_up_to_header' ) );
+		$this->assertCount( 0, $error_items );
 	}
 
 	public function test_run_with_invalid_mpl1_license() {
