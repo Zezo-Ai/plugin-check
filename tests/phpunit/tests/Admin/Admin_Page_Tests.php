@@ -9,6 +9,7 @@ namespace Admin;
 
 use WordPress\Plugin_Check\Admin\Admin_AJAX;
 use WordPress\Plugin_Check\Admin\Admin_Page;
+use WordPress\Plugin_Check\Checker\Check_Types;
 use WP_UnitTestCase;
 
 class Admin_Page_Tests extends WP_UnitTestCase {
@@ -155,12 +156,8 @@ class Admin_Page_Tests extends WP_UnitTestCase {
 		);
 	}
 
-	public function test_filter_plugin_action_links_should_not_add_check_link_for_plugin_checker() {
-
-		$base_file = plugin_basename( WP_PLUGIN_CHECK_MAIN_FILE );
-
-		$action_links = $this->admin_page->filter_plugin_action_links( array(), $base_file, array(), 'all' );
-		$this->assertEmpty( $action_links );
+	public function test_filter_plugin_action_links_for_plugin_checker_check_link() {
+		$base_file = 'plugin-check/plugin.php';
 
 		/** Administrator check */
 		$admin_user = self::factory()->user->create( array( 'role' => 'administrator' ) );
@@ -171,7 +168,40 @@ class Admin_Page_Tests extends WP_UnitTestCase {
 		wp_set_current_user( $admin_user );
 		$action_links = $this->admin_page->filter_plugin_action_links( array(), $base_file, array(), 'all' );
 
-		$this->assertEmpty( $action_links );
+		$this->assertEquals(
+			sprintf(
+				'<a href="%1$s">%2$s</a>',
+				esc_url( admin_url( 'tools.php?page=plugin-check' ) ),
+				esc_html__( 'Check a plugin', 'plugin-check' )
+			),
+			$action_links[0]
+		);
+	}
+
+	public function test_filter_plugin_action_links_should_not_add_check_link_for_plugin_checker() {
+
+		$base_file = plugin_basename( WP_PLUGIN_CHECK_MAIN_FILE );
+
+		$action_links = $this->admin_page->filter_plugin_action_links( array(), $base_file, array(), 'all' );
+
+		$target_link = sprintf(
+			'<a href="%1$s">%2$s</a>',
+			esc_url( admin_url( "tools.php?page=plugin-check&plugin={$base_file}" ) ),
+			esc_html__( 'Check this plugin', 'plugin-check' )
+		);
+
+		$this->assertEmpty( array_intersect( array( $target_link ), $action_links ) );
+
+		/** Administrator check */
+		$admin_user = self::factory()->user->create( array( 'role' => 'administrator' ) );
+
+		if ( is_multisite() ) {
+			grant_super_admin( $admin_user );
+		}
+		wp_set_current_user( $admin_user );
+		$action_links = $this->admin_page->filter_plugin_action_links( array(), $base_file, array(), 'all' );
+
+		$this->assertEmpty( array_intersect( array( $target_link ), $action_links ) );
 	}
 
 	public function test_filter_default_check_categories() {
@@ -208,6 +238,21 @@ class Admin_Page_Tests extends WP_UnitTestCase {
 				return $custom_categories;
 			}
 		);
+	}
+
+	public function test_filter_check_types() {
+		$types = array_keys( Check_Types::get_types() );
+
+		// Render the admin page.
+		ob_start();
+		$this->admin_page->render_page();
+		$output = ob_get_contents();
+		ob_end_clean();
+
+		foreach ( $types as $type ) {
+			$this->assertStringContainsString( '<input type="checkbox" id="' . $type . '" name="types" value="' . $type . '" checked="checked" />', $output );
+
+		}
 	}
 
 	/**

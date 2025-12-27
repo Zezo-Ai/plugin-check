@@ -7,6 +7,7 @@
 
 use WordPress\Plugin_Check\Checker\AJAX_Runner;
 use WordPress\Plugin_Check\Checker\Check_Result;
+use WordPress\Plugin_Check\Checker\Runtime_Environment_Setup;
 use WordPress\Plugin_Check\Test_Data\Empty_Check;
 use WordPress\Plugin_Check\Test_Data\Error_Check;
 use WordPress\Plugin_Check\Test_Data\Runtime_Check;
@@ -16,15 +17,28 @@ class AJAX_Runner_Tests extends WP_UnitTestCase {
 
 	use With_Mock_Filesystem;
 
+	/**
+	 * Storage for preparation cleanups that need to be run after a test.
+	 *
+	 * @var array
+	 */
+	private $cleanups = array();
+
 	public function set_up() {
+		parent::set_up();
+
 		// Setup the mock filesystem so the Runtime_Environment_Setup works correctly within the AJAX_Runner.
 		$this->set_up_mock_filesystem();
 	}
 
 	public function tear_down() {
-		// Force reset the database prefix after runner prepare method called.
-		global $wpdb, $table_prefix;
-		$wpdb->set_prefix( $table_prefix );
+		if ( count( $this->cleanups ) > 0 ) {
+			$this->cleanups = array_reverse( $this->cleanups );
+			foreach ( $this->cleanups as $cleanup ) {
+				$cleanup();
+			}
+			$this->cleanups = array();
+		}
 		parent::tear_down();
 	}
 
@@ -77,8 +91,19 @@ class AJAX_Runner_Tests extends WP_UnitTestCase {
 		$muplugins_loaded = $wp_actions['muplugins_loaded'];
 		unset( $wp_actions['muplugins_loaded'] );
 
-		$runner  = new AJAX_Runner();
-		$cleanup = $runner->prepare();
+		/*
+		 * The runtime environment must be prepared manually before regular runtime preparations.
+		 * This is necessary because in reality it happens in a separate AJAX request before.
+		 */
+		$runtime = new Runtime_Environment_Setup();
+		$runtime->set_up();
+		$this->cleanups[] = function () use ( $runtime ) {
+			$runtime->clean_up();
+		};
+
+		$runner           = new AJAX_Runner();
+		$cleanup          = $runner->prepare();
+		$this->cleanups[] = $cleanup;
 
 		$wp_actions['muplugins_loaded'] = $muplugins_loaded;
 
@@ -111,8 +136,9 @@ class AJAX_Runner_Tests extends WP_UnitTestCase {
 			}
 		);
 
-		$runner  = new AJAX_Runner();
-		$cleanup = $runner->prepare();
+		$runner           = new AJAX_Runner();
+		$cleanup          = $runner->prepare();
+		$this->cleanups[] = $cleanup;
 
 		$this->assertIsCallable( $cleanup );
 
@@ -143,8 +169,10 @@ class AJAX_Runner_Tests extends WP_UnitTestCase {
 			}
 		);
 
-		$runner = new AJAX_Runner();
-		$runner->prepare();
+		$runner           = new AJAX_Runner();
+		$cleanup          = $runner->prepare();
+		$this->cleanups[] = $cleanup;
+
 		$results = $runner->run();
 
 		$this->assertInstanceOf( Check_Result::class, $results );
@@ -167,8 +195,10 @@ class AJAX_Runner_Tests extends WP_UnitTestCase {
 			}
 		);
 
-		$runner = new AJAX_Runner();
-		$runner->prepare();
+		$runner           = new AJAX_Runner();
+		$cleanup          = $runner->prepare();
+		$this->cleanups[] = $cleanup;
+
 		$results = $runner->run();
 
 		$this->assertInstanceOf( Check_Result::class, $results );
@@ -196,7 +226,9 @@ class AJAX_Runner_Tests extends WP_UnitTestCase {
 
 		$runner->set_plugin( 'invalid-plugin' );
 
-		$runner->prepare();
+		$cleanup          = $runner->prepare();
+		$this->cleanups[] = $cleanup;
+
 		$runner->run();
 	}
 
@@ -220,7 +252,9 @@ class AJAX_Runner_Tests extends WP_UnitTestCase {
 
 		$runner->set_check_slugs( array( 'runtime_check' ) );
 
-		$runner->prepare();
+		$cleanup          = $runner->prepare();
+		$this->cleanups[] = $cleanup;
+
 		$runner->run();
 	}
 }

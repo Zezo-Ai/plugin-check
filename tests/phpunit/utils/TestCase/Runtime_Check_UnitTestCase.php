@@ -13,6 +13,7 @@ use WordPress\Plugin_Check\Checker\Check_Result;
 use WordPress\Plugin_Check\Checker\Preparation;
 use WordPress\Plugin_Check\Checker\Preparations\Universal_Runtime_Preparation;
 use WordPress\Plugin_Check\Checker\Runtime_Check;
+use WordPress\Plugin_Check\Checker\Runtime_Environment_Setup;
 use WordPress\Plugin_Check\Checker\With_Shared_Preparations;
 use WP_UnitTestCase;
 
@@ -40,8 +41,17 @@ abstract class Runtime_Check_UnitTestCase extends WP_UnitTestCase {
 	protected function prepare_environment( Check $check, Check_Context $context ) {
 		$cleanups = array();
 
-		// Prepare the Universal Runtime preparation.
 		if ( $check instanceof Runtime_Check ) {
+			/*
+			 * The runtime environment must be prepared manually before regular runtime preparations.
+			 * This is necessary because in reality it happens in a separate AJAX request before.
+			 */
+			$runtime = new Runtime_Environment_Setup();
+			$runtime->set_up();
+			$cleanups[] = function () use ( $runtime ) {
+				$runtime->clean_up();
+			};
+
 			$cleanups[] = ( new Universal_Runtime_Preparation( $context ) )->prepare();
 		}
 
@@ -56,6 +66,9 @@ abstract class Runtime_Check_UnitTestCase extends WP_UnitTestCase {
 		if ( $check instanceof Preparation ) {
 			$cleanups[] = $check->prepare();
 		}
+
+		// Revert order so that earlier preparations are cleaned up later.
+		$cleanups = array_reverse( $cleanups );
 
 		// Return the cleanup function.
 		return function () use ( $cleanups ) {

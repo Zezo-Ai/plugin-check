@@ -22,7 +22,11 @@
 					</label>
 				</h2>
 
-				<select id="plugin-check__plugins-dropdown" name="plugin_check_plugins">
+				<p id="plugin-check__description">
+					<?php esc_html_e( 'Select a plugin to check it for best practices in several categories and security issues. For more information about the checks, use the Help tab at the top of this page.', 'plugin-check' ); ?>
+				</p>
+
+				<select id="plugin-check__plugins-dropdown" name="plugin_check_plugins" aria-describedby="plugin-check__description">
 					<?php if ( 1 !== count( $available_plugins ) ) { ?>
 						<option value=""><?php esc_html_e( 'Select Plugin', 'plugin-check' ); ?></option>
 					<?php } ?>
@@ -35,27 +39,57 @@
 
 				<input type="submit" value="<?php esc_attr_e( 'Check it!', 'plugin-check' ); ?>" id="plugin-check__submit" class="button button-primary" />
 				<span id="plugin-check__spinner" class="spinner" style="float: none;"></span>
-				<h4><?php esc_attr_e( 'Categories', 'plugin-check' ); ?></h4>
-				<?php
-				if ( ! empty( $categories ) ) {
-				?>
-				<table>
-				<?php
-				foreach ( $categories as $category => $label ) { ?>
-					<tr>
-						<td>
-							<fieldset>
-								<legend class="screen-reader-text"><?php echo esc_html( $category ); ?></legend>
-								<label for="<?php echo esc_attr( $category ); ?>">
-									<input type="checkbox" id="<?php echo esc_attr( $category ); ?>" name="categories" value="<?php echo esc_attr( $category ); ?>" <?php checked( in_array( $category, $user_enabled_categories, true ) ); ?> />
-									<?php echo esc_html( $label ); ?>
-								</label>
-							</fieldset>
-						</td>
-					</tr>
+				<div class="plugin-check__options">
+					<div>
+						<h4><?php esc_attr_e( 'Categories', 'plugin-check' ); ?></h4>
+						<?php if ( ! empty( $categories ) ) : ?>
+							<table id="plugin-check__categories">
+								<?php foreach ( $categories as $category => $label ) : ?>
+									<tr>
+										<td>
+											<fieldset>
+												<legend class="screen-reader-text"><?php echo esc_html( $category ); ?></legend>
+												<label for="<?php echo esc_attr( $category ); ?>">
+													<input type="checkbox" id="<?php echo esc_attr( $category ); ?>" name="categories" value="<?php echo esc_attr( $category ); ?>" <?php checked( in_array( $category, $user_enabled_categories, true ) ); ?> />
+													<?php echo esc_html( $label ); ?>
+												</label>
+											</fieldset>
+										</td>
+									</tr>
+								<?php endforeach; ?>
+							</table>
+						<?php endif; ?>
+					</div>
+					<div id="plugin-check__types-container">
+						<h4><?php esc_attr_e( 'Types', 'plugin-check' ); ?></h4>
+						<?php if ( ! empty( $types ) ) : ?>
+							<table id="plugin-check__types">
+								<?php foreach ( $types as $type => $label ) : ?>
+									<tr>
+										<td>
+											<fieldset>
+												<legend class="screen-reader-text"><?php echo esc_html( $type ); ?></legend>
+												<label for="<?php echo esc_attr( $type ); ?>">
+													<input type="checkbox" id="<?php echo esc_attr( $type ); ?>" name="types" value="<?php echo esc_attr( $type ); ?>" checked="checked" />
+													<?php echo esc_html( $label ); ?>
+												</label>
+											</fieldset>
+										</td>
+									</tr>
+								<?php endforeach; ?>
+							</table>
+						<?php endif; ?>
+					</div>
+				</div>
+				<span id="plugin-check__spinner" class="spinner" style="float: none;"></span>
+
+				<?php if ( $has_experimental_checks ) { ?>
+					<h4><?php esc_attr_e( 'Other Options', 'plugin-check' ); ?></h4>
+					<p>
+						<label><input type="checkbox" value="include-experimental" id="plugin-check__include-experimental" /> <?php esc_html_e( 'Include Experimental Checks', 'plugin-check' ); ?></label>
+					</p>
 				<?php } ?>
-				</table>
-				<?php } ?>
+
 			</form>
 
 		<?php } else { ?>
@@ -65,6 +99,7 @@
 		<?php } ?>
 	</div>
 
+	<div id="plugin-check__export-controls" class="plugin-check__export-controls"></div>
 	<div id="plugin-check__results"></div>
 
 </div>

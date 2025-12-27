@@ -121,6 +121,14 @@ abstract class Abstract_Check_Runner implements Check_Runner {
 	protected $check_categories;
 
 	/**
+	 * The mode to run checks in.
+	 *
+	 * @since 1.7.0
+	 * @var string
+	 */
+	protected $mode;
+
+	/**
 	 * Returns the plugin parameter based on the request.
 	 *
 	 * @since 1.0.0
@@ -173,6 +181,15 @@ abstract class Abstract_Check_Runner implements Check_Runner {
 	 * @return string Plugin slug.
 	 */
 	abstract protected function get_slug_param();
+
+	/**
+	 * Returns the mode parameter.
+	 *
+	 * @since 1.7.0
+	 *
+	 * @return string The mode parameter.
+	 */
+	abstract protected function get_mode_param();
 
 	/**
 	 * Sets whether the runner class was initialized early.
@@ -310,8 +327,6 @@ abstract class Abstract_Check_Runner implements Check_Runner {
 	 * @throws Exception Thrown exception when preparation fails.
 	 */
 	final public function prepare() {
-		$cleanup_functions = array();
-
 		if ( $this->initialized_early ) {
 			/*
 			 * When initialized early, plugins are not loaded yet when this method is called.
@@ -334,9 +349,9 @@ abstract class Abstract_Check_Runner implements Check_Runner {
 			$initialize_runtime = $this->has_runtime_check( $this->get_checks_to_run() );
 		}
 
+		$cleanup_functions = array();
 		if ( $initialize_runtime ) {
-			$preparation         = new Universal_Runtime_Preparation( $this->get_check_context() );
-			$cleanup_functions[] = $preparation->prepare();
+			$cleanup_functions = $this->initialize_runtime();
 		}
 
 		if ( $this->delete_plugin_folder ) {
@@ -360,22 +375,12 @@ abstract class Abstract_Check_Runner implements Check_Runner {
 	 *
 	 * @since 1.0.0
 	 *
-	 * @global wpdb   $wpdb         WordPress database abstraction object.
-	 * @global string $table_prefix The database table prefix.
-	 *
 	 * @return Check_Result An object containing all check results.
 	 */
 	final public function run() {
-		global $wpdb, $table_prefix;
 		$checks       = $this->get_checks_to_run();
 		$preparations = $this->get_shared_preparations( $checks );
 		$cleanups     = array();
-		$old_prefix   = null;
-
-		// Set the correct test database prefix if required.
-		if ( $this->has_runtime_check( $checks ) ) {
-			$old_prefix = $wpdb->set_prefix( $table_prefix . 'pc_' );
-		}
 
 		// Prepare all shared preparations.
 		foreach ( $preparations as $preparation ) {
@@ -383,17 +388,12 @@ abstract class Abstract_Check_Runner implements Check_Runner {
 			$cleanups[] = $instance->prepare();
 		}
 
-		$results = $this->get_checks_instance()->run_checks( $this->get_check_context(), $checks );
+		$results = $this->get_checks_instance()->run_checks( $this->get_check_context(), $checks, $this );
 
 		if ( ! empty( $cleanups ) ) {
 			foreach ( $cleanups as $cleanup ) {
 				$cleanup();
 			}
-		}
-
-		// Restore the old prefix.
-		if ( $old_prefix ) {
-			$wpdb->set_prefix( $old_prefix );
 		}
 
 		return $results;
@@ -490,9 +490,21 @@ abstract class Abstract_Check_Runner implements Check_Runner {
 	}
 
 	/**
+	 * Initializes the runtime environment so that runtime checks can be run against a separate set of database tables.
+	 *
+	 * @since 1.3.0
+	 *
+	 * @return callable[] Array of cleanup functions to run after the process has completed.
+	 */
+	protected function initialize_runtime(): array {
+		$preparation = new Universal_Runtime_Preparation( $this->get_check_context() );
+		return array( $preparation->prepare() );
+	}
+
+	/**
 	 * Checks whether the current environment allows for runtime checks to be used.
 	 *
-	 * @since n.e.x.t
+	 * @since 1.2.0
 	 *
 	 * @return bool True if runtime checks are allowed, false otherwise.
 	 */
@@ -623,6 +635,21 @@ abstract class Abstract_Check_Runner implements Check_Runner {
 		return $this->get_slug_param();
 	}
 
+	/**
+	 * Returns the mode to run checks in.
+	 *
+	 * @since 1.7.0
+	 *
+	 * @return string The check mode.
+	 */
+	final protected function get_mode() {
+		if ( null !== $this->mode ) {
+			return $this->mode;
+		}
+
+		return $this->get_mode_param();
+	}
+
 	/** Gets the Check_Context for the plugin.
 	 *
 	 * @since 1.0.0
@@ -632,7 +659,7 @@ abstract class Abstract_Check_Runner implements Check_Runner {
 	private function get_check_context() {
 		$plugin_basename = $this->get_plugin_basename();
 		$plugin_path     = is_dir( $plugin_basename ) ? $plugin_basename : WP_PLUGIN_DIR . '/' . $plugin_basename;
-		return new Check_Context( $plugin_path, $this->get_slug() );
+		return new Check_Context( $plugin_path, $this->get_slug(), $this->get_mode() );
 	}
 
 	/**
@@ -661,5 +688,20 @@ abstract class Abstract_Check_Runner implements Check_Runner {
 	 */
 	final public function set_runtime_environment_setup( $runtime_environment_setup ) {
 		$this->runtime_environment = $runtime_environment_setup;
+	}
+
+	/**
+	 * Sets the mode to run checks in.
+	 *
+	 * @since 1.7.0
+	 *
+	 * @param string $mode The mode to run checks in.
+	 */
+	final public function set_mode( $mode ) {
+		if ( ! empty( $mode ) && in_array( $mode, array( 'new', 'update' ), true ) ) {
+			$this->mode = $mode;
+		} else {
+			$this->mode = 'new';
+		}
 	}
 }

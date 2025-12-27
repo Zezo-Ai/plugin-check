@@ -10,6 +10,7 @@ namespace WordPress\Plugin_Check\Admin;
 use WordPress\Plugin_Check\Checker\Check;
 use WordPress\Plugin_Check\Checker\Check_Categories;
 use WordPress\Plugin_Check\Checker\Check_Repository;
+use WordPress\Plugin_Check\Checker\Check_Types;
 use WordPress\Plugin_Check\Checker\Default_Check_Repository;
 
 /**
@@ -184,6 +185,13 @@ final class Admin_Page {
 			true
 		);
 
+		wp_enqueue_style(
+			'plugin-check-admin',
+			WP_PLUGIN_CHECK_PLUGIN_DIR_URL . 'assets/css/plugin-check-admin.css',
+			array(),
+			WP_PLUGIN_CHECK_VERSION
+		);
+
 		wp_add_inline_script(
 			'plugin-check-admin',
 			'const PLUGIN_CHECK = ' . json_encode(
@@ -193,8 +201,17 @@ final class Admin_Page {
 					'actionSetUpRuntimeEnvironment'   => Admin_AJAX::ACTION_SET_UP_ENVIRONMENT,
 					'actionRunChecks'                 => Admin_AJAX::ACTION_RUN_CHECKS,
 					'actionCleanUpRuntimeEnvironment' => Admin_AJAX::ACTION_CLEAN_UP_ENVIRONMENT,
+					'actionExportResults'             => Admin_AJAX::ACTION_EXPORT_RESULTS,
 					'successMessage'                  => __( 'No errors found.', 'plugin-check' ),
 					'errorMessage'                    => __( 'Errors were found.', 'plugin-check' ),
+					'strings'                         => array(
+						'exportCsv'      => __( 'Export CSV', 'plugin-check' ),
+						'exportJson'     => __( 'Export JSON', 'plugin-check' ),
+						'exportMarkdown' => __( 'Export Markdown', 'plugin-check' ),
+						'exporting'      => __( 'Preparing export…', 'plugin-check' ),
+						'exportError'    => __( 'Export failed.', 'plugin-check' ),
+						'noResults'      => __( 'There are no results to export yet.', 'plugin-check' ),
+					),
 				)
 			),
 			'before'
@@ -272,10 +289,21 @@ final class Admin_Page {
 		$selected_plugin_basename = filter_input( INPUT_GET, 'plugin', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
 
 		$categories = Check_Categories::get_categories();
+		$types      = Check_Types::get_types();
 
 		// Get user settings for category preferences.
 		$user_enabled_categories = get_user_setting( 'plugin_check_category_preferences', implode( '__', $this->get_default_check_categories_to_be_selected() ) );
 		$user_enabled_categories = explode( '__', $user_enabled_categories );
+
+		$check_repo = new Default_Check_Repository();
+
+		$collection = $check_repo->get_checks( Check_Repository::TYPE_ALL | Check_Repository::INCLUDE_EXPERIMENTAL )->filter(
+			static function ( Check $check ) {
+				return $check->get_stability() === Check::STABILITY_EXPERIMENTAL;
+			}
+		);
+
+		$has_experimental_checks = count( $collection ) > 0;
 
 		require WP_PLUGIN_CHECK_PLUGIN_DIR_PATH . 'templates/admin-page.php';
 	}
@@ -295,8 +323,17 @@ final class Admin_Page {
 	 */
 	public function filter_plugin_action_links( $actions, $plugin_file, $plugin_data, $context ) {
 
+		if ( in_array( $context, array( 'mustuse', 'dropins' ), true ) ) {
+			return $actions;
+		}
+
 		$plugin_check_base_name = plugin_basename( WP_PLUGIN_CHECK_MAIN_FILE );
-		if ( in_array( $context, array( 'mustuse', 'dropins' ), true ) || $plugin_check_base_name === $plugin_file ) {
+		if ( $plugin_check_base_name === $plugin_file ) {
+			$actions[] = sprintf(
+				'<a href="%1$s">%2$s</a>',
+				esc_url( admin_url( 'tools.php?page=plugin-check' ) ),
+				esc_html__( 'Check a plugin', 'plugin-check' )
+			);
 			return $actions;
 		}
 
@@ -362,6 +399,15 @@ final class Admin_Page {
 				#plugin-check__results h4:first-child {
 					margin-top: 88.5px;
 				}
+			}
+			.plugin-check__export-controls {
+				margin-top: 24px;
+				display: flex;
+				gap: 8px;
+				flex-wrap: wrap;
+			}
+			.plugin-check__export-controls.is-hidden {
+				display: none;
 			}
 		</style>
 		<?php

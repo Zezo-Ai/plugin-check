@@ -3,8 +3,6 @@
 .idea
 .wordpress-org
 build
-build-cs
-build-phpunit
 docs
 node_modules
 patches
@@ -17,10 +15,13 @@ tests
 .distignore
 .editorconfig
 .eslintrc.js
+.gherkin-lintignore
+.gherkin-lintrc
 .gitattributes
 .gitignore
 .nvmrc
 .phpunit.result.cache
+.typos.toml
 .wp-env.json
 .wp-env.override.json
 behat.yml
