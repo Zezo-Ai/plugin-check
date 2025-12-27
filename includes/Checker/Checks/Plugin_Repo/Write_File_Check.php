@@ -68,7 +68,7 @@ class Write_File_Check extends Abstract_PHP_CodeSniffer_Check {
 	 * @return string Description.
 	 */
 	public function get_description(): string {
-		return __( 'Prevents using poorly folders while writing files.', 'plugin-check' );
+		return __( 'Detects if plugins save data in the plugin folder instead of using the uploads directory or database.', 'plugin-check' );
 	}
 
 	/**
@@ -81,6 +81,6 @@ class Write_File_Check extends Abstract_PHP_CodeSniffer_Check {
 	 * @return string The documentation URL.
 	 */
 	public function get_documentation_url(): string {
-		return __( '#', 'plugin-check' );
+		return __( 'https://developer.wordpress.org/plugins/wordpress-org/common-issues/#saving-data-in-the-plugin-folder', 'plugin-check' );
 	}
 }

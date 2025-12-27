@@ -10,101 +10,191 @@
 
 namespace PluginCheckCS\PluginCheck\Sniffs\CodeAnalysis;
 
-use PHP_CodeSniffer\Exceptions\RuntimeException;
 use PHP_CodeSniffer\Util\Tokens;
-use PHPCSUtils\Tokens\Collections;
-use PHPCSUtils\Utils\TextStrings;
-use WordPressCS\WordPress\Sniff;
+use PHPCSUtils\Utils\PassedParameters;
+use WordPressCS\WordPress\AbstractFunctionParameterSniff;
 
 /**
- * Verifies any images/styles/scripts are not loaded from external sources.
+ * Verifies plugins don't save data in the plugin folder.
+ *
+ * Plugin folders are deleted when upgraded, so using them to store any data is problematic.
+ * Plugins should use the uploads directory or the database instead.
  *
  * @link https://developer.wordpress.org/plugins/wordpress-org/detailed-plugin-guidelines/
  *
  * @since 1.1.0
  */
-final class WriteFileSniff extends Sniff {
+final class WriteFileSniff extends AbstractFunctionParameterSniff {
 
 	/**
-	 * Returns an array of tokens this test wants to listen for.
+	 * The group name for this group of functions.
 	 *
-	 * @return array
+	 * @since 1.1.0
+	 *
+	 * @var string
 	 */
-	public function register() {
-		$targets   = Collections::textStringStartTokens();
-		$targets[] = \T_INLINE_HTML;
-
-		return $targets;
-	}
+	protected $group_name = 'file_write';
 
 	/**
-	 * Processes this test, when one of its tokens is encountered.
+	 * List of file write functions that need to be checked.
 	 *
-	 * @param int $stackPtr The position of the current token in the stack.
+	 * @since 1.1.0
 	 *
-	 * @return int|void Integer stack pointer to skip forward or void to continue
-	 *                  normal file processing.
+	 * @var array<string, true> Key is function name, value irrelevant.
 	 */
-	public function process_token( $stackPtr ) {
-		$end_ptr = $stackPtr;
-		$content = $this->tokens[ $stackPtr ]['content'];
+	protected $target_functions = array(
+		// File write functions - check first parameter (file path).
+		'fwrite'            => true,
+		'fputs'             => true,
+		'file_put_contents' => true,
+		'touch'             => true,
+		// File copy/move functions - check second parameter (destination path).
+		'copy'              => true,
+		'rename'            => true,
+		'copy_dir'          => true,
+		'move_dir'          => true,
+		'unzip_file'        => true,
+	);
 
-		if ( \T_INLINE_HTML !== $this->tokens[ $stackPtr ]['code'] ) {
-			try {
-				$end_ptr = TextStrings::getEndOfCompleteTextString( $this->phpcsFile, $stackPtr );
-				$content = TextStrings::getCompleteTextString( $this->phpcsFile, $stackPtr );
-			} catch ( RuntimeException $e ) {
-				// Parse error/live coding.
+	/**
+	 * Parameter positions for each function.
+	 *
+	 * @var array<string, int>
+	 */
+	private $param_positions = array(
+		'fwrite'            => 1,
+		'fputs'             => 1,
+		'file_put_contents' => 1,
+		'touch'             => 1,
+		'copy'              => 2,
+		'rename'            => 2,
+		'copy_dir'          => 2,
+		'move_dir'          => 2,
+		'unzip_file'        => 2,
+	);
+
+	/**
+	 * WordPress constants that indicate plugin directory usage.
+	 *
+	 * @var array
+	 */
+	private $plugin_constants = array(
+		'WP_PLUGIN_DIR',
+		'WP_PLUGIN_URL',
+		'PLUGINDIR',
+		'WPINC',
+		'WP_CONTENT_DIR',
+		'WP_CONTENT_URL',
+	);
+
+	/**
+	 * WordPress functions that indicate plugin directory usage.
+	 *
+	 * @var array
+	 */
+	private $plugin_functions = array(
+		'plugins_url',
+		'plugin_dir_path',
+		'plugin_dir_url',
+	);
+
+	/**
+	 * WordPress functions that indicate safe directory usage (uploads, temp).
+	 *
+	 * @var array
+	 */
+	private $safe_functions = array(
+		'wp_upload_dir',
+		'wp_tempnam',
+		'get_temp_dir',
+	);
+
+	/**
+	 * Process the parameters of a matched function.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @param int    $stackPtr        The position of the current token in the stack.
+	 * @param string $group_name      The name of the group which was matched.
+	 * @param string $matched_content The token content (function name) which was matched in lowercase.
+	 * @param array  $parameters      Array with information about the parameters.
+	 *
+	 * @return void
+	 */
+	public function process_parameters( $stackPtr, $group_name, $matched_content, $parameters ) {
+		$param_position = isset( $this->param_positions[ $matched_content ] ) ? $this->param_positions[ $matched_content ] : 1;
+		$path_param     = PassedParameters::getParameterFromStack( $parameters, $param_position, array() );
+
+		if ( false === $path_param ) {
+			return;
+		}
+
+		// Get the content of the parameter.
+		$path_content = '';
+		for ( $i = $path_param['start']; $i <= $path_param['end']; $i++ ) {
+			if ( isset( Tokens::$emptyTokens[ $this->tokens[ $i ]['code'] ] ) ) {
+				continue;
+			}
+			$path_content .= $this->tokens[ $i ]['content'];
+		}
+
+		// Check if the path uses safe functions (uploads directory or temp).
+		foreach ( $this->safe_functions as $safe_func ) {
+			if ( stripos( $path_content, $safe_func ) !== false ) {
+				// Safe function detected, no error needed.
 				return;
 			}
 		}
 
-		if ( empty( trim( $content ) ) ) {
+		// Check for plugin constants.
+		foreach ( $this->plugin_constants as $constant ) {
+			if ( stripos( $path_content, $constant ) !== false ) {
+				$this->add_error( $stackPtr, $matched_content, $path_param['start'], 'constant ' . $constant );
+				return;
+			}
+		}
+
+		// Check for plugin functions.
+		foreach ( $this->plugin_functions as $func ) {
+			if ( stripos( $path_content, $func ) !== false ) {
+				$this->add_error( $stackPtr, $matched_content, $path_param['start'], 'function ' . $func . '()' );
+				return;
+			}
+		}
+
+		// Check for __FILE__ or __DIR__ magic constants.
+		if ( stripos( $path_content, '__FILE__' ) !== false || stripos( $path_content, '__DIR__' ) !== false ) {
+			$this->add_error( $stackPtr, $matched_content, $path_param['start'], '__FILE__ or __DIR__ magic constant' );
 			return;
 		}
 
-		// Known offloading services.
-		$look_known_offloading_services = array(
-		);
-		// [ 'fwrite', 'fputs', 'file_put_contents', 'copy', 'rename', 'copy_dir', 'move_dir' ]
-
-		$pattern = '/(' . implode( '|', $look_known_offloading_services ) . ')/i';
-
-		$matches = array();
-		if ( preg_match_all( $pattern, $content, $matches, PREG_OFFSET_CAPTURE ) > 0 ) {
-			foreach ( $matches[0] as $match ) {
-				$this->phpcsFile->addError(
-					'WriteFile images, js, css, and other scripts to your servers or any remote service is disallowed.',
-					$this->find_token_in_multiline_string( $stackPtr, $content, $match[1] ),
-					'OffloadedContent'
-				);
-			}
-			return ( $end_ptr + 1 );
+		// Check for ABSPATH usage (could be writing to WordPress root or plugin folder).
+		if ( stripos( $path_content, 'ABSPATH' ) !== false ) {
+			$this->phpcsFile->addWarning(
+				'Writing files using ABSPATH may be problematic. Consider using wp_upload_dir() instead if storing user data or generated files.',
+				$path_param['start'],
+				'ABSPATHDetected'
+			);
+			return;
 		}
-
-		return ( $end_ptr + 1 );
 	}
 
 	/**
-	 * Find the exact token on which the error should be reported for multi-line strings.
+	 * Adds an error message for plugin directory write attempt.
 	 *
-	 * @param int    $stackPtr     The position of the current token in the stack.
-	 * @param string $content      The complete, potentially multi-line, text string.
-	 * @param int    $match_offset The offset within the content at which the match was found.
+	 * @param int    $stackPtr        The position of the function call.
+	 * @param string $function_name   The name of the function being called.
+	 * @param int    $error_ptr       The position to report the error.
+	 * @param string $indicator       What indicated this is a plugin path.
 	 *
-	 * @return int The stack pointer to the token containing the start of the match.
+	 * @return void
 	 */
-	private function find_token_in_multiline_string( $stackPtr, $content, $match_offset ) {
-		$newline_count = 0;
-		if ( $match_offset > 0 ) {
-			$newline_count = substr_count( $content, "\n", 0, $match_offset );
-		}
-
-		// Account for heredoc/nowdoc text starting at the token *after* the opener.
-		if ( isset( Tokens::$heredocTokens[ $this->tokens[ $stackPtr ]['code'] ] ) === true ) {
-			++$newline_count;
-		}
-
-		return ( $stackPtr + $newline_count );
+	private function add_error( $stackPtr, $function_name, $error_ptr, $indicator ) {
+		$this->phpcsFile->addError(
+			'Plugin folders are deleted when upgraded. Do not save data to the plugin folder using %s(). Detected usage of %s. Use wp_upload_dir() to get the uploads directory path or save to the database instead.',
+			$error_ptr,
+			'PluginDirectoryWrite',
+			array( $function_name, $indicator )
+		);
 	}
 }
