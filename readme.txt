@@ -2,7 +2,7 @@
 
 Contributors:      wordpressdotorg
 Tested up to:      6.9
-Stable tag:        1.7.0
+Stable tag:        1.8.0
 License:           GPLv2 or later
 License URI:       https://www.gnu.org/licenses/gpl-2.0.html
 Tags:              plugin best practices, testing, accessibility, performance, security
@@ -27,6 +27,19 @@ The checks are grouped into several categories, so that you can customize which 
 Keep in mind that this plugin is not a replacement for the manual review process, but it will help you speed up the process of getting your plugin approved for the WordPress.org plugin repository, and it will also help you avoid some common mistakes.
 
 Even if you do not intend to host your plugin in the WordPress.org directory, you are encouraged to use Plugin Check so that your plugin follows the base requirements and best practices for WordPress plugins.
+
+**Plugin Namer Tool**
+
+Plugin Check now includes an AI-powered Plugin Namer tool (accessible via _Tools > Plugin Check Namer_) that helps plugin authors evaluate plugin names before submission. This tool checks for:
+
+* Similarity to existing plugins in the WordPress.org directory
+* Potential trademark conflicts with well-known brands
+* Compliance with WordPress plugin naming guidelines
+* Generic or overly broad naming issues
+
+The Plugin Namer provides instant feedback with actionable suggestions, helping you choose a clear, unique, and policy-compliant name that stands out in the plugin directory. This feature requires AI provider configuration in the settings.
+
+**Important:** The Plugin Namer tool provides guidance only and is not definitive. All plugin name decisions are subject to final review and approval by the WordPress.org Plugins team reviewers.
 
 == Installation ==
 
@@ -67,6 +80,19 @@ To be approved in the WordPress.org plugin directory, a plugin must typically pa
 In any case, passing the checks in this tool likely helps to achieve a smooth plugin review process, but is no guarantee that a plugin will be approved in the WordPress.org plugin directory.
 
 == Changelog ==
+
+= 1.8.0 =
+
+* Enhancement - Add AI-powered Plugin Namer tool to evaluate plugin names for trademark conflicts and naming best practices.
+* Enhancement - Add AI Instructions Detection Check to identify AI tool configuration files and development-only directories.
+* Enhancement - Add support for exporting check results in CSV, JSON, and Markdown formats.
+* Enhancement - Add check type filter to allow filtering results by errors and warnings.
+* Enhancement - Add Direct File Access check to ensure proper security validation with ABSPATH constant.
+* Enhancement - Add check for mismatched "Tested up to" header between plugin header and readme.txt.
+* Enhancement - Update trademark check to remove acronym exceptions and improve flexibility.
+* Enhancement - Add heredoc sniff to detect and restrict heredoc usage (nowdoc allowed).
+* Fix - Update Playground integration blueprint for compatibility.
+* Fix - Force correct plugin slug detection in WP-CLI command.
 
 = 1.7.0 =
 
