@@ -10,9 +10,12 @@
     "composer/installers": "^2.2",
     "dealerdirect/phpcodesniffer-composer-installer": "^1.0.0",
     "nikic/php-parser": "^4",
+    "nyholm/psr7": "^1.8",
+    "patrickschur/language-detection": "^5.3",
+    "php-http/curl-client": "^2.3",
     "plugin-check/phpcs-sniffs": "@dev",
-    "wp-coding-standards/wpcs": "^3.2.0",
-    "patrickschur/language-detection": "^5.3"
+    "wordpress/wp-ai-client": "^0.2.1",
+    "wp-coding-standards/wpcs": "^3.2.0"
   },
   "require-dev": {
     "phpcompatibility/php-compatibility": "dev-develop",
@@ -56,6 +59,7 @@
       "composer/installers": true,
       "cweagans/composer-patches": false,
       "dealerdirect/phpcodesniffer-composer-installer": true,
+      "php-http/discovery": true,
       "phpstan/extension-installer": true
     },
     "platform": {

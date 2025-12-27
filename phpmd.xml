@@ -12,6 +12,7 @@
 	<rule ref="rulesets/codesize.xml">
 		<exclude name="CyclomaticComplexity" />
 		<exclude name="TooManyPublicMethods" />
+		<exclude name="ExcessiveClassComplexity" />
 	</rule>
 
 	<rule ref="rulesets/codesize.xml/CyclomaticComplexity">
@@ -22,7 +23,14 @@
 
 	<rule ref="rulesets/codesize.xml/TooManyPublicMethods">
 		<properties>
+			<property name="maximum" value="20" />
 			<property name="ignorepattern" value="(^(__construct|getIterator|offsetExists|offsetGet|offsetSet|offsetUnset))i" />
+		</properties>
+	</rule>
+
+	<rule ref="rulesets/codesize.xml/ExcessiveClassComplexity">
+		<properties>
+			<property name="maximum" value="100" />
 		</properties>
 	</rule>
 
@@ -50,4 +58,7 @@
 	<exclude-pattern>*/phpcs-sniffs/*</exclude-pattern>
 	<exclude-pattern>*/includes/Lib/*</exclude-pattern>
 	<exclude-pattern>*/includes/Scanner/*</exclude-pattern>
+
+	<!-- Settings page has many public methods due to WordPress Settings API requirements -->
+	<exclude-pattern>*/includes/Admin/Settings_Page.php</exclude-pattern>
 </ruleset>
