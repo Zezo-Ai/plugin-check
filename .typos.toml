@@ -9,6 +9,9 @@ extend-ignore-re = [
     "wheres",
 ]
 
+[default.extend-words]
+Automattic = "Automattic"
+
 [files]
 extend-exclude = [
 	"includes/Lib/Readme/*.php"

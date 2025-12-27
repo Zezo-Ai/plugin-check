@@ -305,4 +305,103 @@ class File_Type_Check_Tests extends WP_UnitTestCase {
 		$this->assertTrue( isset( $errors['.hidden-test'][0][0][0] ) );
 		$this->assertSame( 'hidden_files', $errors['.hidden-test'][0][0][0]['code'] );
 	}
+
+	public function test_run_with_ai_instructions_errors() {
+		$check_context = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-ai-instructions-errors/load.php' );
+		$check_result  = new Check_Result( $check_context );
+
+		$check = new File_Type_Check( File_Type_Check::TYPE_AI_INSTRUCTIONS );
+		$check->run( $check_result );
+
+		$problems      = $check_result->get_warnings();
+		$problem_count = $check_result->get_warning_count();
+		$errors        = $check_result->get_errors();
+
+		$this->assertNotEmpty( $problems );
+		$this->assertGreaterThanOrEqual( 3, $problem_count );
+		$this->assertEmpty( $errors );
+
+		$found_cursor = false;
+		$found_github = false;
+		$found_dev    = false;
+
+		foreach ( $problems as $file => $messages ) {
+			if ( strpos( $file, '.cursor' ) !== false ) {
+				$found_cursor = true;
+				$this->assertTrue( isset( $messages[0][0][0] ) );
+				$this->assertSame( 'ai_instruction_directory', $messages[0][0][0]['code'] );
+			}
+			if ( strpos( $file, '.github' ) !== false ) {
+				$found_github = true;
+				$this->assertTrue( isset( $messages[0][0][0] ) );
+				$this->assertSame( 'github_directory', $messages[0][0][0]['code'] );
+			}
+			if ( strpos( $file, 'DEVELOPMENT.md' ) !== false ) {
+				$found_dev = true;
+				$this->assertTrue( isset( $messages[0][0][0] ) );
+				$this->assertSame( 'unexpected_markdown_file', $messages[0][0][0]['code'] );
+			}
+		}
+
+		$this->assertTrue( $found_cursor, 'Expected .cursor directory to be detected' );
+		$this->assertTrue( $found_github, 'Expected .github directory to be detected' );
+		$this->assertTrue( $found_dev, 'Expected DEVELOPMENT.md to be detected as unexpected' );
+	}
+
+	public function test_run_with_ai_instructions_in_local_dev() {
+		$filter_callback = function () {
+			return 'local';
+		};
+		add_filter( 'wp_get_environment_type', $filter_callback );
+
+		$check_context = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-ai-instructions-errors/load.php' );
+		$check_result  = new Check_Result( $check_context );
+
+		$check = new File_Type_Check( File_Type_Check::TYPE_AI_INSTRUCTIONS );
+		$check->run( $check_result );
+
+		$warnings      = $check_result->get_warnings();
+		$warning_count = $check_result->get_warning_count();
+		$errors        = $check_result->get_errors();
+
+		$this->assertGreaterThanOrEqual( 3, $warning_count );
+		$this->assertNotEmpty( $warnings );
+		$this->assertEmpty( $errors );
+
+		remove_filter( 'wp_get_environment_type', $filter_callback );
+	}
+
+	public function test_run_without_ai_instructions_errors() {
+		$check_context = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-ai-instructions-without-errors/load.php' );
+		$check_result  = new Check_Result( $check_context );
+
+		$check = new File_Type_Check( File_Type_Check::TYPE_AI_INSTRUCTIONS );
+		$check->run( $check_result );
+
+		$errors   = $check_result->get_errors();
+		$warnings = $check_result->get_warnings();
+
+		$this->assertEmpty( $errors );
+		$this->assertEmpty( $warnings );
+	}
+
+	public function test_markdown_files_in_subfolders_allowed() {
+		$check_context = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-ai-instructions-without-errors/load.php' );
+		$check_result  = new Check_Result( $check_context );
+
+		$check = new File_Type_Check( File_Type_Check::TYPE_AI_INSTRUCTIONS );
+		$check->run( $check_result );
+
+		$errors   = $check_result->get_errors();
+		$warnings = $check_result->get_warnings();
+
+		$this->assertEmpty( $errors, 'Markdown files in subfolders should not trigger errors' );
+		$this->assertEmpty( $warnings, 'Markdown files in subfolders should not trigger warnings' );
+
+		foreach ( array_merge( $errors, $warnings ) as $file => $messages ) {
+			$this->assertStringNotContainsString( 'docs/', $file, 'Files in docs/ subfolder should not be flagged' );
+			$this->assertStringNotContainsString( 'GUIDE.md', $file, 'GUIDE.md in subfolder should not be flagged' );
+			$this->assertStringNotContainsString( 'API.md', $file, 'API.md in subfolder should not be flagged' );
+		}
+	}
 }

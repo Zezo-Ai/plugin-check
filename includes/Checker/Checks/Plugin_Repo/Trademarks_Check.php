@@ -13,7 +13,7 @@ use WordPress\Plugin_Check\Checker\Check_Result;
 use WordPress\Plugin_Check\Checker\Checks\Abstract_File_Check;
 use WordPress\Plugin_Check\Lib\Readme\Parser as PCPParser;
 use WordPress\Plugin_Check\Traits\Amend_Check_Result;
-use WordPress\Plugin_Check\Traits\Find_Readme;
+use WordPress\Plugin_Check\Traits\Readme_Utils;
 use WordPress\Plugin_Check\Traits\Stable_Check;
 use WordPressdotorg\Plugin_Directory\Readme\Parser as DotorgParser;
 
@@ -25,7 +25,7 @@ use WordPressdotorg\Plugin_Directory\Readme\Parser as DotorgParser;
 class Trademarks_Check extends Abstract_File_Check {
 
 	use Amend_Check_Result;
-	use Find_Readme;
+	use Readme_Utils;
 	use Stable_Check;
 
 	/**
