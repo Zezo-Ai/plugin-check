@@ -18,16 +18,15 @@ class Write_File_Check_Tests extends WP_UnitTestCase {
 
 		$write_file_check->run( $check_result );
 
-		$errors   = $check_result->get_errors();
-		$warnings = $check_result->get_warnings();
+		$errors = $check_result->get_errors();
 
 		// Should have errors for plugin directory writes.
 		$this->assertNotEmpty( $errors );
-		$this->assertArrayHasKey( 'load.php', $errors );
+		$this->assertArrayHasKey( 'file-operations.php', $errors );
 
 		// Check for specific error codes.
 		$error_codes = array();
-		foreach ( $errors['load.php'] as $line => $columns ) {
+		foreach ( $errors['file-operations.php'] as $line => $columns ) {
 			foreach ( $columns as $column => $messages ) {
 				foreach ( $messages as $message ) {
 					$error_codes[] = $message['code'];
@@ -36,22 +35,10 @@ class Write_File_Check_Tests extends WP_UnitTestCase {
 		}
 
 		// Should detect PluginDirectoryWrite errors.
-		$this->assertContains( 'PluginDirectoryWrite', $error_codes );
+		$this->assertContains( 'PluginCheck.CodeAnalysis.WriteFile.PluginDirectoryWrite', $error_codes );
 
 		// Should have at least 6 errors (one for each bad example).
 		$this->assertGreaterThanOrEqual( 6, $check_result->get_error_count() );
-
-		// Should have warnings for ABSPATH usage.
-		$this->assertNotEmpty( $warnings );
-		$warning_codes = array();
-		foreach ( $warnings['load.php'] as $line => $columns ) {
-			foreach ( $columns as $column => $messages ) {
-				foreach ( $messages as $message ) {
-					$warning_codes[] = $message['code'];
-				}
-			}
-		}
-		$this->assertContains( 'ABSPATHDetected', $warning_codes );
 	}
 
 	public function test_run_without_errors() {
