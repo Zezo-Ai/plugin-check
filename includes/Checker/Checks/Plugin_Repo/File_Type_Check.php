@@ -577,9 +577,10 @@ class File_Type_Check extends Abstract_File_Check {
 	 * @param array        $files  List of file paths.
 	 */
 	protected function check_unexpected_markdown_files( Check_Result $result, array $files ) {
-		$plugin_path           = $result->plugin()->path();
-		$allowed_root_md_files = array( 'README.md', 'readme.txt', 'LICENSE', 'LICENSE.md', 'CHANGELOG.md', 'CONTRIBUTING.md', 'SECURITY.md' );
-		$root_md_files         = array();
+		$plugin_path                 = $result->plugin()->path();
+		$allowed_root_md_files       = array( 'README.md', 'readme.txt', 'LICENSE', 'LICENSE.md', 'CHANGELOG.md', 'CONTRIBUTING.md', 'SECURITY.md' );
+		$allowed_root_md_files_lower = array_map( 'strtolower', $allowed_root_md_files );
+		$root_md_files               = array();
 
 		foreach ( $files as $file ) {
 			$relative_path = str_replace( $plugin_path, '', $file );
@@ -587,7 +588,7 @@ class File_Type_Check extends Abstract_File_Check {
 			$basename      = basename( $file );
 
 			if ( substr_count( $relative_path, '/' ) === 0 && pathinfo( $file, PATHINFO_EXTENSION ) === 'md' ) {
-				if ( ! in_array( $basename, $allowed_root_md_files, true ) ) {
+				if ( ! in_array( strtolower( $basename ), $allowed_root_md_files_lower, true ) ) {
 					$root_md_files[] = $file;
 				}
 			}
