@@ -26,5 +26,5 @@ When suggesting names, avoid proposals that are too close to existing plugin nam
 If the plugin slug has an issue as well you can suggest a new one. The plugin slug is derived from the display name (it can be a short version of it) and is part of the URL of the plugin so no special characters are allowed, no caps and spaces are substituted with the character "-". The maximum length of the slug is 50 characters.
 - suggested_slug
 
-In order to help the PRT understanding what this plugin does, give the following:
+In order to help the Plugins Team understanding what this plugin does, give the following:
 - plugin_category: Give a category to this plugin.

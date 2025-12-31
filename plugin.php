@@ -6,7 +6,7 @@
  * Requires at least: 6.3
  * Requires PHP: 7.4
  * Version: 1.8.0
- * Author: WordPress Performance Team and Plugin Review Team
+ * Author: WordPress Performance Team and Plugins Team
  * License: GPLv2 or later
  * License URI: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  * Text Domain: plugin-check
