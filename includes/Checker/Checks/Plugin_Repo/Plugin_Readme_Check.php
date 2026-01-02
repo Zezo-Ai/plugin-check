@@ -755,7 +755,7 @@ class Plugin_Readme_Check extends Abstract_File_Check {
 		}
 
 		$usernames = explode( ',', trim( $matches[1], ' ,' ) );
-		$usernames = array_filter( array_unique( array_map( 'trim', $usernames ) ), 'strlen' );
+		$usernames = array_filter( array_unique( array_map( 'trim', $usernames ) ) );
 
 		$valid = true;
 
