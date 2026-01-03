@@ -30,6 +30,7 @@ use WordPress\Plugin_Check\Traits\Stable_Check;
  * using checks like: if ( ! defined( 'ABSPATH' ) ) exit;
  *
  * @since 1.8.0
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
 class Direct_File_Access_Check extends Abstract_File_Check {
 
@@ -129,6 +130,181 @@ class Direct_File_Access_Check extends Abstract_File_Check {
 			return false;
 		}
 
+		// Try AST-based detection first for more accurate results.
+		$parser = ( new ParserFactory() )->create( ParserFactory::PREFER_PHP7 );
+		try {
+			$ast = $parser->parse( $contents );
+			if ( null !== $ast ) {
+				if ( $this->has_direct_access_protection_ast( $ast ) ) {
+					return true;
+				}
+			}
+		} catch ( Error $e ) {
+			// Fall through to regex-based detection.
+		}
+
+		// Fallback to regex-based detection.
+		return $this->has_direct_access_protection_regex( $contents );
+	}
+
+	/**
+	 * Checks if AST contains proper direct access protection using AST parsing.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @param array $ast The parsed AST nodes.
+	 * @return bool True if protection found, false otherwise.
+	 */
+	private function has_direct_access_protection_ast( array $ast ) {
+		$protected_vars = array( 'ABSPATH', 'WPINC' );
+
+		foreach ( $ast as $node ) {
+			$class = get_class( $node );
+			if ( 'PhpParser\Node\Stmt\Expression' === $class ) {
+				if ( $this->is_protection_expression( $node->expr, $protected_vars ) ) {
+					return true;
+				}
+			}
+
+			if ( 'PhpParser\Node\Stmt\If_' === $class ) {
+				if ( $this->is_protection_if_statement( $node, $protected_vars ) ) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Checks if an expression is a protection pattern (defined() || exit).
+	 * Matches the internal scanner's approach.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @param Expr  $expr            The expression to check.
+	 * @param array $protected_vars  Array of protected variable names.
+	 * @return bool True if protection pattern, false otherwise.
+	 */
+	private function is_protection_expression( $expr, array $protected_vars ) {
+		$class = get_class( $expr );
+		if ( 'PhpParser\Node\Expr\BinaryOp\BooleanOr' === $class ) {
+			// @phpstan-ignore-next-line Access to property $left on PhpParser\Node\Expr\BinaryOp\BooleanOr.
+			if ( ! empty( $expr->left ) && ! empty( $expr->right ) ) {
+				// @phpstan-ignore-next-line Access to property $right on PhpParser\Node\Expr\BinaryOp\BooleanOr.
+				if ( $this->check_defined_expr( $expr->left, $protected_vars ) ) {
+					// @phpstan-ignore-next-line Access to property $right on PhpParser\Node\Expr\BinaryOp\BooleanOr.
+					if ( $this->is_this_an_exit( $expr->right ) ) {
+						return true;
+					}
+				}
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Checks if an If statement is a protection pattern (if ( ! defined() ) exit).
+	 * Matches the internal scanner's approach.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @param Stmt\If_ $node          The If statement node.
+	 * @param array    $protected_vars Array of protected variable names.
+	 * @return bool True if protection pattern, false otherwise.
+	 */
+	private function is_protection_if_statement( Stmt\If_ $node, array $protected_vars ) {
+		$class = get_class( $node->cond );
+		if ( 'PhpParser\Node\Expr\BooleanNot' === $class ) {
+			// @phpstan-ignore-next-line Access to property $expr on PhpParser\Node\Expr\BooleanNot.
+			if ( $this->check_defined_expr( $node->cond->expr, $protected_vars ) ) {
+				if ( ! empty( $node->stmts ) ) {
+					$continue = false;
+					foreach ( $node->stmts as $stmt ) {
+						// @phpstan-ignore-next-line Access to property $expr on statement.
+						if ( ! empty( $stmt->expr ) && $this->is_this_an_exit( $stmt->expr ) ) {
+							$continue = true;
+						}
+					}
+					if ( $continue ) {
+						return true;
+					}
+				}
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Checks if an expression is a defined() call with protected variable.
+	 * Matches the internal scanner's check_defined_expr() method exactly.
+	 * Works with both regular and named arguments (PHP 8+).
+	 *
+	 * @since 1.9.0
+	 *
+	 * @param Expr  $expr            The expression to check.
+	 * @param array $protected_vars  Array of protected variable names.
+	 * @return bool True if defined() check, false otherwise.
+	 */
+	private function check_defined_expr( $expr, array $protected_vars ) {
+		$class = get_class( $expr );
+		if ( 'PhpParser\Node\Expr\FuncCall' === $class ) {
+			// @phpstan-ignore-next-line Access to property $name on PhpParser\Node\Expr\FuncCall.
+			if ( ! empty( $expr->name ) && $expr->name instanceof Node\Name && 'defined' === $expr->name->toString() ) {
+				// @phpstan-ignore-next-line Access to property $args on PhpParser\Node\Expr\FuncCall.
+				if ( ! empty( $expr->args[0]->value ) && 'PhpParser\Node\Scalar\String_' === get_class( $expr->args[0]->value ) ) {
+					// @phpstan-ignore-next-line Access to property $value on PhpParser\Node\Scalar\String_.
+					if ( ! empty( $expr->args[0]->value->value ) ) {
+						// @phpstan-ignore-next-line Access to property $value on PhpParser\Node\Scalar\String_.
+						if ( in_array( $expr->args[0]->value->value, $protected_vars, true ) ) {
+							return true;
+						}
+					}
+				}
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Checks if an expression is an exit/die call.
+	 * Matches the internal scanner's is_this_an_exit() method.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @param Expr $expr The expression to check.
+	 * @return bool True if exit/die call, false otherwise.
+	 */
+	private function is_this_an_exit( $expr ) {
+		$class = get_class( $expr );
+		if ( 'PhpParser\Node\Expr\Exit_' === $class ) {
+			return true;
+		}
+		if ( 'PhpParser\Node\Expr\FuncCall' === $class ) {
+			// @phpstan-ignore-next-line Access to property $name on PhpParser\Node\Expr\FuncCall.
+			if ( ! empty( $expr->name ) && $expr->name instanceof Node\Name ) {
+				$name = $expr->name->toString();
+				if ( 'exit' === $name || 'die' === $name ) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Checks if a file has proper direct access protection using regex.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @param string $contents The file contents.
+	 * @return bool True if protection found, false otherwise.
+	 */
+	private function has_direct_access_protection_regex( $contents ) {
 		// Remove the opening PHP tag if present.
 		$contents = preg_replace( '/^<\?php\s*/i', '', $contents );
 
@@ -144,28 +320,28 @@ class Direct_File_Access_Check extends Abstract_File_Check {
 		$without_comments = preg_replace( '/\n\s*\n\s*\n/', "\n\n", $without_comments );
 		$without_comments = trim( $without_comments );
 
-		// Pattern 1: defined( 'ABSPATH' ) || exit; or, exit; .
-		if ( preg_match( "/defined\s*\(\s*['\"]ABSPATH['\"]\s*\)\s*(?:\|\||or)\s*(?:exit|die)\s*(?:\([^)]*\))?\s*;/i", $without_comments ) ) {
+		// Pattern 1: defined( 'ABSPATH' ) || exit; or defined( constant_name: 'ABSPATH' ) || exit;.
+		if ( preg_match( "/defined\s*\(\s*(?:constant_name\s*:\s*)?['\"]ABSPATH['\"]\s*\)\s*(?:\|\||or)\s*(?:exit|die)\s*(?:\([^)]*\))?\s*;/i", $without_comments ) ) {
 			return true;
 		}
 
-		// Pattern 2: defined( 'WPINC' ) || exit; or, die();.
-		if ( preg_match( "/defined\s*\(\s*['\"]WPINC['\"]\s*\)\s*(?:\|\||or)\s*(?:exit|die)\s*(?:\([^)]*\))?\s*;/i", $without_comments ) ) {
+		// Pattern 2: defined( 'WPINC' ) || exit; or defined( constant_name: 'WPINC' ) || exit;.
+		if ( preg_match( "/defined\s*\(\s*(?:constant_name\s*:\s*)?['\"]WPINC['\"]\s*\)\s*(?:\|\||or)\s*(?:exit|die)\s*(?:\([^)]*\))?\s*;/i", $without_comments ) ) {
 			return true;
 		}
 
-		// Pattern 3: if ( ! defined( 'ABSPATH' ) ) exit; or, exit;.
-		if ( preg_match( "/if\s*\(\s*!\s*defined\s*\(\s*['\"]ABSPATH['\"]\s*\)\s*\)\s*(?:\{|exit|die)/i", $without_comments ) ) {
+		// Pattern 3: if ( ! defined( 'ABSPATH' ) ) exit; or if ( ! defined( constant_name: 'ABSPATH' ) ) exit;.
+		if ( preg_match( "/if\s*\(\s*!\s*defined\s*\(\s*(?:constant_name\s*:\s*)?['\"]ABSPATH['\"]\s*\)\s*\)\s*(?:\{|exit|die)/i", $without_comments ) ) {
 			return true;
 		}
 
-		// Pattern 4: if ( ! defined( 'WPINC' ) ) exit; {exit; or, die();}.
-		if ( preg_match( "/if\s*\(\s*!\s*defined\s*\(\s*['\"]WPINC['\"]\s*\)\s*\)\s*(?:\{|exit|die)/i", $without_comments ) ) {
+		// Pattern 4: if ( ! defined( 'WPINC' ) ) exit; or if ( ! defined( constant_name: 'WPINC' ) ) exit;.
+		if ( preg_match( "/if\s*\(\s*!\s*defined\s*\(\s*(?:constant_name\s*:\s*)?['\"]WPINC['\"]\s*\)\s*\)\s*(?:\{|exit|die)/i", $without_comments ) ) {
 			return true;
 		}
 
-		// Pattern 5: if ( ! defined( 'ABSPATH' ) ) { die(); }, WPINC.
-		if ( preg_match( "/if\s*\(\s*!\s*defined\s*\(\s*['\"](?:ABSPATH|WPINC)['\"]\s*\)\s*\)\s*\{[^}]*die\s*\(/i", $without_comments ) ) {
+		// Pattern 5: if ( ! defined( 'ABSPATH' ) ) { die(); } or if ( ! defined( constant_name: 'ABSPATH' ) ) { die(); }.
+		if ( preg_match( "/if\s*\(\s*!\s*defined\s*\(\s*(?:constant_name\s*:\s*)?['\"](?:ABSPATH|WPINC)['\"]\s*\)\s*\)\s*\{[^}]*die\s*\(/i", $without_comments ) ) {
 			return true;
 		}
 
@@ -209,6 +385,7 @@ class Direct_File_Access_Check extends Abstract_File_Check {
 	 *
 	 * @param array $ast The parsed AST nodes.
 	 * @return bool True if the AST only contains structural code, false otherwise.
+	 * @SuppressWarnings(PHPMD.NPathComplexity)
 	 */
 	private function is_ast_valid_for_direct_access( array $ast ) {
 		$safe_node_types = array(
@@ -468,6 +645,7 @@ class Direct_File_Access_Check extends Abstract_File_Check {
 	 *
 	 * @param Stmt\If_ $node The If statement node.
 	 * @return bool True if safe, false otherwise.
+	 * @SuppressWarnings(PHPMD.NPathComplexity)
 	 */
 	private function is_safe_if_statement( Stmt\If_ $node ) {
 		if ( ! $this->is_safe_condition( $node->cond ) ) {
