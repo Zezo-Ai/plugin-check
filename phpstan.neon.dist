@@ -50,3 +50,9 @@ parameters:
     -
       message: '/^Instanceof between PhpParser\\Node\\Expr\\AssignOp\\Concat and PhpParser\\Node\\Expr\\AssignOp will always evaluate to true\.$/'
       path: includes/Scanner/PHP_Parser.php
+    -
+      message: '/^Access to property \$parts on .*\.$/'
+      path: includes/Checker/Checks/Plugin_Repo/Direct_File_Access_Check.php
+    -
+      message: '/^Undefined property.*\$parts.*\.$/'
+      path: includes/Checker/Checks/Plugin_Repo/Direct_File_Access_Check.php
