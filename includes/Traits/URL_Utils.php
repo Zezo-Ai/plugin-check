@@ -36,16 +36,29 @@ trait URL_Utils {
 			return false;
 		}
 
-		// Must have a valid scheme and host.
+		// Must have a valid scheme and host, and scheme must be http or https.
 		if ( empty( $parsed_url['scheme'] ) || empty( $parsed_url['host'] ) ) {
 			return false;
 		}
 
-		// Scheme must be http or https.
 		if ( ! in_array( $parsed_url['scheme'], array( 'http', 'https' ), true ) ) {
 			return false;
 		}
 
+		// Check for duplicated protocol and invalid host characters.
+		return $this->validate_url_structure( $url, $parsed_url );
+	}
+
+	/**
+	 * Validates URL structure for duplicated protocols and invalid host characters.
+	 *
+	 * @since 1.6.0
+	 *
+	 * @param string $url        The full URL.
+	 * @param array  $parsed_url Parsed URL array.
+	 * @return bool true if the URL structure is valid, otherwise false.
+	 */
+	private function validate_url_structure( string $url, array $parsed_url ): bool {
 		// Detect duplicated protocol in the host/path portion (e.g., "https://http://example.com/").
 		// Only check up to the query string to avoid false positives with URLs in query parameters.
 		$url_without_query = strtok( $url, '?' );
