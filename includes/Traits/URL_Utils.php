@@ -23,14 +23,39 @@ trait URL_Utils {
 	 * @return bool true if the URL is valid, otherwise false.
 	 */
 	protected function is_valid_url( string $url ): bool {
-		if ( filter_var( $url, FILTER_VALIDATE_URL ) !== $url || ! str_starts_with( $url, 'http' ) ) {
+		// Must start with http or https.
+		if ( ! str_starts_with( $url, 'http' ) ) {
 			return false;
 		}
 
-		// Detect duplicated protocol (e.g., "https://http://example.com/").
+		// Parse the URL to validate its structure.
 		$parsed_url = wp_parse_url( $url );
 
-		if ( isset( $parsed_url['scheme'] ) && str_contains( substr( $url, strlen( $parsed_url['scheme'] ) + 3 ), '://' ) ) {
+		// wp_parse_url returns false on parse failure.
+		if ( false === $parsed_url || ! is_array( $parsed_url ) ) {
+			return false;
+		}
+
+		// Must have a valid scheme and host.
+		if ( empty( $parsed_url['scheme'] ) || empty( $parsed_url['host'] ) ) {
+			return false;
+		}
+
+		// Scheme must be http or https.
+		if ( ! in_array( $parsed_url['scheme'], array( 'http', 'https' ), true ) ) {
+			return false;
+		}
+
+		// Detect duplicated protocol in the host/path portion (e.g., "https://http://example.com/").
+		// Only check up to the query string to avoid false positives with URLs in query parameters.
+		$url_without_query = strtok( $url, '?' );
+		if ( false !== $url_without_query && str_contains( substr( $url_without_query, strlen( $parsed_url['scheme'] ) + 3 ), '://' ) ) {
+			return false;
+		}
+
+		// Validate host doesn't contain obviously invalid characters.
+		// Allow alphanumeric, dots, hyphens, and underscores (for localhost, etc.).
+		if ( preg_match( '/[^a-z0-9.\-_]/i', $parsed_url['host'] ) ) {
 			return false;
 		}
 

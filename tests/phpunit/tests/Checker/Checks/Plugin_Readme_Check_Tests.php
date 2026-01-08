@@ -652,6 +652,25 @@ class Plugin_Readme_Check_Tests extends WP_UnitTestCase {
 		$this->assertCount( 1, wp_list_filter( $errors['readme.txt'][0][0], array( 'code' => 'readme_invalid_donate_link_domain' ) ) );
 	}
 
+	public function test_run_with_valid_paypal_donate_link() {
+		$check         = new Plugin_Readme_Check();
+		$check_context = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-plugin-readme-valid-paypal-donate/load.php' );
+		$check_result  = new Check_Result( $check_context );
+
+		$check->run( $check_result );
+
+		$errors = $check_result->get_errors();
+
+		// Should not have invalid donate link error for PayPal URLs with complex query strings.
+		if ( isset( $errors['readme.txt'] ) && isset( $errors['readme.txt'][0][0] ) ) {
+			$invalid_donate_link_errors = wp_list_filter( $errors['readme.txt'][0][0], array( 'code' => 'readme_invalid_donate_link' ) );
+			$this->assertEmpty( $invalid_donate_link_errors, 'PayPal donation URL with complex query string should be recognized as valid' );
+		} else {
+			// If no errors at all, that's also fine - the URL is valid.
+			$this->assertTrue( true );
+		}
+	}
+
 	public function test_run_language_detection_with_non_english_content() {
 		$check         = new Plugin_Readme_Check();
 		$check_context = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-plugin-readme-errors-language/load.php' );
