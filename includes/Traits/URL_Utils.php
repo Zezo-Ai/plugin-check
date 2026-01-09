@@ -36,39 +36,32 @@ trait URL_Utils {
 			return false;
 		}
 
-		// Must have a valid scheme and host, and scheme must be http or https.
+		// Must have a valid scheme and host.
 		if ( empty( $parsed_url['scheme'] ) || empty( $parsed_url['host'] ) ) {
-			return false;
-		}
-
-		if ( ! in_array( $parsed_url['scheme'], array( 'http', 'https' ), true ) ) {
-			return false;
-		}
-
-		// Check for duplicated protocol and invalid host characters.
-		return $this->validate_url_structure( $url, $parsed_url );
-	}
-
-	/**
-	 * Validates URL structure for duplicated protocols and invalid host characters.
-	 *
-	 * @since 1.6.0
-	 *
-	 * @param string $url        The full URL.
-	 * @param array  $parsed_url Parsed URL array.
-	 * @return bool true if the URL structure is valid, otherwise false.
-	 */
-	private function validate_url_structure( string $url, array $parsed_url ): bool {
-		// Detect duplicated protocol in the host/path portion (e.g., "https://http://example.com/").
-		// Only check up to the query string to avoid false positives with URLs in query parameters.
-		$url_without_query = strtok( $url, '?' );
-		if ( false !== $url_without_query && str_contains( substr( $url_without_query, strlen( $parsed_url['scheme'] ) + 3 ), '://' ) ) {
 			return false;
 		}
 
 		// Validate host doesn't contain obviously invalid characters.
 		// Allow alphanumeric, dots, hyphens, and underscores (for localhost, etc.).
 		if ( preg_match( '/[^a-z0-9.\-_]/i', $parsed_url['host'] ) ) {
+			return false;
+		}
+
+		// Detect duplicated protocol in the host/path portion (e.g., "https://http://example.com/").
+		// Only check up to the query string to avoid false positives with URLs in query parameters.
+		$query_position = strpos( $url, '?' );
+
+		if ( false !== $query_position ) {
+			$url_without_query = substr( $url, 0, $query_position );
+		} else {
+			$url_without_query = $url;
+		}
+
+		// Check for duplicated protocol after the scheme:// portion.
+		$scheme_length = strlen( $parsed_url['scheme'] );
+		$after_scheme  = substr( $url_without_query, $scheme_length + 3 );
+
+		if ( str_contains( $after_scheme, '://' ) ) {
 			return false;
 		}
 
