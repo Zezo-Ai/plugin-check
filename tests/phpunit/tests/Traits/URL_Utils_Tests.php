@@ -26,6 +26,11 @@ class URL_Utils_Tests extends WP_UnitTestCase {
 			array( 'https://example.com/page.html', true ),
 			array( 'https://http://example.com/', false ),
 			array( 'ftp://example.com/file.txt', false ),
+			// PayPal donation URLs with complex query strings.
+			array( 'https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=developer@gmail.com&item_name=WordPress%20Plugin%20Donation&return=https://wordpress.org/plugins/my-plugin/', true ),
+			array( 'https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=test@example.com&item_name=Support%20My%20Plugin', true ),
+			array( 'https://paypal.me/username/5USD', true ),
+			array( 'https://www.paypal.com/donate/?hosted_button_id=123456', true ),
 		);
 	}
 
