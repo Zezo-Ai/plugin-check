@@ -128,6 +128,25 @@ class Plugin_Header_Fields_Check_Tests extends WP_UnitTestCase {
 		$this->assertCount( 1, wp_list_filter( $errors['load.php'][0][0], array( 'code' => 'plugin_header_invalid_license' ) ) );
 	}
 
+	public function test_run_with_valid_wtfpl_license() {
+		$check         = new Plugin_Header_Fields_Check();
+		$check_context = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-wtfpl-license/load.php' );
+		$check_result  = new Check_Result( $check_context );
+
+		$check->run( $check_result );
+
+		$errors = $check_result->get_errors();
+
+		// Should not have invalid license error for WTFPL.
+		if ( isset( $errors['load.php'] ) && isset( $errors['load.php'][0][0] ) ) {
+			$invalid_license_errors = wp_list_filter( $errors['load.php'][0][0], array( 'code' => 'plugin_header_invalid_license' ) );
+			$this->assertEmpty( $invalid_license_errors, 'WTFPL license should be recognized as GPL-compatible' );
+		} else {
+			// If no errors at all, that's also fine - the license is valid.
+			$this->assertTrue( true );
+		}
+	}
+
 	public function test_run_with_invalid_header_fields() {
 		$check         = new Plugin_Header_Fields_Check();
 		$check_context = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-late-escaping-errors/load.php' );
