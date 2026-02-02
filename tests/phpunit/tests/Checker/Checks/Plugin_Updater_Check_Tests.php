@@ -14,7 +14,7 @@ class Plugin_Updater_Check_Tests extends WP_UnitTestCase {
 	/**
 	 * @dataProvider data_plugin_updater_check
 	 */
-	public function test_run_with_plugin_updater_errors( $type_flag, $plugin_basename, $expected_file, $code, $error ) {
+	public function test_run_with_plugin_updater_errors( $type_flag, $plugin_basename, $expected_file, $code, $error, $expected_error_count = 1 ) {
 		$check_context = new Check_Context( UNIT_TESTS_PLUGIN_DIR . $plugin_basename );
 		$check_result  = new Check_Result( $check_context );
 
@@ -26,7 +26,7 @@ class Plugin_Updater_Check_Tests extends WP_UnitTestCase {
 
 			$this->assertNotEmpty( $errors );
 			$this->assertArrayHasKey( $expected_file, $errors );
-			$this->assertSame( 1, $check_result->get_error_count() );
+			$this->assertSame( $expected_error_count, $check_result->get_error_count() );
 
 			$this->assertTrue( isset( $errors[ $expected_file ][0][0][0] ) );
 			$this->assertSame( $code, $errors[ $expected_file ][0][0][0]['code'] );
@@ -44,42 +44,58 @@ class Plugin_Updater_Check_Tests extends WP_UnitTestCase {
 
 	public function data_plugin_updater_check() {
 		return array(
-			'Update URI Header'      => array(
+			'Update URI Header'                    => array(
 				Plugin_Updater_Check::TYPE_PLUGIN_UPDATE_URI_HEADER,
 				'test-plugin-update-uri-header-errors/load.php',
 				'load.php',
 				'plugin_updater_detected',
 				true,
 			),
-			'Updater File'           => array(
+			'Updater File'                         => array(
 				Plugin_Updater_Check::TYPE_PLUGIN_UPDATER_FILE,
 				'test-plugin-updater-file-errors/load.php',
 				'plugin-update-checker.php',
 				'plugin_updater_detected',
 				true,
 			),
-			'Plugin Updaters'        => array(
+			'Plugin Updaters'                      => array(
 				Plugin_Updater_Check::TYPE_PLUGIN_UPDATERS,
 				'test-plugin-updaters-errors/load.php',
 				'load.php',
 				'plugin_updater_detected',
 				true,
 			),
-			'Plugin Updaters Regex'  => array(
+			'Plugin Updaters Regex'                => array(
 				Plugin_Updater_Check::TYPE_PLUGIN_UPDATERS,
 				'test-plugin-updaters-regex-errors/load.php',
 				'load.php',
 				'plugin_updater_detected',
 				true,
 			),
-			'Updater Routines'       => array(
+			'Plugin Updaters PUC (full namespace)' => array(
+				Plugin_Updater_Check::TYPE_PLUGIN_UPDATERS,
+				'test-plugin-updaters-puc-errors/load.php',
+				'load.php',
+				'plugin_updater_detected',
+				true,
+				2,
+			),
+			'Plugin Updaters PUC (use statement)'  => array(
+				Plugin_Updater_Check::TYPE_PLUGIN_UPDATERS,
+				'test-plugin-updaters-puc-use-errors/load.php',
+				'load.php',
+				'plugin_updater_detected',
+				true,
+				2,
+			),
+			'Updater Routines'                     => array(
 				Plugin_Updater_Check::TYPE_PLUGIN_UPDATER_ROUTINES,
 				'test-plugin-updater-routines-errors/load.php',
 				'load.php',
 				'update_modification_detected',
 				false,
 			),
-			'Updater Routines Regex' => array(
+			'Updater Routines Regex'               => array(
 				Plugin_Updater_Check::TYPE_PLUGIN_UPDATER_ROUTINES,
 				'test-plugin-updater-routines-regex-errors/load.php',
 				'load.php',
