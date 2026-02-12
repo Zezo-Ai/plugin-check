@@ -218,6 +218,46 @@
 		return false;
 	}
 
+	/**
+	 * Counts the total number of errors and warnings in the aggregated results.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return {Object} Object with errorCount and warningCount properties.
+	 */
+	function countResults() {
+		let errorCount = 0;
+		let warningCount = 0;
+
+		// Count errors.
+		for ( const file of Object.keys( aggregatedResults.errors ) ) {
+			const lines = aggregatedResults.errors[ file ] || {};
+
+			for ( const line of Object.keys( lines ) ) {
+				const columns = lines[ line ] || {};
+
+				for ( const column of Object.keys( columns ) ) {
+					errorCount += ( columns[ column ] || [] ).length;
+				}
+			}
+		}
+
+		// Count warnings.
+		for ( const file of Object.keys( aggregatedResults.warnings ) ) {
+			const lines = aggregatedResults.warnings[ file ] || {};
+
+			for ( const line of Object.keys( lines ) ) {
+				const columns = lines[ line ] || {};
+
+				for ( const column of Object.keys( columns ) ) {
+					warningCount += ( columns[ column ] || [] ).length;
+				}
+			}
+		}
+
+		return { errorCount, warningCount };
+	}
+
 	function defaultString( key ) {
 		if (
 			pluginCheck.strings &&
@@ -545,9 +585,39 @@
 	 */
 	function renderResultsMessage( isSuccessMessage ) {
 		const messageType = isSuccessMessage ? 'success' : 'error';
-		const messageText = isSuccessMessage
-			? pluginCheck.successMessage
-			: pluginCheck.errorMessage;
+		let messageText;
+
+		if ( isSuccessMessage ) {
+			messageText = pluginCheck.successMessage;
+		} else {
+			// Count errors and warnings.
+			const { errorCount, warningCount } = countResults();
+
+			// Build the message with counts.
+			const errorPart =
+				errorCount > 0
+					? errorCount === 1
+						? '1 error'
+						: errorCount + ' errors'
+					: '';
+			const warningPart =
+				warningCount > 0
+					? warningCount === 1
+						? '1 warning'
+						: warningCount + ' warnings'
+					: '';
+
+			if ( errorPart && warningPart ) {
+				messageText = errorPart + ' and ' + warningPart + ' found.';
+			} else if ( errorPart ) {
+				messageText = errorPart + ' found.';
+			} else if ( warningPart ) {
+				messageText = warningPart + ' found.';
+			} else {
+				// Fallback to default message if somehow no errors/warnings.
+				messageText = pluginCheck.errorMessage;
+			}
+		}
 
 		resultsContainer.innerHTML =
 			renderTemplate( 'plugin-check-results-complete', {
