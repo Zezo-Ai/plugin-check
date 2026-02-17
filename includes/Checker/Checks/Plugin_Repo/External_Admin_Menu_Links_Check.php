@@ -100,15 +100,15 @@ class External_Admin_Menu_Links_Check extends Abstract_File_Check {
 		// - Function name from the list
 		// - Opening parenthesis
 		// - First 3 parameters (non-greedy, can be strings with single/double quotes or variables)
-		// - 4th parameter containing http://, https://, or // at the start of a string
+		// - 4th parameter containing http://, https://, or // at the start of a string.
 		$pattern = '/\b(' . $functions_pattern . ')\s*\(\s*' .
-			// First parameter
+			// First parameter. 
 			'(?:[^,]+)\s*,\s*' .
-			// Second parameter
+			// Second parameter.
 			'(?:[^,]+)\s*,\s*' .
-			// Third parameter
+			// Third parameter.
 			'(?:[^,]+)\s*,\s*' .
-			// Fourth parameter - look for external URL (http://, https://, or //)
+			// Fourth parameter - look for external URL (http://, https://, or //).
 			'[\'"](?:https?:)?\/\/[^\'"]+[\'"]/i';
 
 		$files = self::files_preg_match_all( $pattern, $php_files );
