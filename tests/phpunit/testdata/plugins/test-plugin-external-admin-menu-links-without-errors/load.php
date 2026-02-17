@@ -94,6 +94,22 @@ add_submenu_page(
 	''
 );
 
+// ✅ External URLs in submenu functions are allowed for docs, support, etc.
+add_options_page(
+	'Plugin Documentation',
+	'Documentation',
+	'manage_options',
+	'https://example.com/plugin-docs'
+);
+
+// ✅ External URL in management page for support link.
+add_management_page(
+	'Support',
+	'Get Support',
+	'manage_options',
+	'https://example.com/support'
+);
+
 // ✅ Adding submenu page with internal slug.
 add_submenu_page(
 	'my-plugin-settings',

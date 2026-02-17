@@ -29,28 +29,17 @@ class External_Admin_Menu_Links_Check extends Abstract_File_Check {
 	use Stable_Check;
 
 	/**
-	 * List of admin menu functions to check.
+	 * List of top-level admin menu functions to check.
 	 *
-	 * The 4th parameter (index 3) is the menu slug in all these functions.
-	 * add_submenu_page is intentionally excluded as it may legitimately link to
-	 * support pages or external resources.
+	 * Only add_menu_page is checked as it adds to the top-level admin menu.
+	 * External URLs in submenus (add_submenu_page, add_options_page, etc.) are
+	 * acceptable for documentation, support links, and other resources.
 	 *
 	 * @since 1.8.0
 	 * @var array
 	 */
 	protected $menu_functions = array(
 		'add_menu_page',
-		'add_options_page',
-		'add_management_page',
-		'add_theme_page',
-		'add_plugins_page',
-		'add_users_page',
-		'add_dashboard_page',
-		'add_posts_page',
-		'add_media_page',
-		'add_links_page',
-		'add_pages_page',
-		'add_comments_page',
 	);
 
 	/**
@@ -97,9 +86,9 @@ class External_Admin_Menu_Links_Check extends Abstract_File_Check {
 
 		// Pattern to match menu function calls with external URLs in the 4th parameter.
 		// This regex matches:
-		// - Function name from the list
-		// - Opening parenthesis
-		// - First 3 parameters (non-greedy, can be strings with single/double quotes or variables)
+		// - Function name from the list.
+		// - Opening parenthesis.
+		// - First 3 parameters (non-greedy, can be strings with single/double quotes or variables).
 		// - 4th parameter containing http://, https://, or // at the start of a string.
 		$pattern = '/\b(' . $functions_pattern . ')\s*\(\s*' .
 			// First parameter.
@@ -117,13 +106,9 @@ class External_Admin_Menu_Links_Check extends Abstract_File_Check {
 			foreach ( $files as $file ) {
 				$this->add_result_error_for_file(
 					$result,
-					sprintf(
-						/* translators: %s: Comma-separated list of admin menu function names. */
-						__(
-							'<strong>External URL used in admin menu.</strong><br>Plugins should not add external links directly to the WordPress admin menu. This disrupts the expected user experience and navigation patterns. Instead, create an admin page within WordPress that contains external links with clear descriptions, or add external links within the plugin\'s settings page or help section. Please review usage of: %s',
-							'plugin-check'
-						),
-						implode( ', ', $this->menu_functions )
+					__(
+						'<strong>External URL used in top-level admin menu.</strong><br>Plugins should not add external links directly to the top-level WordPress admin menu using add_menu_page(). This disrupts the expected user experience and navigation patterns. Instead, create an admin page within WordPress that contains external links with clear descriptions, or add external links as submenu items using add_submenu_page().',
+						'plugin-check'
 					),
 					'external_admin_menu_link',
 					$file['file'],
@@ -146,7 +131,7 @@ class External_Admin_Menu_Links_Check extends Abstract_File_Check {
 	 * @return string Description.
 	 */
 	public function get_description(): string {
-		return __( 'Detects external URLs used in WordPress admin menu functions, which disrupts the expected user experience.', 'plugin-check' );
+		return __( 'Detects external URLs used in top-level WordPress admin menu, which disrupts the expected user experience.', 'plugin-check' );
 	}
 
 	/**

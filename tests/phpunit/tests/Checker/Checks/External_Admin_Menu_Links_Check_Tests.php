@@ -13,7 +13,7 @@ use WordPress\Plugin_Check\Checker\Checks\Plugin_Repo\External_Admin_Menu_Links_
 class External_Admin_Menu_Links_Check_Tests extends WP_UnitTestCase {
 
 	/**
-	 * Test that external URLs in admin menu functions are detected as errors.
+	 * Test that external URLs in add_menu_page() (top-level menu) are detected as errors.
 	 */
 	public function test_detect_external_admin_menu_links_with_errors() {
 		$check_context = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-external-admin-menu-links-with-errors/load.php' );
@@ -44,7 +44,7 @@ class External_Admin_Menu_Links_Check_Tests extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Test that internal admin menu slugs do not trigger errors.
+	 * Test that internal slugs and external URLs in submenu functions do not trigger errors.
 	 */
 	public function test_no_errors_for_internal_admin_menu_links() {
 		$check_context = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-external-admin-menu-links-without-errors/load.php' );

@@ -16,10 +16,11 @@
  */
 
 /**
- * These are examples of problematic code that adds external links to admin menu.
+ * These are examples of problematic code that adds external links to
+ * the TOP-LEVEL admin menu using add_menu_page().
  */
 
-// ❌ Adding external link to main menu with https.
+// ❌ Adding external link to top-level menu with https.
 add_menu_page(
 	'External Resource',
 	'External Resource',
@@ -30,55 +31,18 @@ add_menu_page(
 	30
 );
 
-// ❌ Adding external link to options page with http.
-add_options_page(
-	'Settings',
-	'Settings',
+// ❌ Adding external link to top-level menu with http.
+add_menu_page(
+	'HTTP External',
+	'HTTP External',
 	'manage_options',
-	'http://example.com/settings'
+	'http://example.com/http-page',
+	'',
+	'dashicons-admin-site',
+	31
 );
 
-// ❌ Adding external link to management page.
-add_management_page(
-	'Tools',
-	'Tools',
-	'manage_options',
-	'https://example.com/tools'
-);
-
-// ❌ Adding external link to theme page.
-add_theme_page(
-	'Theme Options',
-	'Theme Options',
-	'manage_options',
-	'https://example.com/theme-options'
-);
-
-// ❌ Adding external link to plugins page.
-add_plugins_page(
-	'Plugin Settings',
-	'Plugin Settings',
-	'manage_options',
-	'https://example.com/plugin-settings'
-);
-
-// ❌ Adding external link to users page.
-add_users_page(
-	'User Import',
-	'User Import',
-	'manage_options',
-	'https://example.com/user-import'
-);
-
-// ❌ Adding external link to dashboard page.
-add_dashboard_page(
-	'Dashboard Widget',
-	'Dashboard Widget',
-	'manage_options',
-	'https://example.com/dashboard-widget'
-);
-
-// ❌ Adding external link with protocol-relative URL.
+// ❌ Adding external link with protocol-relative URL to top-level menu.
 add_menu_page(
 	'Protocol Relative',
 	'Protocol Relative',
@@ -86,5 +50,5 @@ add_menu_page(
 	'//example.com/protocol-relative',
 	'',
 	'dashicons-admin-site',
-	31
+	32
 );
