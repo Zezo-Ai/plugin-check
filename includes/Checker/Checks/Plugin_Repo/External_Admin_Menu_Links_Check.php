@@ -102,7 +102,7 @@ class External_Admin_Menu_Links_Check extends Abstract_File_Check {
 		// - First 3 parameters (non-greedy, can be strings with single/double quotes or variables)
 		// - 4th parameter containing http://, https://, or // at the start of a string.
 		$pattern = '/\b(' . $functions_pattern . ')\s*\(\s*' .
-			// First parameter. 
+			// First parameter.
 			'(?:[^,]+)\s*,\s*' .
 			// Second parameter.
 			'(?:[^,]+)\s*,\s*' .
