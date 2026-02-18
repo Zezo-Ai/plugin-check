@@ -21,7 +21,7 @@ use WordPress\Plugin_Check\Traits\Stable_Check;
  * as the menu slug parameter in WordPress admin menu functions. This practice violates
  * WordPress.org Plugin Directory Guideline #11 which prohibits hijacking the admin experience.
  *
- * @since 1.8.0
+ * @since 1.9.0
  */
 class External_Admin_Menu_Links_Check extends Abstract_File_Check {
 
@@ -35,7 +35,7 @@ class External_Admin_Menu_Links_Check extends Abstract_File_Check {
 	 * External URLs in submenus (add_submenu_page, add_options_page, etc.) are
 	 * acceptable for documentation, support links, and other resources.
 	 *
-	 * @since 1.8.0
+	 * @since 1.9.0
 	 * @var array
 	 */
 	protected $menu_functions = array(
@@ -47,7 +47,7 @@ class External_Admin_Menu_Links_Check extends Abstract_File_Check {
 	 *
 	 * Every check must have at least one category.
 	 *
-	 * @since 1.8.0
+	 * @since 1.9.0
 	 *
 	 * @return array The categories for the check.
 	 */
@@ -58,7 +58,7 @@ class External_Admin_Menu_Links_Check extends Abstract_File_Check {
 	/**
 	 * Amends the given result by running the check on the given list of files.
 	 *
-	 * @since 1.8.0
+	 * @since 1.9.0
 	 *
 	 * @param Check_Result $result The check result to amend, including the plugin context to check.
 	 * @param array        $files  List of absolute file paths.
@@ -75,7 +75,7 @@ class External_Admin_Menu_Links_Check extends Abstract_File_Check {
 	/**
 	 * Looks for external URLs in admin menu functions and amends the given result with an error if found.
 	 *
-	 * @since 1.8.0
+	 * @since 1.9.0
 	 *
 	 * @param Check_Result $result    The check result to amend, including the plugin context to check.
 	 * @param array        $php_files List of absolute PHP file paths.
@@ -107,7 +107,7 @@ class External_Admin_Menu_Links_Check extends Abstract_File_Check {
 				$this->add_result_error_for_file(
 					$result,
 					__(
-						'<strong>External URL used in top-level admin menu.</strong><br>Plugins should not add external links directly to the top-level WordPress admin menu using add_menu_page(). This disrupts the expected user experience and navigation patterns. Instead, create an admin page within WordPress that contains external links with clear descriptions, or add external links as submenu items using add_submenu_page().',
+						'<strong>External URL used in top-level admin menu.</strong><br>Plugins should not use add_menu_page() for external links as it disrupts the WordPress navigation experience.',
 						'plugin-check'
 					),
 					'external_admin_menu_link',
@@ -115,7 +115,7 @@ class External_Admin_Menu_Links_Check extends Abstract_File_Check {
 					$file['line'],
 					$file['column'],
 					'https://developer.wordpress.org/plugins/wordpress-org/detailed-plugin-guidelines/#11-plugins-should-not-hijack-the-admin',
-					9
+					7
 				);
 			}
 		}
@@ -126,7 +126,7 @@ class External_Admin_Menu_Links_Check extends Abstract_File_Check {
 	 *
 	 * Every check must have a short description explaining what the check does.
 	 *
-	 * @since 1.8.0
+	 * @since 1.9.0
 	 *
 	 * @return string Description.
 	 */
@@ -139,7 +139,7 @@ class External_Admin_Menu_Links_Check extends Abstract_File_Check {
 	 *
 	 * Every check must have a URL with further information about the check.
 	 *
-	 * @since 1.8.0
+	 * @since 1.9.0
 	 *
 	 * @return string The documentation URL.
 	 */
