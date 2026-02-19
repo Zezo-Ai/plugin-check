@@ -594,18 +594,19 @@
 			const { errorCount, warningCount } = countResults();
 
 			// Build the message with counts.
-			const errorPart =
-				errorCount > 0
-					? errorCount === 1
-						? '1 error'
-						: errorCount + ' errors'
-					: '';
-			const warningPart =
-				warningCount > 0
-					? warningCount === 1
+			let errorPart = '';
+			if ( errorCount > 0 ) {
+				errorPart =
+					errorCount === 1 ? '1 error' : errorCount + ' errors';
+			}
+
+			let warningPart = '';
+			if ( warningCount > 0 ) {
+				warningPart =
+					warningCount === 1
 						? '1 warning'
-						: warningCount + ' warnings'
-					: '';
+						: warningCount + ' warnings';
+			}
 
 			if ( errorPart && warningPart ) {
 				messageText = errorPart + ' and ' + warningPart + ' found.';
