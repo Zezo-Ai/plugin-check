@@ -681,6 +681,7 @@ final class Namer_Page {
 	 * @since 1.9.0
 	 *
 	 * @SuppressWarnings(PHPMD.NPathComplexity)
+	 * @SuppressWarnings(PHPMD.CyclomaticComplexity)
 	 *
 	 * @return array Map of provider label => list of model options.
 	 */
