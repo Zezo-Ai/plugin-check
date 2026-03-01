@@ -326,6 +326,8 @@ final class Namer_Page {
 	 * Renders the page.
 	 *
 	 * @since 1.8.0
+	 *
+	 * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
 	 */
 	public function render_page() {
 		if ( ! current_user_can( 'manage_options' ) ) {
@@ -664,6 +666,8 @@ final class Namer_Page {
 	 * Gets available model preferences from AI connectors.
 	 *
 	 * @since 1.9.0
+	 *
+	 * @SuppressWarnings(PHPMD.NPathComplexity)
 	 *
 	 * @return array List of model options with value/label.
 	 */

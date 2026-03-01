@@ -133,6 +133,8 @@ trait AI_Check_Names {
 	 *
 	 * @since 1.9.0
 	 *
+	 * @SuppressWarnings(PHPMD.NPathComplexity)
+	 *
 	 * @param string        $prompt           The prompt to send to the AI.
 	 * @param string        $model_preference Model preference (optional).
 	 * @param callable|null $builder_config   Optional callback to configure the prompt builder before execution.
@@ -259,6 +261,8 @@ trait AI_Check_Names {
 	 * Extracts token usage from a result object, if available.
 	 *
 	 * @since 1.9.0
+	 *
+	 * @SuppressWarnings(PHPMD.NPathComplexity)
 	 *
 	 * @param object $result Result object.
 	 * @return array|null Token usage array or null.
