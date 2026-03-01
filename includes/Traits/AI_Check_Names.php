@@ -173,7 +173,7 @@ trait AI_Check_Names {
 				return $result;
 			}
 
-			$text = method_exists( $result, 'to_text' ) ? $result->to_text() : ( method_exists( $result, 'toText' ) ? $result->toText() : '' );
+			$text  = method_exists( $result, 'to_text' ) ? $result->to_text() : ( method_exists( $result, 'toText' ) ? $result->toText() : '' );
 			$usage = $this->extract_token_usage( $result );
 
 			return array_filter(
@@ -764,7 +764,7 @@ trait AI_Check_Names {
 	 * @since 1.8.0
 	 *
 	 * @param object $builder The prompt builder instance.
-	 * @param string        $query_type Type of query: 'similar_name' or 'prereview'.
+	 * @param string $query_type Type of query: 'similar_name' or 'prereview'.
 	 * @return void
 	 */
 	protected function maybe_set_structured_output( $builder, $query_type = 'similar_name' ) {

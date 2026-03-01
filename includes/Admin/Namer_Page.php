@@ -337,14 +337,15 @@ final class Namer_Page {
 		<div class="wrap">
 			<h1><?php echo esc_html__( 'Plugin Check Namer Tool', 'plugin-check' ); ?></h1>
 
-			<?php if ( is_wp_error( $ai_config ) ) : ?>
+			<?php
+			if ( is_wp_error( $ai_config ) ) {
+				?>
 				<p class="description">
 					<?php esc_html_e( 'The Plugin Namer requires WordPress 7.0+ with configured AI connectors. Please enable AI connectors in core to use this tool.', 'plugin-check' ); ?>
 				</p>
-			</div>
-			<?php
-			return;
-			endif;
+				<?php
+				return;
+			}
 			?>
 
 			<form id="plugin-check-namer-form" method="post">
@@ -479,7 +480,7 @@ final class Namer_Page {
 		$author = trim( $author );
 
 		$model_preference = $this->get_model_preference_from_request();
-		$user_id = get_current_user_id();
+		$user_id          = get_current_user_id();
 
 		if ( empty( $input ) ) {
 			$this->handle_analyze_error( $user_id, '', new WP_Error( 'missing_input', __( 'Please enter a plugin name.', 'plugin-check' ) ) );
