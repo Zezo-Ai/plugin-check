@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e752aa0d80139aa98aad7680c25699fc",
+    "content-hash": "6cbcdae00799cb3e60f0dea6f325a655",
     "packages": [
         {
             "name": "automattic/vipwpcs",
@@ -1047,11 +1047,11 @@
         },
         {
             "name": "plugin-check/phpcs-sniffs",
-            "version": "1.0.0",
+            "version": "dev-1192-fatal-error-with-wordpress-70-beta-2-using-core",
             "dist": {
                 "type": "path",
                 "url": "./phpcs-sniffs",
-                "reference": "8754076d6e68c41d209eea227a2ef824af208ef8"
+                "reference": "86ba78de0727e4f998716b720da3919b7c14b68c"
             },
             "require": {
                 "dealerdirect/phpcodesniffer-composer-installer": "^1.0.0",
@@ -7851,6 +7851,7 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
+        "plugin-check/phpcs-sniffs": 20,
         "phpcompatibility/php-compatibility": 20
     },
     "prefer-stable": false,

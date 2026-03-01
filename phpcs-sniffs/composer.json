@@ -1,6 +1,5 @@
 {
   "name": "plugin-check/phpcs-sniffs",
-  "version": "1.0.0",
   "description": "PHP_CodeSniffer rules (sniffs) for static checks in Plugin Check",
   "license": "GPL-2.0-or-later",
   "type": "phpcodesniffer-standard",
