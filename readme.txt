@@ -37,7 +37,7 @@ Plugin Check now includes an AI-powered Plugin Namer tool (accessible via _Tools
 * Compliance with WordPress plugin naming guidelines
 * Generic or overly broad naming issues
 
-The Plugin Namer provides instant feedback with actionable suggestions, helping you choose a clear, unique, and policy-compliant name that stands out in the plugin directory. This feature requires AI provider configuration in the settings.
+The Plugin Namer provides instant feedback with actionable suggestions, helping you choose a clear, unique, and policy-compliant name that stands out in the plugin directory. This feature requires WordPress 7.0+ and configured AI connectors.
 
 **Important:** The Plugin Namer tool provides guidance only and is not definitive. All plugin name decisions are subject to final review and approval by the WordPress.org Plugins team reviewers.
 

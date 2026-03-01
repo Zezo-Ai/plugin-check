@@ -8,7 +8,6 @@
 namespace WordPress\Plugin_Check\Admin;
 
 use WordPress\Plugin_Check\Traits\AI_Check_Names;
-use WordPress\Plugin_Check\Traits\AI_Connect;
 use WP_Error;
 
 /**
@@ -18,7 +17,6 @@ use WP_Error;
  */
 final class Namer_Page {
 
-	use AI_Connect;
 	use AI_Check_Names;
 
 	/**
@@ -28,14 +26,6 @@ final class Namer_Page {
 	 * @var string
 	 */
 	const MENU_SLUG = 'plugin-check-namer';
-
-	/**
-	 * Option name used by Plugin Check settings.
-	 *
-	 * @since 1.8.0
-	 * @var string
-	 */
-	const OPTION_NAME = 'plugin_check_settings';
 
 	/**
 	 * Admin-post action for analysis.
@@ -62,7 +52,7 @@ final class Namer_Page {
 		add_action( 'admin_menu', array( $this, 'add_page' ) );
 		add_action( 'admin_post_' . self::ACTION_ANALYZE, array( $this, 'handle_analyze' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
-		add_action( 'admin_notices', array( $this, 'render_api_key_notice' ) );
+		add_action( 'admin_notices', array( $this, 'render_ai_notice' ) );
 		add_action( 'wp_ajax_plugin_check_namer_analyze', array( $this, 'ajax_analyze' ) );
 	}
 
@@ -141,12 +131,13 @@ final class Namer_Page {
 
 		$author = $this->get_author_name_from_request();
 
-		$ai_config = $this->get_ai_config();
+		$model_preference = $this->get_model_preference_from_request();
+		$ai_config        = $this->get_ai_config( $model_preference );
 		if ( is_wp_error( $ai_config ) ) {
 			wp_send_json_error( array( 'message' => $ai_config->get_error_message() ) );
 		}
 
-		$analysis = $this->run_name_analysis( $ai_config['provider'], $ai_config['api_key'], $ai_config['model'], $name, $author );
+		$analysis = $this->run_name_analysis( $ai_config['model_preference'], $name, $author );
 		if ( is_wp_error( $analysis ) ) {
 			wp_send_json_error( array( 'message' => $analysis->get_error_message() ) );
 		}
@@ -164,7 +155,7 @@ final class Namer_Page {
 	 *
 	 * @param array        $parsed    Parsed analysis.
 	 * @param string|array $analysis  Raw analysis.
-	 * @param array        $ai_config AI configuration with provider and model info.
+	 * @param array        $ai_config AI configuration with model preference info.
 	 * @return array Response array.
 	 */
 	protected function build_ajax_response( $parsed, $analysis, $ai_config = array() ) {
@@ -187,11 +178,10 @@ final class Namer_Page {
 			$response['token_usage'] = $parsed['token_usage'];
 		}
 
-		// Add AI model and provider information.
-		if ( ! empty( $ai_config ) ) {
+		// Add AI model preference information.
+		if ( ! empty( $ai_config['model_preference'] ) ) {
 			$response['ai_info'] = array(
-				'provider' => $ai_config['provider'],
-				'model'    => $ai_config['model'],
+				'model' => $ai_config['model_preference'],
 			);
 		}
 
@@ -248,38 +238,62 @@ final class Namer_Page {
 	}
 
 	/**
-	 * Gets AI configuration from settings.
+	 * Gets AI configuration from core AI connectors.
 	 *
-	 * @since 1.8.0
+	 * @since 1.9.0
 	 *
+	 * @param string $model_preference Selected model preference (optional).
 	 * @return array|WP_Error AI config array or error.
 	 */
-	protected function get_ai_config() {
-		$settings = get_option( self::OPTION_NAME, array() );
-		$provider = isset( $settings['ai_provider'] ) ? (string) $settings['ai_provider'] : '';
-		$api_key  = isset( $settings['ai_api_key'] ) ? (string) $settings['ai_api_key'] : '';
-		$model    = isset( $settings['ai_model'] ) ? (string) $settings['ai_model'] : '';
-
-		if ( empty( $provider ) || empty( $api_key ) || empty( $model ) ) {
+	protected function get_ai_config( $model_preference = '' ) {
+		if ( ! function_exists( 'wp_ai_client_prompt' ) ) {
 			return new WP_Error(
-				'missing_ai_config',
-				__( 'AI settings are not configured. Please configure Provider, API key, and Model in Plugin Check settings first.', 'plugin-check' )
+				'ai_client_not_available',
+				__( 'The AI client is not available. This feature requires WordPress 7.0 or newer.', 'plugin-check' )
 			);
 		}
 
+		if ( ! is_wp_version_compatible( '7.0' ) ) {
+			return new WP_Error(
+				'ai_client_not_available',
+				__( 'The AI client is only available in WordPress 7.0 or newer.', 'plugin-check' )
+			);
+		}
+
+		$builder = wp_ai_client_prompt( 'Plugin Check AI availability test.' );
+		if ( is_wp_error( $builder ) ) {
+			return $builder;
+		}
+
+		$builder = $this->apply_model_preference( $builder, $model_preference );
+		if ( is_wp_error( $builder ) ) {
+			return $builder;
+		}
+
+		if ( method_exists( $builder, 'is_supported_for_text_generation' ) ) {
+			$supported = $builder->is_supported_for_text_generation();
+			if ( is_wp_error( $supported ) ) {
+				return $supported;
+			}
+			if ( ! $supported ) {
+				return new WP_Error(
+					'ai_not_configured',
+					__( 'AI connectors are not configured. Please connect an AI provider in WordPress 7.0+ settings.', 'plugin-check' )
+				);
+			}
+		}
+
 		return array(
-			'provider' => $provider,
-			'api_key'  => $api_key,
-			'model'    => $model,
+			'model_preference' => (string) $model_preference,
 		);
 	}
 
 	/**
-	 * Renders admin notice when API key settings are not configured.
+	 * Renders admin notice when AI connectors are not configured.
 	 *
 	 * @since 1.9.0
 	 */
-	public function render_api_key_notice() {
+	public function render_ai_notice() {
 		$screen = get_current_screen();
 		if ( ! $screen || $screen->id !== $this->hook_suffix ) {
 			return;
@@ -293,16 +307,14 @@ final class Namer_Page {
 		if ( ! is_wp_error( $ai_config ) ) {
 			return;
 		}
-
-		$settings_url = add_query_arg( array( 'page' => Settings_Page::PAGE_SLUG ), admin_url( 'options-general.php' ) );
 		?>
 		<div class="notice notice-warning is-dismissible">
 			<p>
 				<?php
 				printf(
-					/* translators: %s: Link to Plugin Check settings page. */
-					__( 'To use the Namer tool, <a href="%s">set a valid API key in Plugin Check settings</a>.', 'plugin-check' ),
-					esc_url( $settings_url )
+					/* translators: %s: Error message. */
+					__( 'To use the Namer tool, configure AI connectors in WordPress 7.0+ settings. Details: %s', 'plugin-check' ),
+					esc_html( $ai_config->get_error_message() )
 				);
 				?>
 			</p>
@@ -320,9 +332,20 @@ final class Namer_Page {
 			return;
 		}
 
+		$ai_config = $this->get_ai_config();
 		?>
 		<div class="wrap">
 			<h1><?php echo esc_html__( 'Plugin Check Namer Tool', 'plugin-check' ); ?></h1>
+
+			<?php if ( is_wp_error( $ai_config ) ) : ?>
+				<p class="description">
+					<?php esc_html_e( 'The Plugin Namer requires WordPress 7.0+ with configured AI connectors. Please enable AI connectors in core to use this tool.', 'plugin-check' ); ?>
+				</p>
+			</div>
+			<?php
+			return;
+			endif;
+			?>
 
 			<form id="plugin-check-namer-form" method="post">
 				<table class="form-table" role="presentation">
@@ -359,6 +382,29 @@ final class Namer_Page {
 								/>
 								<p class="description">
 									<?php echo esc_html__( 'Optional: Enter the author or brand name if you own the trademark.', 'plugin-check' ); ?>
+								</p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row">
+								<label for="plugin_check_namer_model"><?php echo esc_html__( 'AI model', 'plugin-check' ); ?></label>
+							</th>
+							<td>
+								<?php $model_options = $this->get_available_model_preferences(); ?>
+								<select
+									id="plugin_check_namer_model"
+									name="model_preference"
+									class="regular-text"
+								>
+									<option value=""><?php echo esc_html__( 'Automatic (recommended)', 'plugin-check' ); ?></option>
+									<?php foreach ( $model_options as $model_option ) : ?>
+										<option value="<?php echo esc_attr( $model_option['value'] ); ?>">
+											<?php echo esc_html( $model_option['label'] ); ?>
+										</option>
+									<?php endforeach; ?>
+								</select>
+								<p class="description">
+									<?php echo esc_html__( 'Choose a specific model from connected AI providers, or leave as automatic to let WordPress decide.', 'plugin-check' ); ?>
 								</p>
 							</td>
 						</tr>
@@ -432,6 +478,7 @@ final class Namer_Page {
 		$author = isset( $_POST['plugin_check_namer_author'] ) ? sanitize_text_field( wp_unslash( $_POST['plugin_check_namer_author'] ) ) : '';
 		$author = trim( $author );
 
+		$model_preference = $this->get_model_preference_from_request();
 		$user_id = get_current_user_id();
 
 		if ( empty( $input ) ) {
@@ -439,13 +486,13 @@ final class Namer_Page {
 			return;
 		}
 
-		$ai_config = $this->get_ai_config();
+		$ai_config = $this->get_ai_config( $model_preference );
 		if ( is_wp_error( $ai_config ) ) {
 			$this->handle_analyze_error( $user_id, $input, $ai_config );
 			return;
 		}
 
-		$analysis = $this->run_name_analysis( $ai_config['provider'], $ai_config['api_key'], $ai_config['model'], $input, $author );
+		$analysis = $this->run_name_analysis( $ai_config['model_preference'], $input, $author );
 
 		if ( is_wp_error( $analysis ) ) {
 			$this->handle_analyze_error( $user_id, $input, $analysis );
@@ -598,5 +645,79 @@ final class Namer_Page {
 			'start' => -1,
 			'end'   => -1,
 		);
+	}
+
+	/**
+	 * Gets model preference from the current request.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @return string Model preference.
+	 */
+	protected function get_model_preference_from_request() {
+		$model_preference = isset( $_POST['model_preference'] ) ? sanitize_text_field( wp_unslash( $_POST['model_preference'] ) ) : '';
+		return trim( (string) $model_preference );
+	}
+
+	/**
+	 * Gets available model preferences from AI connectors.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @return array List of model options with value/label.
+	 */
+	protected function get_available_model_preferences() {
+		$options = array();
+		$models  = array();
+
+		if ( function_exists( 'wp_ai_client_get_available_models' ) ) {
+			$models = wp_ai_client_get_available_models();
+		} elseif ( function_exists( 'wp_ai_client_get_models' ) ) {
+			$models = wp_ai_client_get_models();
+		}
+
+		$models = apply_filters( 'plugin_check_ai_model_preferences', $models );
+
+		if ( is_array( $models ) ) {
+			foreach ( $models as $key => $model ) {
+				if ( is_array( $model ) ) {
+					$provider = isset( $model['provider'] ) ? (string) $model['provider'] : '';
+					$id       = isset( $model['id'] ) ? (string) $model['id'] : ( isset( $model['model'] ) ? (string) $model['model'] : '' );
+					$label    = isset( $model['label'] ) ? (string) $model['label'] : '';
+
+					$value = '';
+					if ( '' !== $provider && '' !== $id ) {
+						$value = $provider . '::' . $id;
+					} elseif ( '' !== $id ) {
+						$value = $id;
+					}
+
+					if ( '' === $label ) {
+						$label = '' !== $provider ? $provider . ' / ' . $id : $id;
+					}
+
+					if ( '' !== $value ) {
+						$options[] = array(
+							'value' => $value,
+							'label' => $label,
+						);
+					}
+
+					continue;
+				}
+
+				$model_id = is_string( $model ) ? $model : ( is_string( $key ) ? $key : '' );
+				if ( '' === $model_id ) {
+					continue;
+				}
+
+				$options[] = array(
+					'value' => $model_id,
+					'label' => $model_id,
+				);
+			}
+		}
+
+		return $options;
 	}
 }

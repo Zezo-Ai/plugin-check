@@ -38,6 +38,9 @@
 		const authorInput = document.getElementById(
 			'plugin_check_namer_author'
 		);
+		const modelSelect = document.getElementById(
+			'plugin_check_namer_model'
+		);
 
 		const submitBtn = document.getElementById(
 			'plugin-check-namer-submit'
@@ -162,6 +165,12 @@
 					( authorInput.value || '' ).trim()
 				);
 			}
+			if ( modelSelect ) {
+				formData.append(
+					'model_preference',
+					( modelSelect.value || '' ).trim()
+				);
+			}
 
 			fetch( pluginCheckNamer.ajaxUrl, {
 				method: 'POST',
@@ -246,11 +255,16 @@
 
 						// Add AI provider and model info if available.
 						if ( payload.data.ai_info ) {
-							tokensText =
-								payload.data.ai_info.provider +
-								' (' +
-								payload.data.ai_info.model +
-								') - ';
+							const parts = [];
+							if ( payload.data.ai_info.provider ) {
+								parts.push( payload.data.ai_info.provider );
+							}
+							if ( payload.data.ai_info.model ) {
+								parts.push( payload.data.ai_info.model );
+							}
+							if ( parts.length ) {
+								tokensText = parts.join( ' / ' ) + ' - ';
+							}
 						}
 
 						tokensText += tokenUsage.total_tokens + ' total';
