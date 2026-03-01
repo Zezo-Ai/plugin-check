@@ -345,6 +345,11 @@ final class Namer_Page {
 				<p class="description">
 					<?php esc_html_e( 'The Plugin Namer requires WordPress 7.0+ with configured AI connectors. Please enable AI connectors in core to use this tool.', 'plugin-check' ); ?>
 				</p>
+				<p>
+					<a class="button button-primary" href="<?php echo esc_url( admin_url( 'options-general.php?page=connectors-wp-admin' ) ); ?>">
+						<?php esc_html_e( 'Configure AI Connectors', 'plugin-check' ); ?>
+					</a>
+				</p>
 				<?php
 				return;
 			}
@@ -393,17 +398,25 @@ final class Namer_Page {
 								<label for="plugin_check_namer_model"><?php echo esc_html__( 'AI model', 'plugin-check' ); ?></label>
 							</th>
 							<td>
-								<?php $model_options = $this->get_available_model_preferences(); ?>
+								<?php $model_groups = $this->get_available_model_preferences(); ?>
 								<select
 									id="plugin_check_namer_model"
 									name="model_preference"
 									class="regular-text"
 								>
 									<option value=""><?php echo esc_html__( 'Automatic (recommended)', 'plugin-check' ); ?></option>
-									<?php foreach ( $model_options as $model_option ) : ?>
-										<option value="<?php echo esc_attr( $model_option['value'] ); ?>">
-											<?php echo esc_html( $model_option['label'] ); ?>
-										</option>
+									<?php foreach ( $model_groups as $group_label => $group_options ) : ?>
+										<?php if ( ! empty( $group_label ) ) : ?>
+											<optgroup label="<?php echo esc_attr( $group_label ); ?>">
+										<?php endif; ?>
+										<?php foreach ( $group_options as $model_option ) : ?>
+											<option value="<?php echo esc_attr( $model_option['value'] ); ?>">
+												<?php echo esc_html( $model_option['label'] ); ?>
+											</option>
+										<?php endforeach; ?>
+										<?php if ( ! empty( $group_label ) ) : ?>
+											</optgroup>
+										<?php endif; ?>
 									<?php endforeach; ?>
 								</select>
 								<p class="description">
@@ -669,10 +682,10 @@ final class Namer_Page {
 	 *
 	 * @SuppressWarnings(PHPMD.NPathComplexity)
 	 *
-	 * @return array List of model options with value/label.
+	 * @return array Map of provider label => list of model options.
 	 */
 	protected function get_available_model_preferences() {
-		$options = array();
+		$grouped = array();
 		$models  = array();
 
 		if ( function_exists( 'wp_ai_client_get_available_models' ) ) {
@@ -702,7 +715,11 @@ final class Namer_Page {
 					}
 
 					if ( '' !== $value ) {
-						$options[] = array(
+						$group_label = '' !== $provider ? $provider : __( 'Other', 'plugin-check' );
+						if ( ! isset( $grouped[ $group_label ] ) ) {
+							$grouped[ $group_label ] = array();
+						}
+						$grouped[ $group_label ][] = array(
 							'value' => $value,
 							'label' => $label,
 						);
@@ -716,13 +733,17 @@ final class Namer_Page {
 					continue;
 				}
 
-				$options[] = array(
+				$group_label = __( 'Other', 'plugin-check' );
+				if ( ! isset( $grouped[ $group_label ] ) ) {
+					$grouped[ $group_label ] = array();
+				}
+				$grouped[ $group_label ][] = array(
 					'value' => $model_id,
 					'label' => $model_id,
 				);
 			}
 		}
 
-		return $options;
+		return $grouped;
 	}
 }
