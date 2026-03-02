@@ -7,6 +7,7 @@
 
 namespace WordPress\Plugin_Check\Traits;
 
+use WordPress\AiClient\AiClient;
 use WP_Error;
 
 /**
@@ -205,146 +206,45 @@ trait AI_Utils {
 	}
 
 	/**
-	 * Returns filtered AI models considering active providers/models only.
+	 * Returns models from active/configured providers using the official AI Client registry flow.
 	 *
 	 * @since 1.9.0
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity)
-	 * @SuppressWarnings(PHPMD.NPathComplexity)
 	 *
 	 * @return array
 	 */
 	protected function get_filtered_ai_models() {
-		$models                = array();
-		$providers             = array();
-		$inactive_provider_ids = array();
-
-		if ( function_exists( 'wp_ai_client_get_available_models' ) ) {
-			$models = wp_ai_client_get_available_models();
-		} elseif ( function_exists( 'wp_ai_client_get_models' ) ) {
-			$models = wp_ai_client_get_models();
-		}
-
-		if ( function_exists( 'wp_ai_client_get_available_providers' ) ) {
-			$providers = wp_ai_client_get_available_providers();
-		}
-
-		if ( is_array( $providers ) ) {
-			foreach ( $providers as $provider_key => $provider_data ) {
-				$provider_id = is_string( $provider_key ) ? $provider_key : '';
-
-				if ( is_array( $provider_data ) ) {
-					$provider_id = $this->resolve_provider_id( $provider_id, $provider_data );
-				}
-
-				$provider_id = $this->normalize_provider_id( $provider_id );
-				if ( '' === $provider_id ) {
-					continue;
-				}
-
-				if ( is_array( $provider_data ) && ! $this->is_ai_item_active( $provider_data ) ) {
-					$inactive_provider_ids[ $provider_id ] = true;
-				}
-			}
-		}
-
-		$models = apply_filters( 'plugin_check_ai_model_preferences', $models );
-
-		if ( ! is_array( $models ) ) {
+		if ( ! class_exists( AiClient::class ) ) {
 			return array();
 		}
 
-		$filtered = array();
+		$models = array();
 
-		foreach ( $models as $key => $model ) {
-			if ( is_array( $model ) ) {
-				if ( ! $this->is_ai_item_active( $model ) ) {
+		try {
+			$registry = AiClient::defaultRegistry();
+
+			foreach ( $registry->getRegisteredProviderIds() as $provider_id ) {
+				if ( ! $registry->isProviderConfigured( $provider_id ) ) {
 					continue;
 				}
 
-				$provider = isset( $model['provider'] ) ? $this->normalize_provider_id( (string) $model['provider'] ) : '';
-				if ( '' !== $provider && isset( $inactive_provider_ids[ $provider ] ) ) {
-					continue;
+				$class_name    = $registry->getProviderClassName( $provider_id );
+				$provider_meta = $class_name::metadata();
+
+				foreach ( $class_name::modelMetadataDirectory()->listModelMetadata() as $model_meta ) {
+					$models[] = array(
+						'provider'       => (string) $provider_id,
+						'provider_label' => (string) $provider_meta->getName(),
+						'id'             => (string) $model_meta->getId(),
+						'label'          => (string) $model_meta->getName(),
+					);
 				}
-
-				$filtered[ $key ] = $model;
-				continue;
 			}
-
-			$filtered[ $key ] = $model;
+		} catch ( \Throwable $e ) {
+			return array();
 		}
 
-		return $filtered;
-	}
-
-	/**
-	 * Resolves a provider ID from provider metadata.
-	 *
-	 * @since 1.9.0
-	 *
-	 * @param string $provider_id   Initial provider id from array key.
-	 * @param array  $provider_data Provider metadata.
-	 * @return string
-	 */
-	protected function resolve_provider_id( $provider_id, array $provider_data ) {
-		if ( '' !== $provider_id ) {
-			return $provider_id;
-		}
-
-		$possible_keys = array( 'id', 'provider', 'slug', 'name' );
-		foreach ( $possible_keys as $key ) {
-			if ( isset( $provider_data[ $key ] ) && is_string( $provider_data[ $key ] ) && '' !== trim( $provider_data[ $key ] ) ) {
-				return (string) $provider_data[ $key ];
-			}
-		}
-
-		return '';
-	}
-
-	/**
-	 * Normalizes provider IDs to reduce mismatches across core data shapes.
-	 *
-	 * @since 1.9.0
-	 *
-	 * @param string $provider_id Provider ID.
-	 * @return string
-	 */
-	protected function normalize_provider_id( $provider_id ) {
-		$provider_id = strtolower( trim( (string) $provider_id ) );
-		if ( '' === $provider_id ) {
-			return '';
-		}
-
-		// Normalize common namespaces like "WordPress\\AI\\Providers\\OpenAI".
-		$provider_id = preg_replace( '/^.*[\\\\\\/]/', '', $provider_id );
-		return preg_replace( '/[^a-z0-9_-]/', '', $provider_id );
-	}
-
-	/**
-	 * Determines if an AI provider/model item should be treated as active.
-	 *
-	 * @since 1.9.0
-	 *
-	 * @param mixed $item Item metadata.
-	 * @return bool
-	 */
-	protected function is_ai_item_active( $item ) {
-		if ( ! is_array( $item ) ) {
-			return true;
-		}
-
-		$boolean_fields = array( 'active', 'is_active', 'enabled', 'is_enabled', 'connected', 'is_connected' );
-		foreach ( $boolean_fields as $field ) {
-			if ( array_key_exists( $field, $item ) ) {
-				return (bool) $item[ $field ];
-			}
-		}
-
-		if ( isset( $item['status'] ) && is_string( $item['status'] ) ) {
-			return in_array( strtolower( $item['status'] ), array( 'active', 'enabled', 'connected' ), true );
-		}
-
-		return true;
+		$models = apply_filters( 'plugin_check_ai_model_preferences', $models );
+		return is_array( $models ) ? $models : array();
 	}
 
 	/**
@@ -388,9 +288,10 @@ trait AI_Utils {
 		if ( is_array( $models ) ) {
 			foreach ( $models as $key => $model ) {
 				if ( is_array( $model ) ) {
-					$provider = isset( $model['provider'] ) ? (string) $model['provider'] : '';
-					$id       = isset( $model['id'] ) ? (string) $model['id'] : ( isset( $model['model'] ) ? (string) $model['model'] : '' );
-					$label    = isset( $model['label'] ) ? (string) $model['label'] : '';
+					$provider       = isset( $model['provider'] ) ? (string) $model['provider'] : '';
+					$provider_label = isset( $model['provider_label'] ) ? (string) $model['provider_label'] : '';
+					$id             = isset( $model['id'] ) ? (string) $model['id'] : ( isset( $model['model'] ) ? (string) $model['model'] : '' );
+					$label          = isset( $model['label'] ) ? (string) $model['label'] : '';
 
 					$value = '';
 					if ( '' !== $provider && '' !== $id ) {
@@ -404,7 +305,7 @@ trait AI_Utils {
 					}
 
 					if ( '' !== $value ) {
-						$group_label = '' !== $provider ? $provider : __( 'Other', 'plugin-check' );
+						$group_label = '' !== $provider_label ? $provider_label : ( '' !== $provider ? $provider : __( 'Other', 'plugin-check' ) );
 						if ( ! isset( $grouped[ $group_label ] ) ) {
 							$grouped[ $group_label ] = array();
 						}
