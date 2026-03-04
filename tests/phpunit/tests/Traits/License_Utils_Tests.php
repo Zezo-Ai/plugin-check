@@ -78,6 +78,11 @@ class License_Utils_Tests extends WP_UnitTestCase {
 
 			array( 'The Unlicense', 'Unlicense' ),
 			array( 'Unlicense', 'Unlicense' ),
+
+			array( 'WTFPL', 'WTFPL' ),
+			array( 'WTFPL v2', 'WTFPL' ),
+			array( 'Do What The F*ck You Want To Public License', 'WTFPL' ),
+			array( 'Do What The Fuck You Want To Public License', 'WTFPL' ),
 		);
 	}
 
@@ -120,6 +125,10 @@ class License_Utils_Tests extends WP_UnitTestCase {
 			array( 'CC0 1.0 Universal', true ),
 			array( 'The Unlicense', true ),
 			array( 'Unlicense', true ),
+			array( 'WTFPL', true ),
+			array( 'WTFPL v2', true ),
+			array( 'Do What The F*ck You Want To Public License', true ),
+			array( 'Do What The Fuck You Want To Public License', true ),
 
 			array( 'EPL', false ),
 			array( 'EUPL', false ),

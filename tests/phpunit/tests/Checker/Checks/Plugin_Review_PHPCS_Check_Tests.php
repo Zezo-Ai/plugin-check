@@ -60,9 +60,6 @@ class Plugin_Review_PHPCS_Check_Tests extends WP_UnitTestCase {
 		// There should not be WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents error on Line no 39 and column no 1.
 		$this->assertCount( 0, wp_list_filter( $errors['load.php'][39][1], array( 'code' => 'WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents' ) ) );
 
-		// Check for PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound error on Line no 41 and column no at 1.
-		$this->assertSame( 'PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound', $errors['load.php'][41][1][0]['code'] );
-
 		// Check for existing forbidden functions.
 		$forbidden_found = 'Generic.PHP.ForbiddenFunctions.Found';
 
@@ -112,6 +109,9 @@ class Plugin_Review_PHPCS_Check_Tests extends WP_UnitTestCase {
 
 		// Check for WordPress.WP.DiscouragedFunctions.wp_reset_query_wp_reset_query warning on Line no 26 and column no at 1.
 		$this->assertSame( 'WordPress.WP.DiscouragedFunctions.wp_reset_query_wp_reset_query', $warnings['load.php'][26][1][0]['code'] );
+
+		// Check for PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound warning on Line no 41 and column no at 1.
+		$this->assertSame( 'PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound', $warnings['load.php'][41][1][0]['code'] );
 
 		// Check for new forbidden functions
 		// Check for Generic.PHP.ForbiddenFunctions._cleanup_header_commentFound error on Line no 52 and column no at 1.

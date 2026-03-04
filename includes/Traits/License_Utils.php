@@ -56,6 +56,10 @@ trait License_Utils {
 		$license = preg_replace( '/GPL\s*[-|\.]*\s*[v]?([0-9])(\.[0])?/i', 'GPL$1', $license, 1 );
 		$license = preg_replace( '/Apache.*?([0-9])(\.[0])?/i', 'Apache$1', $license );
 		$license = preg_replace( '/(The\s+)?Unlicense/i', 'Unlicense', $license );
+		// Normalize WTFPL variations - must come before version removal to catch full text.
+		$license = preg_replace( '/Do\s+What\s+The\s+F[^\s]*\s+You\s+Want\s+To\s+Public\s+License/i', 'WTFPL', $license );
+		// Remove version numbers from WTFPL (e.g., "WTFPL v2" -> "WTFPL").
+		$license = preg_replace( '/WTFPL\s*[v]?([0-9])/i', 'WTFPL', $license );
 		$license = str_replace( '.', '', $license );
 
 		return $license;
@@ -84,7 +88,13 @@ trait License_Utils {
 	 * @return bool true if the license is GPL compatible, otherwise false.
 	 */
 	protected function is_license_gpl_compatible( $license ) {
-		$match = preg_match( '/GPL|GNU|MIT|FreeBSD|New BSD|BSD-3-Clause|BSD 3 Clause|OpenLDAP|Expat|Apache2|MPL20|ISC|CC0|Unlicense/im', $license );
+		// Check for WTFPL in full text form before normalization.
+		$wtfpl_match = preg_match( '/Do\s+What\s+The\s+F[^\s]*\s+You\s+Want\s+To\s+Public\s+License/i', $license );
+		if ( $wtfpl_match ) {
+			return true;
+		}
+
+		$match = preg_match( '/GPL|GNU|MIT|FreeBSD|New BSD|BSD-3-Clause|BSD 3 Clause|OpenLDAP|Expat|Apache2|MPL20|ISC|CC0|Unlicense|WTFPL/im', $license );
 
 		return ( false === $match || 0 === $match ) ? false : true;
 	}

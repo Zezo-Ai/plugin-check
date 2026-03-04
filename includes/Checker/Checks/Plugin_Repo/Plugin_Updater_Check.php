@@ -174,6 +174,8 @@ class Plugin_Updater_Check extends Abstract_File_Check {
 			'#class [A-Z_]+_Plugin_Updater#i',
 			'#updater\.\w+\.\w{2,5}#i',
 			'#site_transient_update_plugins#',
+			'#YahnisElsts\\\\PluginUpdateChecker#',
+			'#PucFactory::buildUpdateChecker#',
 		);
 
 		foreach ( $look_for_regex as $regex ) {

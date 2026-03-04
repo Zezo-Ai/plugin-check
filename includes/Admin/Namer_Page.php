@@ -62,6 +62,7 @@ final class Namer_Page {
 		add_action( 'admin_menu', array( $this, 'add_page' ) );
 		add_action( 'admin_post_' . self::ACTION_ANALYZE, array( $this, 'handle_analyze' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
+		add_action( 'admin_notices', array( $this, 'render_api_key_notice' ) );
 		add_action( 'wp_ajax_plugin_check_namer_analyze', array( $this, 'ajax_analyze' ) );
 	}
 
@@ -274,6 +275,42 @@ final class Namer_Page {
 	}
 
 	/**
+	 * Renders admin notice when API key settings are not configured.
+	 *
+	 * @since 1.9.0
+	 */
+	public function render_api_key_notice() {
+		$screen = get_current_screen();
+		if ( ! $screen || $screen->id !== $this->hook_suffix ) {
+			return;
+		}
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
+		$ai_config = $this->get_ai_config();
+		if ( ! is_wp_error( $ai_config ) ) {
+			return;
+		}
+
+		$settings_url = add_query_arg( array( 'page' => Settings_Page::PAGE_SLUG ), admin_url( 'options-general.php' ) );
+		?>
+		<div class="notice notice-warning is-dismissible">
+			<p>
+				<?php
+				printf(
+					/* translators: %s: Link to Plugin Check settings page. */
+					__( 'To use the Namer tool, <a href="%s">set a valid API key in Plugin Check settings</a>.', 'plugin-check' ),
+					esc_url( $settings_url )
+				);
+				?>
+			</p>
+		</div>
+		<?php
+	}
+
+	/**
 	 * Renders the page.
 	 *
 	 * @since 1.8.0
@@ -329,7 +366,7 @@ final class Namer_Page {
 				</table>
 
 				<p class="description">
-					<strong><?php echo esc_html__( 'Note:', 'plugin-check' ); ?></strong> 
+					<strong><?php echo esc_html__( 'Note:', 'plugin-check' ); ?></strong>
 					<br/>
 					<?php echo esc_html__( 'This tool provides guidance only and is not definitive. It contains a prompt that is used to evaluate the similarity of a plugin name to other plugin names and ensure compliance with trademark regulations.', 'plugin-check' ); ?>
 					<br/>
