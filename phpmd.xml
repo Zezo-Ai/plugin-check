@@ -48,6 +48,7 @@
 
 	<rule ref="rulesets/unusedcode.xml">
 		<exclude name="UnusedFormalParameter" />
+		<exclude name="UnusedPrivateField" />
 	</rule>
 
 	<!-- Third-party or auto-generated code -->
@@ -60,5 +61,4 @@
 	<exclude-pattern>*/includes/Scanner/*</exclude-pattern>
 
 	<!-- Settings page has many public methods due to WordPress Settings API requirements -->
-	<exclude-pattern>*/includes/Admin/Settings_Page.php</exclude-pattern>
 </ruleset>
