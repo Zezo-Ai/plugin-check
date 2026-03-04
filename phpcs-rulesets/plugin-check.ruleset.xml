@@ -158,9 +158,4 @@
 	<!-- Check for discouraged functions. -->
 	<rule ref="PluginCheck.CodeAnalysis.DiscouragedFunctions"/>
 
-	<!-- Check for external CDN asset loading (privacy guideline #7). -->
-	<rule ref="PluginCheck.CodeAnalysis.EnqueuedResourceOffloading">
-		<severity>7</severity>
-	</rule>
-
 </ruleset>
