@@ -69,7 +69,7 @@ final class OffloadingSniff extends Sniff {
 		// as EnqueuedResourceOffloadingSniff already handles those and we want to avoid double reporting.
 		if ( isset( $this->tokens[ $stackPtr ]['nested_parenthesis'] ) ) {
 			foreach ( $this->tokens[ $stackPtr ]['nested_parenthesis'] as $opener => $closer ) {
-				$prev = $this->phpcsFile->findPrevious( \PHP_CodeSniffer\Util\Tokens::$emptyTokens, ( $opener - 1 ), null, true );
+				$prev = $this->phpcsFile->findPrevious( Tokens::$emptyTokens, ( $opener - 1 ), null, true );
 				if ( false !== $prev && \T_STRING === $this->tokens[ $prev ]['code'] ) {
 					$function_name = $this->tokens[ $prev ]['content'];
 					if ( in_array( $function_name, array( 'wp_enqueue_script', 'wp_enqueue_style', 'wp_register_script', 'wp_register_style' ), true ) ) {
