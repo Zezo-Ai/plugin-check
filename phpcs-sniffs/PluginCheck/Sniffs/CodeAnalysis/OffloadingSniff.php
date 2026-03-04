@@ -65,6 +65,20 @@ final class OffloadingSniff extends Sniff {
 			return;
 		}
 
+		// Skip check if the string is within wp_enqueue_script/etc function calls,
+		// as EnqueuedResourceOffloadingSniff already handles those and we want to avoid double reporting.
+		if ( isset( $this->tokens[ $stackPtr ]['nested_parenthesis'] ) ) {
+			foreach ( $this->tokens[ $stackPtr ]['nested_parenthesis'] as $opener => $closer ) {
+				$prev = $this->phpcsFile->findPrevious( \PHP_CodeSniffer\Util\Tokens::$emptyTokens, ( $opener - 1 ), null, true );
+				if ( false !== $prev && \T_STRING === $this->tokens[ $prev ]['code'] ) {
+					$function_name = $this->tokens[ $prev ]['content'];
+					if ( in_array( $function_name, array( 'wp_enqueue_script', 'wp_enqueue_style', 'wp_register_script', 'wp_register_style' ), true ) ) {
+						return ( $end_ptr + 1 );
+					}
+				}
+			}
+		}
+
 		// First check: Always check against known offloading services pattern for all strings.
 		$pattern = $this->get_offloading_services_pattern();
 
