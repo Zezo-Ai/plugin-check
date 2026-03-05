@@ -597,15 +597,23 @@
 			let errorPart = '';
 			if ( errorCount > 0 ) {
 				errorPart =
-					errorCount === 1 ? '1 error' : errorCount + ' errors';
+					errorCount === 1
+						? pluginCheck.errorString.replace( '%d', errorCount )
+						: pluginCheck.errorsString.replace( '%d', errorCount );
 			}
 
 			let warningPart = '';
 			if ( warningCount > 0 ) {
 				warningPart =
 					warningCount === 1
-						? '1 warning'
-						: warningCount + ' warnings';
+						? pluginCheck.warningString.replace(
+								'%d',
+								warningCount
+						  )
+						: pluginCheck.warningsString.replace(
+								'%d',
+								warningCount
+						  );
 			}
 
 			if ( errorPart && warningPart ) {
