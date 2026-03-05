@@ -221,7 +221,7 @@
 	/**
 	 * Counts the total number of errors and warnings in the aggregated results.
 	 *
-	 * @since 1.0.0
+	 * @since 1.9.0
 	 *
 	 * @return {Object} Object with errorCount and warningCount properties.
 	 */
