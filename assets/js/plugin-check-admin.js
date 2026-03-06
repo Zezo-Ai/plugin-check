@@ -593,27 +593,45 @@
 			// Count errors and warnings.
 			const { errorCount, warningCount } = countResults();
 
+			// Ensure wp.i18n is available, fallback to basic text if not.
+			const _n =
+				window.wp && window.wp.i18n && window.wp.i18n._n
+					? window.wp.i18n._n
+					: function ( single, plural, number ) {
+							return number === 1 ? single : plural;
+					  };
+			const sprintf =
+				window.wp && window.wp.i18n && window.wp.i18n.sprintf
+					? window.wp.i18n.sprintf
+					: function ( format, ...args ) {
+							return format.replace(
+								/%[sd]/g,
+								() => args.shift() || ''
+							);
+					  };
+
 			// Build the message with counts.
 			let errorPart = '';
 			if ( errorCount > 0 ) {
-				errorPart =
-					errorCount === 1
-						? pluginCheck.errorString.replace( '%d', errorCount )
-						: pluginCheck.errorsString.replace( '%d', errorCount );
+				errorPart = sprintf(
+					/* translators: %d: number of errors. */
+					_n( '%d error', '%d errors', errorCount, 'plugin-check' ),
+					errorCount
+				);
 			}
 
 			let warningPart = '';
 			if ( warningCount > 0 ) {
-				warningPart =
-					warningCount === 1
-						? pluginCheck.warningString.replace(
-								'%d',
-								warningCount
-						  )
-						: pluginCheck.warningsString.replace(
-								'%d',
-								warningCount
-						  );
+				warningPart = sprintf(
+					/* translators: %d: number of warnings. */
+					_n(
+						'%d warning',
+						'%d warnings',
+						warningCount,
+						'plugin-check'
+					),
+					warningCount
+				);
 			}
 
 			if ( errorPart && warningPart ) {
@@ -624,7 +642,7 @@
 				messageText = warningPart + ' found.';
 			} else {
 				// Fallback to default message if somehow no errors/warnings.
-				messageText = pluginCheck.errorMessage;
+				messageText = pluginCheck.errorMessage || 'Errors were found.';
 			}
 		}
 
