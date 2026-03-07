@@ -137,6 +137,7 @@ class Plugin_Content_Check extends Abstract_File_Check {
 	 */
 	private function add_block_api_version_result( Check_Result $result, string $file ) {
 		$is_error = ! $this->is_update_mode( $result );
+		$severity = $is_error ? 7 : 5;
 
 		$this->add_result_message_for_file(
 			$result,
@@ -147,7 +148,7 @@ class Plugin_Content_Check extends Abstract_File_Check {
 			0,
 			0,
 			'https://developer.wordpress.org/block-editor/reference-guides/block-api/block-api-versions/block-migration-for-iframe-editor-compatibility/',
-			7
+			$severity
 		);
 	}
 

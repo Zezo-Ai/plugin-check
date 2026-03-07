@@ -44,6 +44,7 @@ class Plugin_Content_Check_Tests extends WP_UnitTestCase {
 		$this->assertArrayHasKey( 'includes/nested-block/block.json', $errors );
 		$this->assertArrayNotHasKey( 'blocks/v3/block.json', $errors );
 		$this->assertCount( 1, wp_list_filter( $errors['blocks/missing/block.json'][0][0], array( 'code' => 'block_api_version_too_low' ) ) );
+		$this->assertSame( 7, $errors['blocks/missing/block.json'][0][0][0]['severity'] );
 	}
 
 	public function test_detect_block_api_version_warnings_in_update_mode() {
@@ -59,6 +60,7 @@ class Plugin_Content_Check_Tests extends WP_UnitTestCase {
 		$this->assertArrayHasKey( 'includes/nested-block/block.json', $check_result->get_warnings() );
 		$this->assertArrayNotHasKey( 'blocks/v3/block.json', $check_result->get_warnings() );
 		$this->assertCount( 0, wp_list_filter( $check_result->get_errors()['blocks/missing/block.json'][0][0] ?? array(), array( 'code' => 'block_api_version_too_low' ) ) );
+		$this->assertSame( 5, $check_result->get_warnings()['blocks/missing/block.json'][0][0][0]['severity'] );
 	}
 
 	public function test_detect_block_api_version_without_errors() {
