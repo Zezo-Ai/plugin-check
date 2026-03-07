@@ -136,8 +136,8 @@ class Plugin_Content_Check extends Abstract_File_Check {
 	 * @param string       $file   Absolute path to block.json.
 	 */
 	private function add_block_api_version_result( Check_Result $result, string $file ) {
-		$is_error = ! $this->is_update_mode( $result );
-		$severity = $is_error ? 7 : 5;
+		$is_error = true;
+		$severity = $this->is_update_mode( $result ) ? 5 : 7;
 
 		$this->add_result_message_for_file(
 			$result,
