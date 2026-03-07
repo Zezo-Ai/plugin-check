@@ -203,6 +203,15 @@ final class Admin_Page {
 					'actionCleanUpRuntimeEnvironment' => Admin_AJAX::ACTION_CLEAN_UP_ENVIRONMENT,
 					'actionExportResults'             => Admin_AJAX::ACTION_EXPORT_RESULTS,
 					'successMessage'                  => __( 'No errors found.', 'plugin-check' ),
+					'errorMessage'                    => __( 'Errors were found.', 'plugin-check' ),
+					/* translators: %d: Number of errors found. */
+					'errorString'                     => __( '%d error', 'plugin-check' ),
+					/* translators: %d: Number of errors found. */
+					'errorsString'                    => __( '%d errors', 'plugin-check' ),
+					/* translators: %d: Number of warnings found. */
+					'warningString'                   => __( '%d warning', 'plugin-check' ),
+					/* translators: %d: Number of warnings found. */
+					'warningsString'                  => __( '%d warnings', 'plugin-check' ),
 					'strings'                         => array(
 						'exportCsv'      => __( 'Export CSV', 'plugin-check' ),
 						'exportJson'     => __( 'Export JSON', 'plugin-check' ),
@@ -214,12 +223,6 @@ final class Admin_Page {
 				)
 			),
 			'before'
-		);
-
-		wp_set_script_translations(
-			'plugin-check-admin',
-			'plugin-check',
-			WP_PLUGIN_CHECK_PLUGIN_DIR_PATH . 'languages'
 		);
 	}
 
