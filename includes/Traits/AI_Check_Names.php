@@ -210,25 +210,22 @@ trait AI_Check_Names {
 			return $builder;
 		}
 
-		$method = null;
-		if ( method_exists( $builder, 'using_model_preference' ) ) {
-			$method = 'using_model_preference';
-		} elseif ( method_exists( $builder, 'usingModelPreference' ) ) {
-			$method = 'usingModelPreference';
-		}
-
-		if ( ! $method ) {
-			return $builder;
-		}
-
 		$preference = $this->normalize_model_preference( $model_preference );
-		$result     = call_user_func( array( $builder, $method ), $preference );
 
-		if ( is_wp_error( $result ) ) {
-			return $result;
+		try {
+			$result = $builder->using_model_preference( $preference );
+			return $result ? $result : $builder;
+		} catch ( \Exception $e ) {
+			// If method doesn't exist or fails, return WP_Error.
+			return new WP_Error(
+				'model_preference_error',
+				sprintf(
+					/* translators: %s: Exception message */
+					__( 'Failed to apply model preference: %s', 'plugin-check' ),
+					$e->getMessage()
+				)
+			);
 		}
-
-		return $result ? $result : $builder;
 	}
 
 	/**
@@ -249,7 +246,7 @@ trait AI_Check_Names {
 			if ( false !== strpos( $trimmed, $separator ) ) {
 				list( $provider, $model ) = array_map( 'trim', explode( $separator, $trimmed, 2 ) );
 				if ( '' !== $provider && '' !== $model ) {
-					return array( array( $provider, $model ) );
+					return array( $provider, $model );
 				}
 			}
 		}
