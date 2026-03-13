@@ -407,8 +407,11 @@
 							? err.message
 							: pluginCheckNamer.messages.genericError
 					);
+
 					if ( errorDiv ) {
-						errorDiv.classList.remove( 'plugin-check-namer-hidden' );
+						errorDiv.classList.remove(
+							'plugin-check-namer-hidden'
+						);
 					}
 				} )
 				.finally( function () {
