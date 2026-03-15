@@ -7,7 +7,7 @@
  * Requires PHP: Latest version
  * Author: WordPress Performance Team
  * Author URI: This is not a valid URL
- * Text Domain: test-mismathed-textdomain-here
+ * Text Domain: test-mismatched-textdomain-here
  * Domain Path: /nonexistent-folder
  * Network: random-value
  * GitHub Plugin URI: johndoe/package
