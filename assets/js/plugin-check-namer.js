@@ -115,11 +115,12 @@
 			if ( explainEl ) {
 				setHtml( explainEl, '' );
 			}
+			if ( errorDiv ) {
+				errorDiv.classList.add( 'plugin-check-namer-hidden' );
+			}
 			if ( errorEl ) {
-				errorEl.classList.add( 'plugin-check-namer-hidden' );
 				setText( errorEl, '' );
 			}
-
 			if ( confusionPluginsDiv ) {
 				confusionPluginsDiv.classList.add(
 					'plugin-check-namer-hidden'
@@ -406,8 +407,11 @@
 							? err.message
 							: pluginCheckNamer.messages.genericError
 					);
-					if ( errorEl ) {
-						errorEl.classList.remove( 'plugin-check-namer-hidden' );
+
+					if ( errorDiv ) {
+						errorDiv.classList.remove(
+							'plugin-check-namer-hidden'
+						);
 					}
 				} )
 				.finally( function () {
