@@ -1,7 +1,7 @@
 === Plugin Check (PCP) ===
 
 Contributors:      wordpressdotorg
-Tested up to:      6.9
+Tested up to:      7.0
 Stable tag:        1.9.0
 License:           GPLv2 or later
 License URI:       https://www.gnu.org/licenses/gpl-2.0.html
@@ -85,12 +85,14 @@ In any case, passing the checks in this tool likely helps to achieve a smooth pl
 
 * Enhancement - Use the WordPress 7.0 core AI connectors.
 * Enhancement - Add External Admin Menu Links check to detect external URLs in top-level admin menus.
+* Enhancement - Add a block metadata check that requires editor blocks to define `apiVersion` 3 or higher for WordPress 7.0+ iframe editor compatibility.
 * Enhancement - Improve Plugin Updater detection to identify Plugin Update Checker (PUC) calls.
 * Enhancement - Accept WTFPL as a GPL-compatible license.
 * Fix - Improve PayPal donation URL validation for complex query strings.
 * Tweak - Convert the `load_plugin_textdomain()` check from error to warning severity.
 * Fix - Improve readme contributors validation when trailing commas are present.
 * Fix - Make markdown file checks case-insensitive.
+* Chore - Update development dependencies, including `@wordpress/scripts`, `simple-git`, `basic-ftp`, `svgo`, `immutable`, and `@wp-playground/cli`.
 * Tweak - Update WordPress.org Plugins Team naming for consistency.
 
 = 1.8.0 =
