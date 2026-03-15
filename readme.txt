@@ -85,13 +85,17 @@ In any case, passing the checks in this tool likely helps to achieve a smooth pl
 
 * Enhancement - Use the WordPress 7.0 core AI connectors.
 * Enhancement - Add External Admin Menu Links check to detect external URLs in top-level admin menus.
-* Enhancement - Add a block metadata check that requires editor blocks to define `apiVersion` 3 or higher for WordPress 7.0+ iframe editor compatibility.
+* Enhancement - Add and refine the block metadata compatibility check to require `apiVersion` 3+ for WordPress 7.0+ iframe editor compatibility, including adjusted severity by mode.
 * Enhancement - Improve Plugin Updater detection to identify Plugin Update Checker (PUC) calls.
 * Enhancement - Accept WTFPL as a GPL-compatible license.
 * Fix - Improve PayPal donation URL validation for complex query strings.
+* Fix - Ensure AI Check uses the configured model preference.
+* Fix - Show a clear Plugin Namer error message when AI connector status is unavailable.
+* Fix - Update the Plugin Namer connector settings page link.
 * Tweak - Convert the `load_plugin_textdomain()` check from error to warning severity.
 * Fix - Improve readme contributors validation when trailing commas are present.
 * Fix - Make markdown file checks case-insensitive.
+* Tweak - Refine escaping sniff error messages for clearer guidance.
 * Chore - Update development dependencies, including `@wordpress/scripts`, `simple-git`, `basic-ftp`, `svgo`, `immutable`, and `@wp-playground/cli`.
 * Tweak - Update WordPress.org Plugins Team naming for consistency.
 
