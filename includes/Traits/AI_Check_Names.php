@@ -163,10 +163,12 @@ trait AI_Check_Names {
 		}
 
 		// Try to generate a rich result first.
+		// Use is_callable() instead of method_exists() to detect methods
+		// provided via __call() magic (e.g. WP_AI_Client_Prompt_Builder).
 		$result = null;
-		if ( method_exists( $builder, 'generate_text_result' ) ) {
+		if ( is_callable( array( $builder, 'generate_text_result' ) ) ) {
 			$result = $builder->generate_text_result();
-		} elseif ( method_exists( $builder, 'generateTextResult' ) ) {
+		} elseif ( is_callable( array( $builder, 'generateTextResult' ) ) ) {
 			$result = $builder->generateTextResult();
 		}
 
@@ -280,6 +282,11 @@ trait AI_Check_Names {
 		$prompt_tokens     = method_exists( $usage, 'get_prompt_tokens' ) ? $usage->get_prompt_tokens() : ( method_exists( $usage, 'getPromptTokens' ) ? $usage->getPromptTokens() : null );
 		$completion_tokens = method_exists( $usage, 'get_completion_tokens' ) ? $usage->get_completion_tokens() : ( method_exists( $usage, 'getCompletionTokens' ) ? $usage->getCompletionTokens() : null );
 		$total_tokens      = method_exists( $usage, 'get_total_tokens' ) ? $usage->get_total_tokens() : ( method_exists( $usage, 'getTotalTokens' ) ? $usage->getTotalTokens() : null );
+
+		// Compute total from prompt + completion if not directly available.
+		if ( null === $total_tokens && null !== $prompt_tokens && null !== $completion_tokens ) {
+			$total_tokens = $prompt_tokens + $completion_tokens;
+		}
 
 		if ( null === $prompt_tokens && null === $completion_tokens && null === $total_tokens ) {
 			return null;
