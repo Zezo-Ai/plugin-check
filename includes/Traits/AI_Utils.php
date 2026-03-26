@@ -231,6 +231,11 @@ trait AI_Utils {
 				$provider_meta = $class_name::metadata();
 
 				foreach ( $class_name::modelMetadataDirectory()->listModelMetadata() as $model_meta ) {
+
+					if ( ! $this->model_supports_text_generation( $model_meta ) ) {
+						continue;
+					}
+
 					$models[] = array(
 						'provider'       => (string) $provider_id,
 						'provider_label' => (string) $provider_meta->getName(),
@@ -245,6 +250,38 @@ trait AI_Utils {
 
 		$models = apply_filters( 'plugin_check_ai_model_preferences', $models );
 		return is_array( $models ) ? $models : array();
+	}
+
+	/**
+	 * Determines whether a model metadata object supports text generation.
+	 *
+	 * @since 1.9.1
+	 *
+	 * @param object $model_meta Model metadata object.
+	 * @return bool True when the model supports text generation, otherwise false.
+	 */
+	protected function model_supports_text_generation( $model_meta ) {
+
+		if ( ! method_exists( $model_meta, 'getSupportedCapabilities' ) ) {
+			return true;
+		}
+
+		$capabilities = $model_meta->getSupportedCapabilities();
+		if ( ! is_array( $capabilities ) ) {
+			return false;
+		}
+
+		foreach ( $capabilities as $capability ) {
+			if ( is_string( $capability ) && 'text_generation' === $capability ) {
+				return true;
+			}
+
+			if ( is_object( $capability ) && method_exists( $capability, 'equals' ) && $capability->equals( 'text_generation' ) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**
