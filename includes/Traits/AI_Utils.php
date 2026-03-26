@@ -255,7 +255,12 @@ trait AI_Utils {
 	/**
 	 * Determines whether a model metadata object supports text generation.
 	 *
+	 * Both input and output must be text-based; models that support non-text output
+	 * modalities (e.g. audio, image) are excluded.
+	 *
 	 * @since 1.9.1
+	 *
+	 * @SuppressWarnings(PHPMD.CyclomaticComplexity)
 	 *
 	 * @param object $model_meta Model metadata object.
 	 * @return bool True when the model supports text generation, otherwise false.
@@ -271,17 +276,64 @@ trait AI_Utils {
 			return false;
 		}
 
+		$has_text_generation = false;
 		foreach ( $capabilities as $capability ) {
 			if ( is_string( $capability ) && 'text_generation' === $capability ) {
-				return true;
+				$has_text_generation = true;
+				break;
 			}
 
 			if ( is_object( $capability ) && method_exists( $capability, 'equals' ) && $capability->equals( 'text_generation' ) ) {
-				return true;
+				$has_text_generation = true;
+				break;
 			}
 		}
 
-		return false;
+		if ( ! $has_text_generation ) {
+			return false;
+		}
+
+		// Also ensure all supported output modality combinations are text-only.
+		if ( method_exists( $model_meta, 'getSupportedOptions' ) ) {
+			$options = $model_meta->getSupportedOptions();
+			if ( is_array( $options ) ) {
+				foreach ( $options as $option ) {
+					if ( ! is_object( $option ) || ! method_exists( $option, 'getName' ) ) {
+						continue;
+					}
+					$option_name = $option->getName();
+					if (
+						! is_object( $option_name )
+						|| ! method_exists( $option_name, 'isOutputModalities' )
+						|| ! $option_name->isOutputModalities()
+					) {
+						continue;
+					}
+					if ( ! method_exists( $option, 'getSupportedValues' ) ) {
+						continue;
+					}
+					$supported_values = $option->getSupportedValues();
+					if ( ! is_array( $supported_values ) ) {
+						continue;
+					}
+					foreach ( $supported_values as $combination ) {
+						if ( ! is_array( $combination ) ) {
+							continue;
+						}
+						foreach ( $combination as $modality ) {
+							$is_text = ( is_string( $modality ) && 'text' === $modality )
+								|| ( is_object( $modality ) && method_exists( $modality, 'isText' ) && $modality->isText() )
+								|| ( is_object( $modality ) && isset( $modality->value ) && 'text' === $modality->value );
+							if ( ! $is_text ) {
+								return false;
+							}
+						}
+					}
+				}
+			}
+		}
+
+		return true;
 	}
 
 	/**
