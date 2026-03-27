@@ -54,7 +54,6 @@ final class Namer_Page {
 		add_action( 'admin_menu', array( $this, 'add_page' ) );
 		add_action( 'admin_post_' . self::ACTION_ANALYZE, array( $this, 'handle_analyze' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
-		add_action( 'admin_notices', array( $this, 'render_ai_notice' ) );
 		add_action( 'wp_ajax_plugin_check_namer_analyze', array( $this, 'ajax_analyze' ) );
 	}
 
@@ -212,40 +211,6 @@ final class Namer_Page {
 	protected function get_author_name_from_request() {
 		$author = isset( $_POST['author_name'] ) ? sanitize_text_field( wp_unslash( $_POST['author_name'] ) ) : '';
 		return trim( $author );
-	}
-
-	/**
-	 * Renders admin notice when AI connectors are not configured.
-	 *
-	 * @since 1.9.0
-	 */
-	public function render_ai_notice() {
-		$screen = get_current_screen();
-		if ( ! $screen || $screen->id !== $this->hook_suffix ) {
-			return;
-		}
-
-		if ( ! current_user_can( 'manage_options' ) ) {
-			return;
-		}
-
-		$ai_config = $this->get_ai_config();
-		if ( ! is_wp_error( $ai_config ) ) {
-			return;
-		}
-		?>
-		<div class="notice notice-warning is-dismissible">
-			<p>
-				<?php
-				printf(
-					/* translators: %s: Error message. */
-					__( 'To use the Namer tool, configure AI connectors in WordPress 7.0+ settings. Details: %s', 'plugin-check' ),
-					esc_html( $ai_config->get_error_message() )
-				);
-				?>
-			</p>
-		</div>
-		<?php
 	}
 
 	/**
