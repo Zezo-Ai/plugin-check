@@ -96,6 +96,13 @@ trait AI_Utils {
 			return $connectors;
 		}
 
+		if ( ! function_exists( 'wp_ai_client_prompt' ) ) {
+			return new WP_Error(
+				'ai_client_not_available',
+				__( 'The AI client is not available. This feature requires WordPress 7.0 or newer.', 'plugin-check' )
+			);
+		}
+
 		$builder = wp_ai_client_prompt( 'Plugin Check AI availability test.' );
 		if ( is_wp_error( $builder ) ) {
 			return $builder;
