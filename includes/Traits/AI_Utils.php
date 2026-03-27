@@ -33,17 +33,6 @@ trait AI_Utils {
 			);
 		}
 
-		if ( ! function_exists( 'wp_ai_client_prompt' ) ) {
-			return new WP_Error(
-				'ai_client_not_available',
-				sprintf(
-					/* translators: %s: WordPress version. */
-					__( 'The Plugin Check Namer Tool requires WordPress version 7.0 or newer. You are running WordPress version %s.', 'plugin-check' ),
-					get_bloginfo( 'version' )
-				)
-			);
-		}
-
 		if ( ! is_wp_version_compatible( '7.0' ) ) {
 			return new WP_Error(
 				'ai_client_not_available',
@@ -99,7 +88,11 @@ trait AI_Utils {
 		if ( ! function_exists( 'wp_ai_client_prompt' ) ) {
 			return new WP_Error(
 				'ai_client_not_available',
-				__( 'The AI client is not available. This feature requires WordPress 7.0 or newer.', 'plugin-check' )
+				sprintf(
+					/* translators: %s: WordPress version. */
+					__( 'The Plugin Check Namer Tool requires WordPress version 7.0 or newer. You are running WordPress version %s.', 'plugin-check' ),
+					get_bloginfo( 'version' )
+				)
 			);
 		}
 
