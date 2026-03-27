@@ -20,7 +20,7 @@ trait AI_Utils {
 	/**
 	 * Checks AI prerequisites: feature flag, function availability, and version.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @return true|WP_Error True if all prerequisites are met, WP_Error otherwise.
 	 */
@@ -61,7 +61,7 @@ trait AI_Utils {
 	/**
 	 * Checks that at least one AI connector is configured and active.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @return true|WP_Error True if a connector is available, WP_Error otherwise.
 	 */
@@ -85,6 +85,7 @@ trait AI_Utils {
 	 * @return array|WP_Error AI config array or error.
 	 */
 	protected function get_ai_config( $model_preference = '' ) {
+
 		$prerequisites = $this->check_ai_prerequisites();
 		if ( is_wp_error( $prerequisites ) ) {
 			return $prerequisites;
