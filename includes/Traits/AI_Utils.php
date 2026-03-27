@@ -18,6 +18,65 @@ use WP_Error;
 trait AI_Utils {
 
 	/**
+	 * Checks AI prerequisites: feature flag, function availability, and version.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @return true|WP_Error True if all prerequisites are met, WP_Error otherwise.
+	 */
+	protected function check_ai_prerequisites() {
+
+		if ( function_exists( 'wp_supports_ai' ) && ! wp_supports_ai() ) {
+			return new WP_Error(
+				'ai_disabled',
+				__( 'The Plugin Check Namer feature requires AI support to be enabled on this site. Please enable AI functionality to use this feature.', 'plugin-check' )
+			);
+		}
+
+		if ( ! function_exists( 'wp_ai_client_prompt' ) ) {
+			return new WP_Error(
+				'ai_client_not_available',
+				sprintf(
+					/* translators: %s: WordPress version. */
+					__( 'The Plugin Check Namer Tool requires WordPress version 7.0 or newer. You are running WordPress version %s.', 'plugin-check' ),
+					get_bloginfo( 'version' )
+				)
+			);
+		}
+
+		if ( ! is_wp_version_compatible( '7.0' ) ) {
+			return new WP_Error(
+				'ai_client_not_available',
+				sprintf(
+					/* translators: %s: WordPress version. */
+					__( 'The Plugin Check Namer Tool requires WordPress version 7.0 or higher. You are running WordPress version %s.', 'plugin-check' ),
+					get_bloginfo( 'version' )
+				)
+			);
+		}
+
+		return true;
+	}
+
+	/**
+	 * Checks that at least one AI connector is configured and active.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @return true|WP_Error True if a connector is available, WP_Error otherwise.
+	 */
+	protected function check_ai_connectors() {
+		if ( $this->has_no_active_ai_connectors() ) {
+			return new WP_Error(
+				'ai_not_configured',
+				__( 'AI connectors are not configured. Please connect and enable an AI provider in WordPress 7.0+ settings.', 'plugin-check' )
+			);
+		}
+
+		return true;
+	}
+
+	/**
 	 * Gets AI configuration from core AI connectors.
 	 *
 	 * @since 1.9.0
@@ -26,25 +85,14 @@ trait AI_Utils {
 	 * @return array|WP_Error AI config array or error.
 	 */
 	protected function get_ai_config( $model_preference = '' ) {
-		if ( ! function_exists( 'wp_ai_client_prompt' ) ) {
-			return new WP_Error(
-				'ai_client_not_available',
-				__( 'The AI client is not available. This feature requires WordPress 7.0 or newer.', 'plugin-check' )
-			);
+		$prerequisites = $this->check_ai_prerequisites();
+		if ( is_wp_error( $prerequisites ) ) {
+			return $prerequisites;
 		}
 
-		if ( ! is_wp_version_compatible( '7.0' ) ) {
-			return new WP_Error(
-				'ai_client_not_available',
-				__( 'The AI client is only available in WordPress 7.0 or newer.', 'plugin-check' )
-			);
-		}
-
-		if ( $this->has_no_active_ai_connectors() ) {
-			return new WP_Error(
-				'ai_not_configured',
-				__( 'AI connectors are not configured. Please connect and enable an AI provider in WordPress 7.0+ settings.', 'plugin-check' )
-			);
+		$connectors = $this->check_ai_connectors();
+		if ( is_wp_error( $connectors ) ) {
+			return $connectors;
 		}
 
 		$builder = wp_ai_client_prompt( 'Plugin Check AI availability test.' );

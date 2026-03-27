@@ -268,15 +268,24 @@ final class Namer_Page {
 			<?php
 			if ( is_wp_error( $ai_config ) ) {
 				?>
-				<p class="description">
-					<?php esc_html_e( 'The Plugin Namer requires WordPress 7.0+ with configured AI connectors. Please enable AI connectors in core to use this tool.', 'plugin-check' ); ?>
-				</p>
-				<p>
-					<a class="button button-primary" href="<?php echo esc_url( admin_url( 'options-connectors.php' ) ); ?>">
-						<?php esc_html_e( 'Configure AI Connectors', 'plugin-check' ); ?>
-					</a>
-				</p>
+				<div class="notice notice-error">
+					<p>
+						<?php
+						echo esc_html( $ai_config->get_error_message() );
+						?>
+					</p>
+				</div>
+
 				<?php
+				if ( true === $this->check_ai_prerequisites() && is_wp_error( $this->check_ai_connectors() ) ) {
+					?>
+					<p>
+						<a class="button button-primary" href="<?php echo esc_url( admin_url( 'options-connectors.php' ) ); ?>">
+							<?php esc_html_e( 'Configure AI Connectors', 'plugin-check' ); ?>
+						</a>
+					</p>
+					<?php
+				}
 				return;
 			}
 			?>
