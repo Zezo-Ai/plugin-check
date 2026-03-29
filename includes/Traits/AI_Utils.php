@@ -8,7 +8,6 @@
 namespace WordPress\Plugin_Check\Traits;
 
 use WordPress\AiClient\AiClient;
-use WordPress\AiClient\Common\AbstractEnum;
 use WP_Error;
 
 /**
@@ -229,7 +228,7 @@ trait AI_Utils {
 				$has_text_gen = false;
 				foreach ( $supported as $cap ) {
 					$val = '';
-					if ( $cap instanceof AbstractEnum && 'text_generation' === strtolower( (string) $cap->value ) ) {
+					if ( is_object( $cap ) && 'text_generation' === strtolower( (string) $cap ) ) {
 						$has_text_gen = true;
 						break;
 					}
@@ -260,8 +259,8 @@ trait AI_Utils {
 					$is_input  = false;
 					$is_output = false;
 
-					if ( $name instanceof AbstractEnum ) {
-						$raw       = strtolower( (string) $name->value );
+					if ( is_object( $name ) ) {
+						$raw       = strtolower( (string) $name );
 						$is_input  = 'input_modalities' === $raw;
 						$is_output = 'output_modalities' === $raw;
 					} elseif ( is_string( $name ) ) {
@@ -332,7 +331,7 @@ trait AI_Utils {
 				$text = '';
 				if ( is_string( $modality ) ) {
 					$text = strtolower( $modality );
-				} elseif ( $modality instanceof AbstractEnum && 'text' === strtolower( (string) $modality->value ) ) {
+				} elseif ( is_object( $modality ) && 'text' === strtolower( (string) $modality ) ) {
 					return true;
 				}
 				if ( 'text' === $text ) {
