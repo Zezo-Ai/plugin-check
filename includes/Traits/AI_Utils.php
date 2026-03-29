@@ -224,22 +224,8 @@ trait AI_Utils {
 		// If capabilities metadata is present, require text_generation capability.
 		if ( method_exists( $model_meta, 'getSupportedCapabilities' ) ) {
 			$supported = $model_meta->getSupportedCapabilities();
-			if ( is_array( $supported ) ) {
-				$has_text_gen = false;
-				foreach ( $supported as $cap ) {
-					$val = '';
-					if ( is_object( $cap ) && 'text_generation' === strtolower( (string) $cap ) ) {
-						$has_text_gen = true;
-						break;
-					}
-					if ( is_string( $cap ) && 'text_generation' === strtolower( $cap ) ) {
-						$has_text_gen = true;
-						break;
-					}
-				}
-				if ( ! $has_text_gen ) {
-					return false;
-				}
+			if ( is_array( $supported ) && ! $this->meta_has_text_generation_cap( $supported ) ) {
+				return false;
 			}
 		}
 
@@ -247,67 +233,14 @@ trait AI_Utils {
 		if ( method_exists( $model_meta, 'getSupportedOptions' ) ) {
 			$options = $model_meta->getSupportedOptions();
 			if ( is_array( $options ) ) {
-				$input_has_text  = null;
-				$output_has_text = null;
-
-				foreach ( $options as $option ) {
-					if ( ! is_object( $option ) || ! method_exists( $option, 'getName' ) ) {
-						continue;
-					}
-
-					$name      = $option->getName();
-					$is_input  = false;
-					$is_output = false;
-
-					if ( is_object( $name ) ) {
-						$raw       = strtolower( (string) $name );
-						$is_input  = 'input_modalities' === $raw;
-						$is_output = 'output_modalities' === $raw;
-					} elseif ( is_string( $name ) ) {
-						$raw       = strtolower( $name );
-						$is_input  = 'inputmodalities' === $raw || 'input_modalities' === $raw;
-						$is_output = 'outputmodalities' === $raw || 'output_modalities' === $raw;
-					}
-
-					if ( ! $is_input && ! $is_output ) {
-						continue;
-					}
-
-					if ( ! method_exists( $option, 'getSupportedValues' ) ) {
-						continue;
-					}
-
-					$values   = $option->getSupportedValues();
-					$has_text = $this->modality_values_include_text( $values );
-
-					if ( $is_input ) {
-						$input_has_text = $has_text;
-					}
-					if ( $is_output ) {
-						$output_has_text = $has_text;
-					}
-				}
-
-				// If modality options were present, use them as the authority.
-				if ( null !== $input_has_text || null !== $output_has_text ) {
-					return (bool) $input_has_text && (bool) $output_has_text;
+				$modality = $this->meta_get_modality_text_support( $options );
+				if ( null !== $modality['input'] || null !== $modality['output'] ) {
+					return (bool) $modality['input'] && (bool) $modality['output'];
 				}
 			}
 		}
 
-		// Fall back to name-based inference.
-		if ( method_exists( $model_meta, 'getId' ) ) {
-			$model = strtolower( (string) $model_meta->getId() );
-			if (
-			false !== strpos( $model, 'transcribe' )
-			|| false !== strpos( $model, 'tts' )
-			|| false !== strpos( $model, 'realtime' )
-			) {
-				return false;
-			}
-		}
-
-		return true;
+		return ! $this->meta_is_audio_model_by_name( $model_meta );
 	}
 
 	/**
@@ -341,6 +274,90 @@ trait AI_Utils {
 		}
 
 		return false;
+	}
+
+	/**
+	 * Returns whether a capabilities array contains text_generation.
+	 *
+	 * @since 2.0.0
+	 *
+	 * @param array $supported Capabilities from getSupportedCapabilities().
+	 * @return bool
+	 */
+	private function meta_has_text_generation_cap( array $supported ): bool {
+		foreach ( $supported as $cap ) {
+			if ( is_object( $cap ) && 'text_generation' === strtolower( (string) $cap ) ) {
+				return true;
+			}
+			if ( is_string( $cap ) && 'text_generation' === strtolower( $cap ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Returns input/output text-modality support derived from getSupportedOptions().
+	 *
+	 * @since 2.0.0
+	 *
+	 * @param array $options Options from getSupportedOptions().
+	 * @return array
+	 */
+	private function meta_get_modality_text_support( array $options ): array {
+		$input_has_text  = null;
+		$output_has_text = null;
+
+		foreach ( $options as $option ) {
+			if ( ! is_object( $option ) || ! method_exists( $option, 'getName' ) ) {
+				continue;
+			}
+			$name      = $option->getName();
+			$is_input  = false;
+			$is_output = false;
+			if ( is_object( $name ) ) {
+				$raw       = strtolower( (string) $name );
+				$is_input  = 'input_modalities' === $raw;
+				$is_output = 'output_modalities' === $raw;
+			} elseif ( is_string( $name ) ) {
+				$raw       = strtolower( $name );
+				$is_input  = 'inputmodalities' === $raw || 'input_modalities' === $raw;
+				$is_output = 'outputmodalities' === $raw || 'output_modalities' === $raw;
+			}
+			if ( ( ! $is_input && ! $is_output ) || ! method_exists( $option, 'getSupportedValues' ) ) {
+				continue;
+			}
+			$has_text = $this->modality_values_include_text( $option->getSupportedValues() );
+			if ( $is_input ) {
+				$input_has_text = $has_text;
+			}
+			if ( $is_output ) {
+				$output_has_text = $has_text;
+			}
+		}
+
+		return array(
+			'input'  => $input_has_text,
+			'output' => $output_has_text,
+		);
+	}
+
+	/**
+	 * Returns true when model name suggests audio-only (transcription / TTS / realtime).
+	 *
+	 * @since 2.0.0
+	 *
+	 * @param object $model_meta Model metadata object.
+	 * @return bool
+	 */
+	private function meta_is_audio_model_by_name( $model_meta ): bool {
+		if ( ! method_exists( $model_meta, 'getId' ) ) {
+			return false;
+		}
+		$model = strtolower( (string) $model_meta->getId() );
+		return false !== strpos( $model, 'transcribe' )
+			|| false !== strpos( $model, 'tts' )
+			|| false !== strpos( $model, 'realtime' );
 	}
 
 	/**
