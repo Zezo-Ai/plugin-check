@@ -206,6 +206,148 @@ trait AI_Utils {
 	}
 
 	/**
+	 * Returns whether a model metadata object supports text for both input and output.
+	 *
+	 * Checks supported capabilities for text_generation, then inspects input/output
+	 * modality options. Falls back to name-based inference when metadata is insufficient.
+	 *
+	 * @since 2.0.0
+	 *
+	 * @param object $model_meta Model metadata object.
+	 * @return bool True when the model supports text input and text output.
+	 */
+	protected function supports_text_io_from_metadata( $model_meta ) {
+		if ( ! is_object( $model_meta ) ) {
+			return false;
+		}
+
+		// If capabilities metadata is present, require text_generation capability.
+		if ( method_exists( $model_meta, 'getSupportedCapabilities' ) ) {
+			$supported = $model_meta->getSupportedCapabilities();
+			if ( is_array( $supported ) ) {
+				$has_text_gen = false;
+				foreach ( $supported as $cap ) {
+					$val = '';
+					if ( is_object( $cap ) && method_exists( $cap, '__get' ) && 'text_generation' === strtolower( (string) $cap->value ) ) {
+						$has_text_gen = true;
+						break;
+					}
+					if ( is_string( $cap ) && 'text_generation' === strtolower( $cap ) ) {
+						$has_text_gen = true;
+						break;
+					}
+				}
+				if ( ! $has_text_gen ) {
+					return false;
+				}
+			}
+		}
+
+		// Check input/output modality options for text support.
+		if ( method_exists( $model_meta, 'getSupportedOptions' ) ) {
+			$options = $model_meta->getSupportedOptions();
+			if ( is_array( $options ) ) {
+				$input_has_text  = null;
+				$output_has_text = null;
+
+				foreach ( $options as $option ) {
+					if ( ! is_object( $option ) || ! method_exists( $option, 'getName' ) ) {
+						continue;
+					}
+
+					$name      = $option->getName();
+					$is_input  = false;
+					$is_output = false;
+
+					if ( is_object( $name ) ) {
+						if ( method_exists( $name, '__get' ) ) {
+							$raw       = strtolower( (string) $name->value );
+							$is_input  = 'input_modalities' === $raw;
+							$is_output = 'output_modalities' === $raw;
+						}
+					} elseif ( is_string( $name ) ) {
+						$raw       = strtolower( $name );
+						$is_input  = 'inputmodalities' === $raw || 'input_modalities' === $raw;
+						$is_output = 'outputmodalities' === $raw || 'output_modalities' === $raw;
+					}
+
+					if ( ! $is_input && ! $is_output ) {
+						continue;
+					}
+
+					if ( ! method_exists( $option, 'getSupportedValues' ) ) {
+						continue;
+					}
+
+					$values   = $option->getSupportedValues();
+					$has_text = $this->modality_values_include_text( $values );
+
+					if ( $is_input ) {
+						$input_has_text = $has_text;
+					}
+					if ( $is_output ) {
+						$output_has_text = $has_text;
+					}
+				}
+
+				// If modality options were present, use them as the authority.
+				if ( null !== $input_has_text || null !== $output_has_text ) {
+					return (bool) $input_has_text && (bool) $output_has_text;
+				}
+			}
+		}
+
+		// Fall back to name-based inference.
+		if ( method_exists( $model_meta, 'getId' ) ) {
+			$model = strtolower( (string) $model_meta->getId() );
+			if (
+			false !== strpos( $model, 'transcribe' )
+			|| false !== strpos( $model, 'tts' )
+			|| false !== strpos( $model, 'realtime' )
+			) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * Returns whether a supported-values matrix contains a text modality.
+	 *
+	 * @since 2.0.0
+	 *
+	 * @param mixed $values Supported values from a SupportedOption (array of combinations).
+	 * @return bool True when at least one item resolves to text.
+	 */
+	protected function modality_values_include_text( $values ) {
+		if ( ! is_array( $values ) ) {
+			return false;
+		}
+
+		foreach ( $values as $combination ) {
+			if ( ! is_array( $combination ) ) {
+				continue;
+			}
+			foreach ( $combination as $modality ) {
+				$text = '';
+				if ( is_string( $modality ) ) {
+					$text = strtolower( $modality );
+				} elseif ( is_object( $modality ) ) {
+					if ( method_exists( $modality, '__get' ) && 'text' === strtolower( (string) $modality->value ) ) {
+						return true;
+					}
+				}
+				if ( 'text' === $text ) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	/**
 	 * Returns models from active/configured providers using the official AI Client registry flow.
 	 *
 	 * @since 1.9.0
@@ -232,7 +374,7 @@ trait AI_Utils {
 
 				foreach ( $class_name::modelMetadataDirectory()->listModelMetadata() as $model_meta ) {
 
-					if ( ! $this->model_supports_text_generation( $model_meta ) ) {
+					if ( ! $this->supports_text_io_from_metadata( $model_meta ) ) {
 						continue;
 					}
 
@@ -250,90 +392,6 @@ trait AI_Utils {
 
 		$models = apply_filters( 'plugin_check_ai_model_preferences', $models );
 		return is_array( $models ) ? $models : array();
-	}
-
-	/**
-	 * Determines whether a model metadata object supports text generation.
-	 *
-	 * Both input and output must be text-based; models that support non-text output
-	 * modalities (e.g. audio, image) are excluded.
-	 *
-	 * @since 1.9.1
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity)
-	 *
-	 * @param object $model_meta Model metadata object.
-	 * @return bool True when the model supports text generation, otherwise false.
-	 */
-	protected function model_supports_text_generation( $model_meta ) {
-
-		if ( ! method_exists( $model_meta, 'getSupportedCapabilities' ) ) {
-			return true;
-		}
-
-		$capabilities = $model_meta->getSupportedCapabilities();
-		if ( ! is_array( $capabilities ) ) {
-			return false;
-		}
-
-		$has_text_generation = false;
-		foreach ( $capabilities as $capability ) {
-			if ( is_string( $capability ) && 'text_generation' === $capability ) {
-				$has_text_generation = true;
-				break;
-			}
-
-			if ( is_object( $capability ) && method_exists( $capability, 'equals' ) && $capability->equals( 'text_generation' ) ) {
-				$has_text_generation = true;
-				break;
-			}
-		}
-
-		if ( ! $has_text_generation ) {
-			return false;
-		}
-
-		// Also ensure all supported output modality combinations are text-only.
-		if ( method_exists( $model_meta, 'getSupportedOptions' ) ) {
-			$options = $model_meta->getSupportedOptions();
-			if ( is_array( $options ) ) {
-				foreach ( $options as $option ) {
-					if ( ! is_object( $option ) || ! method_exists( $option, 'getName' ) ) {
-						continue;
-					}
-					$option_name = $option->getName();
-					if (
-						! is_object( $option_name )
-						|| ! method_exists( $option_name, 'isOutputModalities' )
-						|| ! $option_name->isOutputModalities()
-					) {
-						continue;
-					}
-					if ( ! method_exists( $option, 'getSupportedValues' ) ) {
-						continue;
-					}
-					$supported_values = $option->getSupportedValues();
-					if ( ! is_array( $supported_values ) ) {
-						continue;
-					}
-					foreach ( $supported_values as $combination ) {
-						if ( ! is_array( $combination ) ) {
-							continue;
-						}
-						foreach ( $combination as $modality ) {
-							$is_text = ( is_string( $modality ) && 'text' === $modality )
-								|| ( is_object( $modality ) && method_exists( $modality, 'isText' ) && $modality->isText() )
-								|| ( is_object( $modality ) && isset( $modality->value ) && 'text' === $modality->value );
-							if ( ! $is_text ) {
-								return false;
-							}
-						}
-					}
-				}
-			}
-		}
-
-		return true;
 	}
 
 	/**
