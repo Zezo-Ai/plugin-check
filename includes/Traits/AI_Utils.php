@@ -8,6 +8,7 @@
 namespace WordPress\Plugin_Check\Traits;
 
 use WordPress\AiClient\AiClient;
+use WordPress\AiClient\Common\AbstractEnum;
 use WP_Error;
 
 /**
@@ -228,7 +229,7 @@ trait AI_Utils {
 				$has_text_gen = false;
 				foreach ( $supported as $cap ) {
 					$val = '';
-					if ( is_object( $cap ) && method_exists( $cap, '__get' ) && 'text_generation' === strtolower( (string) $cap->value ) ) {
+					if ( $cap instanceof AbstractEnum && 'text_generation' === strtolower( (string) $cap->value ) ) {
 						$has_text_gen = true;
 						break;
 					}
@@ -259,12 +260,10 @@ trait AI_Utils {
 					$is_input  = false;
 					$is_output = false;
 
-					if ( is_object( $name ) ) {
-						if ( method_exists( $name, '__get' ) ) {
-							$raw       = strtolower( (string) $name->value );
-							$is_input  = 'input_modalities' === $raw;
-							$is_output = 'output_modalities' === $raw;
-						}
+					if ( $name instanceof AbstractEnum ) {
+						$raw       = strtolower( (string) $name->value );
+						$is_input  = 'input_modalities' === $raw;
+						$is_output = 'output_modalities' === $raw;
 					} elseif ( is_string( $name ) ) {
 						$raw       = strtolower( $name );
 						$is_input  = 'inputmodalities' === $raw || 'input_modalities' === $raw;
@@ -333,10 +332,8 @@ trait AI_Utils {
 				$text = '';
 				if ( is_string( $modality ) ) {
 					$text = strtolower( $modality );
-				} elseif ( is_object( $modality ) ) {
-					if ( method_exists( $modality, '__get' ) && 'text' === strtolower( (string) $modality->value ) ) {
-						return true;
-					}
+				} elseif ( $modality instanceof AbstractEnum && 'text' === strtolower( (string) $modality->value ) ) {
+					return true;
 				}
 				if ( 'text' === $text ) {
 					return true;
