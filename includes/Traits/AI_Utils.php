@@ -386,7 +386,6 @@ trait AI_Utils {
 				$provider_meta = $class_name::metadata();
 
 				foreach ( $class_name::modelMetadataDirectory()->listModelMetadata() as $model_meta ) {
-
 					if ( ! $this->supports_text_io_from_metadata( $model_meta ) ) {
 						continue;
 					}
