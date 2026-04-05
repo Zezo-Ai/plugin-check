@@ -140,29 +140,50 @@ class WP_Functions_Compatibility_Check extends Abstract_File_Check {
 			return self::$functions_since_map;
 		}
 
-		self::$functions_since_map = array();
+		$raw_map                   = $this->load_functions_since_raw_map();
+		self::$functions_since_map = $this->normalize_functions_since_map( $raw_map );
+		return self::$functions_since_map;
+	}
 
+	/**
+	 * Loads the raw function-since map from the JSON dataset file.
+	 *
+	 * @since 1.10.0
+	 *
+	 * @return array<string, string>
+	 */
+	private function load_functions_since_raw_map(): array {
 		if ( ! is_readable( self::DATA_FILE ) ) {
-			return self::$functions_since_map;
+			return array();
 		}
 
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 		$raw_json = file_get_contents( self::DATA_FILE );
 		if ( false === $raw_json || '' === $raw_json ) {
-			return self::$functions_since_map;
+			return array();
 		}
 
 		$decoded = json_decode( $raw_json, true );
 		if ( ! is_array( $decoded ) ) {
-			return self::$functions_since_map;
+			return array();
 		}
 
 		$map = $decoded['function_since'] ?? $decoded;
-		if ( ! is_array( $map ) ) {
-			return self::$functions_since_map;
-		}
+		return is_array( $map ) ? $map : array();
+	}
 
-		foreach ( $map as $function_name => $since_version ) {
+	/**
+	 * Normalizes raw function-since map values.
+	 *
+	 * @since 1.10.0
+	 *
+	 * @param array $raw_map Raw function map from the dataset.
+	 * @return array<string, string>
+	 */
+	private function normalize_functions_since_map( array $raw_map ): array {
+		$normalized_map = array();
+
+		foreach ( $raw_map as $function_name => $since_version ) {
 			if ( ! is_string( $function_name ) || ! is_string( $since_version ) ) {
 				continue;
 			}
@@ -172,10 +193,10 @@ class WP_Functions_Compatibility_Check extends Abstract_File_Check {
 				continue;
 			}
 
-			self::$functions_since_map[ strtolower( $function_name ) ] = $normalized_version;
+			$normalized_map[ strtolower( $function_name ) ] = $normalized_version;
 		}
 
-		return self::$functions_since_map;
+		return $normalized_map;
 	}
 
 	/**
