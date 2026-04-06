@@ -19,7 +19,7 @@ use WordPressdotorg\Plugin_Directory\Readme\Parser as DotorgParser;
 /**
  * Checks whether WordPress function usage is compatible with the plugin's declared "Tested up to" version.
  *
- * @since 1.10.0
+ * @since 2.0.0
  */
 class WP_Functions_Compatibility_Check extends Abstract_File_Check {
 
