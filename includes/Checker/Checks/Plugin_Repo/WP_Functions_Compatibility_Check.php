@@ -10,21 +10,17 @@ namespace WordPress\Plugin_Check\Checker\Checks\Plugin_Repo;
 use WordPress\Plugin_Check\Checker\Check_Categories;
 use WordPress\Plugin_Check\Checker\Check_Result;
 use WordPress\Plugin_Check\Checker\Checks\Abstract_File_Check;
-use WordPress\Plugin_Check\Lib\Readme\Parser as PCPParser;
 use WordPress\Plugin_Check\Traits\Amend_Check_Result;
-use WordPress\Plugin_Check\Traits\Readme_Utils;
 use WordPress\Plugin_Check\Traits\Stable_Check;
-use WordPressdotorg\Plugin_Directory\Readme\Parser as DotorgParser;
 
 /**
- * Checks whether WordPress function usage is compatible with the plugin's declared "Tested up to" version.
+ * Checks whether WordPress function usage is compatible with the plugin's minimum supported WordPress version.
  *
  * @since 2.0.0
  */
 class WP_Functions_Compatibility_Check extends Abstract_File_Check {
 
 	use Amend_Check_Result;
-	use Readme_Utils;
 	use Stable_Check;
 
 	/**
@@ -68,8 +64,8 @@ class WP_Functions_Compatibility_Check extends Abstract_File_Check {
 			return;
 		}
 
-		$tested_up_to = $this->get_tested_up_to_version( $result, $files );
-		if ( empty( $tested_up_to ) ) {
+		$minimum_supported_wp = $this->get_minimum_supported_wp_version( $result );
+		if ( '' === $minimum_supported_wp ) {
 			return;
 		}
 
@@ -83,20 +79,20 @@ class WP_Functions_Compatibility_Check extends Abstract_File_Check {
 				}
 
 				$introduced_in = $functions_since_map[ $function_name ];
-				if ( ! version_compare( $introduced_in, $tested_up_to, '>' ) ) {
+				if ( ! version_compare( $introduced_in, $minimum_supported_wp, '>' ) ) {
 					continue;
 				}
 
 				$this->add_result_error_for_file(
 					$result,
 					sprintf(
-						/* translators: 1: Function name, 2: Function introduced in version, 3: Tested up to version */
-						__( 'Function "%1$s()" was introduced in WordPress %2$s, but your plugin is only tested up to WordPress %3$s.', 'plugin-check' ),
+						/* translators: 1: Function name, 2: Function introduced in version, 3: Minimum supported WordPress version */
+						__( 'Function "%1$s()" requires WordPress %2$s, but your plugin minimum supported version is WordPress %3$s.', 'plugin-check' ),
 						esc_html( $function_name ),
 						esc_html( $introduced_in ),
-						esc_html( $tested_up_to )
+						esc_html( $minimum_supported_wp )
 					),
-					'wp_function_not_compatible_with_tested_upto',
+					'wp_function_not_compatible_with_requires_wp',
 					$file,
 					$call['line'],
 					0,
@@ -114,7 +110,7 @@ class WP_Functions_Compatibility_Check extends Abstract_File_Check {
 	 * @return string
 	 */
 	public function get_description(): string {
-		return __( 'Checks whether WordPress functions used by the plugin are compatible with its declared "Tested up to" version.', 'plugin-check' );
+		return __( 'Checks whether WordPress functions used by the plugin are compatible with its minimum supported WordPress version.', 'plugin-check' );
 	}
 
 	/**
@@ -125,7 +121,7 @@ class WP_Functions_Compatibility_Check extends Abstract_File_Check {
 	 * @return string
 	 */
 	public function get_documentation_url(): string {
-		return __( 'https://developer.wordpress.org/plugins/wordpress-org/how-your-readme-txt-works/#readme-header-information', 'plugin-check' );
+		return __( 'https://developer.wordpress.org/plugins/plugin-basics/header-requirements/#header-fields', 'plugin-check' );
 	}
 
 	/**
@@ -200,39 +196,15 @@ class WP_Functions_Compatibility_Check extends Abstract_File_Check {
 	}
 
 	/**
-	 * Gets plugin tested-up-to version from plugin header or readme.
+	 * Gets plugin minimum supported WordPress version.
 	 *
 	 * @since 1.10.0
 	 *
 	 * @param Check_Result $result The check result.
-	 * @param array        $files  Plugin files.
 	 * @return string
 	 */
-	private function get_tested_up_to_version( Check_Result $result, array $files ): string {
-		$main_file = $result->plugin()->main_file();
-		$header    = get_file_data(
-			$main_file,
-			array( 'TestedWP' => 'Tested up to' ),
-			'plugin'
-		);
-
-		$tested = $this->normalize_wp_version( $header['TestedWP'] ?? '' );
-		if ( '' !== $tested ) {
-			return $tested;
-		}
-
-		if ( $result->plugin()->is_single_file_plugin() ) {
-			return '';
-		}
-
-		$readme_files = $this->filter_files_for_readme( $files, $result->plugin()->path() );
-		$readme_file  = reset( $readme_files );
-		if ( ! $readme_file ) {
-			return '';
-		}
-
-		$parser = class_exists( DotorgParser::class ) ? new DotorgParser( $readme_file ) : new PCPParser( $readme_file );
-		return $this->normalize_wp_version( $parser->tested ?? '' );
+	private function get_minimum_supported_wp_version( Check_Result $result ): string {
+		return $this->normalize_wp_version( $result->plugin()->minimum_supported_wp() );
 	}
 
 	/**

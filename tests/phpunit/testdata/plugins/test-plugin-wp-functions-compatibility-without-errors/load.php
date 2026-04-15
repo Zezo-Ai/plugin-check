@@ -3,7 +3,7 @@
  * Plugin Name: Test Plugin WP Functions Compatibility Without Errors
  * Plugin URI: https://github.com/WordPress/plugin-check
  * Description: Test plugin for WordPress functions compatibility check without errors.
- * Requires at least: 5.0
+ * Requires at least: 5.3
  * Requires PHP: 7.4
  * Tested up to: 6.0
  * Version: 1.0.0

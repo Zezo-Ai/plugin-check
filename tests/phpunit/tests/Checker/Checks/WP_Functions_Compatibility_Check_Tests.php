@@ -21,7 +21,7 @@ class WP_Functions_Compatibility_Check_Tests extends WP_UnitTestCase {
 		$errors = $check_result->get_errors();
 
 		$this->assertArrayHasKey( 'uses-new-function.php', $errors );
-		$this->assertCount( 1, wp_list_filter( $errors['uses-new-function.php'][8][0], array( 'code' => 'wp_function_not_compatible_with_tested_upto' ) ) );
+		$this->assertCount( 1, wp_list_filter( $errors['uses-new-function.php'][8][0], array( 'code' => 'wp_function_not_compatible_with_requires_wp' ) ) );
 	}
 
 	public function test_run_without_errors() {
@@ -32,6 +32,6 @@ class WP_Functions_Compatibility_Check_Tests extends WP_UnitTestCase {
 		$check->run( $check_result );
 
 		$errors = $check_result->get_errors();
-		$this->assertEmpty( wp_list_filter( $errors['uses-compatible-function.php'][8][0] ?? array(), array( 'code' => 'wp_function_not_compatible_with_tested_upto' ) ) );
+		$this->assertEmpty( wp_list_filter( $errors['uses-compatible-function.php'][8][0] ?? array(), array( 'code' => 'wp_function_not_compatible_with_requires_wp' ) ) );
 	}
 }
