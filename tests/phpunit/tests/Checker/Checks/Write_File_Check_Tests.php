@@ -26,10 +26,12 @@ class Write_File_Check_Tests extends WP_UnitTestCase {
 
 		// Check for specific error codes.
 		$error_codes = array();
+		$file_operations_error_count = 0;
 		foreach ( $errors['file-operations.php'] as $line => $columns ) {
 			foreach ( $columns as $column => $messages ) {
 				foreach ( $messages as $message ) {
 					$error_codes[] = $message['code'];
+					++$file_operations_error_count;
 				}
 			}
 		}
@@ -37,8 +39,8 @@ class Write_File_Check_Tests extends WP_UnitTestCase {
 		// Should detect PluginDirectoryWrite errors.
 		$this->assertContains( 'PluginCheck.CodeAnalysis.WriteFile.PluginDirectoryWrite', $error_codes );
 
-		// Should have at least 6 errors (one for each bad example).
-		$this->assertGreaterThanOrEqual( 6, $check_result->get_error_count() );
+		// file-operations.php should include direct and variable-indirection plugin path violations.
+		$this->assertGreaterThanOrEqual( 8, $file_operations_error_count );
 	}
 
 	public function test_run_without_errors() {

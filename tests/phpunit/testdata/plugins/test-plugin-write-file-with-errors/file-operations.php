@@ -22,3 +22,6 @@ touch( WP_CONTENT_DIR . '/custom-data.txt' );
 // Error: Using plugins_url.
 file_put_contents( plugins_url() . '/test-plugin/data.json', '{}' );
 
+// Error: Variable assigned from plugin_dir_path().
+$plugin_path = plugin_dir_path( __FILE__ ) . 'cache/indirect.txt';
+file_put_contents( $plugin_path, 'Some data' );

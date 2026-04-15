@@ -73,3 +73,7 @@ function test_save_to_database() {
 	update_option( 'my_plugin_data', array( 'key' => 'value' ) );
 }
 
+// Example 8: Using WP_CONTENT_DIR uploads subpath (correct).
+function test_write_to_uploads_via_content_dir() {
+	file_put_contents( WP_CONTENT_DIR . '/uploads/my-plugin/data.txt', 'Some data' );
+}

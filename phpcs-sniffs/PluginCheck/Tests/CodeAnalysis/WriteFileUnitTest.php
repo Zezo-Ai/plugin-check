@@ -7,9 +7,9 @@
 
 namespace PluginCheckCS\PluginCheck\Tests\CodeAnalysis;
 
+use PHP_CodeSniffer\Sniffs\Sniff;
 use PluginCheckCS\PluginCheck\Sniffs\CodeAnalysis\WriteFileSniff;
 use PluginCheckCS\PluginCheck\Tests\AbstractSniffUnitTest;
-use PHP_CodeSniffer\Sniffs\Sniff;
 
 /**
  * Unit tests for WriteFileSniff.
@@ -30,6 +30,7 @@ final class WriteFileUnitTest extends AbstractSniffUnitTest {
 			17 => 1, // rename with plugin_dir_path().
 			20 => 1, // touch with WP_CONTENT_DIR.
 			23 => 1, // file_put_contents with plugins_url().
+			27 => 1, // file_put_contents with variable assigned from plugin_dir_path().
 		);
 	}
 
@@ -61,4 +62,3 @@ final class WriteFileUnitTest extends AbstractSniffUnitTest {
 	public function set_sniff_parameters( Sniff $sniff ) {
 	}
 }
-

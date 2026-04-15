@@ -129,14 +129,7 @@ final class WriteFileSniff extends AbstractFunctionParameterSniff {
 			return;
 		}
 
-		// Get the content of the parameter.
-		$path_content = '';
-		for ( $i = $path_param['start']; $i <= $path_param['end']; $i++ ) {
-			if ( isset( Tokens::$emptyTokens[ $this->tokens[ $i ]['code'] ] ) ) {
-				continue;
-			}
-			$path_content .= $this->tokens[ $i ]['content'];
-		}
+		$path_content = $this->get_path_content_with_resolved_variables( $path_param['start'], $path_param['end'], $stackPtr );
 
 		// Check if the path uses safe functions (uploads directory or temp).
 		foreach ( $this->safe_functions as $safe_func ) {
@@ -149,6 +142,10 @@ final class WriteFileSniff extends AbstractFunctionParameterSniff {
 		// Check for plugin constants.
 		foreach ( $this->plugin_constants as $constant ) {
 			if ( stripos( $path_content, $constant ) !== false ) {
+				if ( in_array( $constant, array( 'WP_CONTENT_DIR', 'WP_CONTENT_URL' ), true ) && $this->is_uploads_subpath( $path_content ) ) {
+					return;
+				}
+
 				$this->add_error( $stackPtr, $matched_content, $path_param['start'], 'constant ' . $constant );
 				return;
 			}
@@ -196,5 +193,135 @@ final class WriteFileSniff extends AbstractFunctionParameterSniff {
 			'PluginDirectoryWrite',
 			array( $function_name, $indicator )
 		);
+	}
+
+	/**
+	 * Gets a normalized path expression and expands simple variable assignments.
+	 *
+	 * @param int $start_ptr Start pointer.
+	 * @param int $end_ptr End pointer.
+	 * @param int $stackPtr Function call pointer.
+	 * @return string
+	 */
+	private function get_path_content_with_resolved_variables( $start_ptr, $end_ptr, $stackPtr ) {
+		$path_content = '';
+		for ( $i = $start_ptr; $i <= $end_ptr; $i++ ) {
+			if ( isset( Tokens::$emptyTokens[ $this->tokens[ $i ]['code'] ] ) ) {
+				continue;
+			}
+			$path_content .= $this->tokens[ $i ]['content'];
+		}
+
+		return $this->expand_expression_variables( $path_content, $stackPtr, array() );
+	}
+
+	/**
+	 * Expands variables in an expression from assignments in the same scope.
+	 *
+	 * @param string $expression Path expression.
+	 * @param int    $stackPtr Function call pointer.
+	 * @param array  $visited_variables Visited variables map.
+	 * @return string
+	 */
+	private function expand_expression_variables( $expression, $stackPtr, array $visited_variables ) {
+		if ( false === strpos( $expression, '$' ) ) {
+			return $expression;
+		}
+
+		preg_match_all( '/\$[A-Za-z_][A-Za-z0-9_]*/', $expression, $matches );
+		if ( empty( $matches[0] ) ) {
+			return $expression;
+		}
+
+		$expanded_expression = $expression;
+		foreach ( array_unique( $matches[0] ) as $variable_name ) {
+			if ( isset( $visited_variables[ $variable_name ] ) ) {
+				continue;
+			}
+
+			$assignment_expression = $this->find_latest_assignment_expression( $variable_name, $stackPtr );
+			if ( '' === $assignment_expression ) {
+				continue;
+			}
+
+			$visited_variables[ $variable_name ] = true;
+			$expanded_expression                .= ' ' . $this->expand_expression_variables( $assignment_expression, $stackPtr, $visited_variables );
+		}
+
+		return $expanded_expression;
+	}
+
+	/**
+	 * Finds the latest assignment expression for a variable in the same function scope.
+	 *
+	 * @param string $variable_name Variable name.
+	 * @param int    $stackPtr Function call pointer.
+	 * @return string
+	 */
+	private function find_latest_assignment_expression( $variable_name, $stackPtr ) {
+		$function_scope_ptr = $this->get_enclosing_function_scope_ptr( $stackPtr );
+
+		for ( $i = $stackPtr - 1; $i >= 0; $i-- ) {
+			if ( \T_VARIABLE !== $this->tokens[ $i ]['code'] || $variable_name !== $this->tokens[ $i ]['content'] ) {
+				continue;
+			}
+
+			if ( $this->get_enclosing_function_scope_ptr( $i ) !== $function_scope_ptr ) {
+				continue;
+			}
+
+			$next_non_empty = $this->phpcsFile->findNext( Tokens::$emptyTokens, ( $i + 1 ), null, true );
+			if ( false === $next_non_empty || \T_EQUAL !== $this->tokens[ $next_non_empty ]['code'] ) {
+				continue;
+			}
+
+			$assignment_end = $this->phpcsFile->findEndOfStatement( $next_non_empty );
+			if ( false === $assignment_end || $assignment_end >= $stackPtr ) {
+				continue;
+			}
+
+			$assignment_expression = '';
+			for ( $j = $next_non_empty + 1; $j < $assignment_end; $j++ ) {
+				if ( isset( Tokens::$emptyTokens[ $this->tokens[ $j ]['code'] ] ) ) {
+					continue;
+				}
+				$assignment_expression .= $this->tokens[ $j ]['content'];
+			}
+
+			return $assignment_expression;
+		}
+
+		return '';
+	}
+
+	/**
+	 * Gets the closest enclosing function/closure pointer.
+	 *
+	 * @param int $stackPtr Stack pointer.
+	 * @return int|null
+	 */
+	private function get_enclosing_function_scope_ptr( $stackPtr ) {
+		if ( empty( $this->tokens[ $stackPtr ]['conditions'] ) ) {
+			return null;
+		}
+
+		$conditions = array_reverse( $this->tokens[ $stackPtr ]['conditions'], true );
+		foreach ( $conditions as $condition_ptr => $condition_code ) {
+			if ( in_array( $condition_code, array( \T_FUNCTION, \T_CLOSURE, \T_FN ), true ) ) {
+				return $condition_ptr;
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Checks if the expression points to a likely uploads subpath.
+	 *
+	 * @param string $expression Path expression.
+	 * @return bool
+	 */
+	private function is_uploads_subpath( $expression ) {
+		return (bool) preg_match( '/(?:[\'"]|\/|\\\\)uploads(?:[\'"\/\\\\]|$)/i', $expression );
 	}
 }

@@ -22,6 +22,10 @@ touch( WP_CONTENT_DIR . '/custom-data.txt' );
 // Error: Using plugins_url (should error).
 file_put_contents( plugins_url() . '/test-plugin/data.json', '{}' );
 
+// Error: Variable assigned from plugin_dir_path.
+$plugin_path = plugin_dir_path( __FILE__ ) . 'cache/indirect.txt';
+file_put_contents( $plugin_path, 'Some data' );
+
 // OK: Writing to uploads directory (no error).
 file_put_contents( wp_upload_dir()['basedir'] . '/my-plugin/data.txt', 'Some data' );
 
@@ -31,3 +35,5 @@ fwrite( fopen( wp_tempnam( 'my-plugin-' ), 'w' ), 'Temporary data' );
 // OK: Using get_temp_dir (no error).
 touch( get_temp_dir() . 'my-temp-file.txt' );
 
+// OK: Using WP_CONTENT_DIR uploads subpath (no error).
+file_put_contents( WP_CONTENT_DIR . '/uploads/my-plugin/data.txt', 'Some data' );
