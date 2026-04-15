@@ -390,6 +390,7 @@ class Direct_File_Access_Check extends Abstract_File_Check {
 	private function is_ast_valid_for_direct_access( array $ast ) {
 		$safe_node_types = array(
 			Stmt\Nop::class,
+			Stmt\Declare_::class,
 			Stmt\Namespace_::class,
 			Stmt\Use_::class,
 			Stmt\GroupUse::class,
