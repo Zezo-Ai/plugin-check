@@ -25,7 +25,7 @@ class Write_File_Check_Tests extends WP_UnitTestCase {
 		$this->assertArrayHasKey( 'file-operations.php', $errors );
 
 		// Check for specific error codes.
-		$error_codes = array();
+		$error_codes                 = array();
 		$file_operations_error_count = 0;
 		foreach ( $errors['file-operations.php'] as $line => $columns ) {
 			foreach ( $columns as $column => $messages ) {
