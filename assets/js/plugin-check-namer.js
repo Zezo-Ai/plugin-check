@@ -38,6 +38,9 @@
 		const authorInput = document.getElementById(
 			'plugin_check_namer_author'
 		);
+		const modelSelect = document.getElementById(
+			'plugin_check_namer_model'
+		);
 
 		const submitBtn = document.getElementById(
 			'plugin-check-namer-submit'
@@ -112,11 +115,12 @@
 			if ( explainEl ) {
 				setHtml( explainEl, '' );
 			}
+			if ( errorDiv ) {
+				errorDiv.classList.add( 'plugin-check-namer-hidden' );
+			}
 			if ( errorEl ) {
-				errorEl.classList.add( 'plugin-check-namer-hidden' );
 				setText( errorEl, '' );
 			}
-
 			if ( confusionPluginsDiv ) {
 				confusionPluginsDiv.classList.add(
 					'plugin-check-namer-hidden'
@@ -160,6 +164,12 @@
 				formData.append(
 					'author_name',
 					( authorInput.value || '' ).trim()
+				);
+			}
+			if ( modelSelect ) {
+				formData.append(
+					'model_preference',
+					( modelSelect.value || '' ).trim()
 				);
 			}
 
@@ -246,14 +256,29 @@
 
 						// Add AI provider and model info if available.
 						if ( payload.data.ai_info ) {
-							tokensText =
-								payload.data.ai_info.provider +
-								' (' +
-								payload.data.ai_info.model +
-								') - ';
+							const parts = [];
+							if ( payload.data.ai_info.provider ) {
+								parts.push( payload.data.ai_info.provider );
+							}
+							if ( payload.data.ai_info.model ) {
+								parts.push( payload.data.ai_info.model );
+							}
+							if ( parts.length ) {
+								tokensText = parts.join( ' / ' ) + ' - ';
+							}
 						}
 
-						tokensText += tokenUsage.total_tokens + ' total';
+						const totalTokens =
+							tokenUsage.total_tokens ||
+							( tokenUsage.prompt_tokens &&
+							tokenUsage.completion_tokens
+								? tokenUsage.prompt_tokens +
+								  tokenUsage.completion_tokens
+								: null );
+
+						if ( totalTokens ) {
+							tokensText += totalTokens + ' total';
+						}
 
 						// Add breakdown with prompt and completion tokens.
 						if (
@@ -392,8 +417,11 @@
 							? err.message
 							: pluginCheckNamer.messages.genericError
 					);
-					if ( errorEl ) {
-						errorEl.classList.remove( 'plugin-check-namer-hidden' );
+
+					if ( errorDiv ) {
+						errorDiv.classList.remove(
+							'plugin-check-namer-hidden'
+						);
 					}
 				} )
 				.finally( function () {

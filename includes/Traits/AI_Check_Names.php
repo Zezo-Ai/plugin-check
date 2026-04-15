@@ -7,8 +7,6 @@
 
 namespace WordPress\Plugin_Check\Traits;
 
-use WordPress\AiClient\AiClient;
-use WordPress\AiClient\Builders\PromptBuilder;
 use WP_Error;
 
 /**
@@ -18,27 +16,19 @@ use WP_Error;
  */
 trait AI_Check_Names {
 
-	use AI_Connect;
-
 	/**
 	 * Runs the name analysis via AI (makes two queries like internal scanner).
 	 *
 	 * @since 1.8.0
 	 *
-	 * @param string $provider Provider key.
-	 * @param string $api_key  API key.
-	 * @param string $model    Model ID.
-	 * @param string $name     Plugin name to evaluate.
-	 * @param string $author   Optional author/brand name.
+	 * @param string $model_preference Model preference (optional).
+	 * @param string $name             Plugin name to evaluate.
+	 * @param string $author           Optional author/brand name.
 	 * @return array|WP_Error Array with 'text' and 'token_usage' keys, or WP_Error.
 	 */
-	protected function run_name_analysis( $provider, $api_key, $model, $name, $author = '' ) {
-		if ( ! class_exists( AiClient::class ) ) {
-			return new WP_Error( 'ai_client_not_available', __( 'AI client SDK is not available.', 'plugin-check' ) );
-		}
-
+	protected function run_name_analysis( $model_preference, $name, $author = '' ) {
 		// First query: Similar name search.
-		$similar_name_result = $this->run_similar_name_query( $provider, $api_key, $model, $name );
+		$similar_name_result = $this->run_similar_name_query( $model_preference, $name );
 		if ( is_wp_error( $similar_name_result ) ) {
 			return $similar_name_result;
 		}
@@ -47,7 +37,7 @@ trait AI_Check_Names {
 		$additional_context = $this->build_similar_name_context( $similar_name_result['text'] );
 
 		// Second query: Pre-review with similar name results as context.
-		$prereview_result = $this->run_prereview_query( $provider, $api_key, $model, $name, $additional_context, $author );
+		$prereview_result = $this->run_prereview_query( $model_preference, $name, $additional_context, $author );
 		if ( is_wp_error( $prereview_result ) ) {
 			return $prereview_result;
 		}
@@ -63,13 +53,11 @@ trait AI_Check_Names {
 	 *
 	 * @since 1.8.0
 	 *
-	 * @param string $provider Provider key.
-	 * @param string $api_key  API key.
-	 * @param string $model    Model ID.
-	 * @param string $name     Plugin name to evaluate.
+	 * @param string $model_preference Model preference (optional).
+	 * @param string $name             Plugin name to evaluate.
 	 * @return array|WP_Error Array with 'text' and 'token_usage' keys, or WP_Error.
 	 */
-	protected function run_similar_name_query( $provider, $api_key, $model, $name ) {
+	protected function run_similar_name_query( $model_preference, $name ) {
 		$prompt_template = $this->get_prompt_template( 'ai-check-similar-name.md' );
 		if ( is_wp_error( $prompt_template ) ) {
 			return $prompt_template;
@@ -79,10 +67,8 @@ trait AI_Check_Names {
 
 		// Execute AI request with structured output configuration.
 		return $this->execute_ai_request(
-			$provider,
-			$api_key,
-			$model,
 			$prompt,
+			$model_preference,
 			function ( $builder ) {
 				$this->maybe_set_structured_output( $builder, 'similar_name' );
 			}
@@ -94,15 +80,13 @@ trait AI_Check_Names {
 	 *
 	 * @since 1.8.0
 	 *
-	 * @param string $provider           Provider key.
-	 * @param string $api_key            API key.
-	 * @param string $model              Model ID.
+	 * @param string $model_preference   Model preference (optional).
 	 * @param string $name               Plugin name to evaluate.
 	 * @param string $additional_context Additional context from similar name query.
 	 * @param string $author             Optional author/brand name.
 	 * @return array|WP_Error Array with 'text' and 'token_usage' keys, or WP_Error.
 	 */
-	protected function run_prereview_query( $provider, $api_key, $model, $name, $additional_context = '', $author = '' ) {
+	protected function run_prereview_query( $model_preference, $name, $additional_context = '', $author = '' ) {
 		$prompt_template = $this->get_prompt_template( 'ai-check-prereview.md' );
 		if ( is_wp_error( $prompt_template ) ) {
 			return $prompt_template;
@@ -136,12 +120,186 @@ trait AI_Check_Names {
 
 		// Execute AI request with structured output configuration.
 		return $this->execute_ai_request(
-			$provider,
-			$api_key,
-			$model,
 			$full_prompt,
+			$model_preference,
 			function ( $builder ) {
 				$this->maybe_set_structured_output( $builder, 'prereview' );
+			}
+		);
+	}
+
+	/**
+	 * Executes an AI request with the provided parameters.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @SuppressWarnings(PHPMD.NPathComplexity)
+	 *
+	 * @param string        $prompt           The prompt to send to the AI.
+	 * @param string        $model_preference Model preference (optional).
+	 * @param callable|null $builder_config   Optional callback to configure the prompt builder before execution.
+	 * @return array|WP_Error Array with 'text' and optional 'token_usage', or WP_Error on failure.
+	 */
+	protected function execute_ai_request( $prompt, $model_preference = '', $builder_config = null ) {
+		if ( ! function_exists( 'wp_ai_client_prompt' ) ) {
+			return new WP_Error(
+				'ai_client_not_available',
+				__( 'AI client is not available. This feature requires WordPress 7.0 or newer.', 'plugin-check' )
+			);
+		}
+
+		$builder = wp_ai_client_prompt( $prompt );
+		if ( is_wp_error( $builder ) ) {
+			return $builder;
+		}
+
+		$builder = $this->apply_model_preference( $builder, $model_preference );
+		if ( is_wp_error( $builder ) ) {
+			return $builder;
+		}
+
+		if ( is_callable( $builder_config ) ) {
+			call_user_func( $builder_config, $builder );
+		}
+
+		// Try to generate a rich result first.
+		// Use is_callable() instead of method_exists() to detect methods
+		// provided via __call() magic (e.g. WP_AI_Client_Prompt_Builder).
+		$result = null;
+		if ( is_callable( array( $builder, 'generate_text_result' ) ) ) {
+			$result = $builder->generate_text_result();
+		} elseif ( is_callable( array( $builder, 'generateTextResult' ) ) ) {
+			$result = $builder->generateTextResult();
+		}
+
+		if ( $result ) {
+			if ( is_wp_error( $result ) ) {
+				return $result;
+			}
+
+			$text  = method_exists( $result, 'to_text' ) ? $result->to_text() : ( method_exists( $result, 'toText' ) ? $result->toText() : '' );
+			$usage = $this->extract_token_usage( $result );
+
+			return array_filter(
+				array(
+					'text'        => $text,
+					'token_usage' => $usage,
+				)
+			);
+		}
+
+		$text = $builder->generate_text();
+		if ( is_wp_error( $text ) ) {
+			return $text;
+		}
+
+		return array(
+			'text' => (string) $text,
+		);
+	}
+
+	/**
+	 * Applies a model preference to the prompt builder if supported.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @param object $builder Prompt builder instance.
+	 * @param string $model_preference Model preference.
+	 * @return object|WP_Error Updated builder or WP_Error.
+	 */
+	protected function apply_model_preference( $builder, $model_preference ) {
+		if ( empty( $model_preference ) ) {
+			return $builder;
+		}
+
+		$preference = $this->normalize_model_preference( $model_preference );
+
+		try {
+			$result = $builder->using_model_preference( $preference );
+			return $result ? $result : $builder;
+		} catch ( \Exception $e ) {
+			// If method doesn't exist or fails, return WP_Error.
+			return new WP_Error(
+				'model_preference_error',
+				sprintf(
+					/* translators: %s: Exception message */
+					__( 'Failed to apply model preference: %s', 'plugin-check' ),
+					$e->getMessage()
+				)
+			);
+		}
+	}
+
+	/**
+	 * Normalizes a model preference string into a supported preference format.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @param string $model_preference Model preference string.
+	 * @return string|array Normalized preference.
+	 */
+	protected function normalize_model_preference( $model_preference ) {
+		$trimmed = trim( (string) $model_preference );
+		if ( '' === $trimmed ) {
+			return '';
+		}
+
+		foreach ( array( '::', '|', ':' ) as $separator ) {
+			if ( false !== strpos( $trimmed, $separator ) ) {
+				list( $provider, $model ) = array_map( 'trim', explode( $separator, $trimmed, 2 ) );
+				if ( '' !== $provider && '' !== $model ) {
+					return array( $provider, $model );
+				}
+			}
+		}
+
+		return $trimmed;
+	}
+
+	/**
+	 * Extracts token usage from a result object, if available.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @SuppressWarnings(PHPMD.NPathComplexity)
+	 *
+	 * @param object $result Result object.
+	 * @return array|null Token usage array or null.
+	 */
+	protected function extract_token_usage( $result ) {
+		$usage = null;
+
+		if ( method_exists( $result, 'get_token_usage' ) ) {
+			$usage = $result->get_token_usage();
+		} elseif ( method_exists( $result, 'getTokenUsage' ) ) {
+			$usage = $result->getTokenUsage();
+		}
+
+		if ( ! $usage || ! is_object( $usage ) ) {
+			return null;
+		}
+
+		$prompt_tokens     = method_exists( $usage, 'get_prompt_tokens' ) ? $usage->get_prompt_tokens() : ( method_exists( $usage, 'getPromptTokens' ) ? $usage->getPromptTokens() : null );
+		$completion_tokens = method_exists( $usage, 'get_completion_tokens' ) ? $usage->get_completion_tokens() : ( method_exists( $usage, 'getCompletionTokens' ) ? $usage->getCompletionTokens() : null );
+		$total_tokens      = method_exists( $usage, 'get_total_tokens' ) ? $usage->get_total_tokens() : ( method_exists( $usage, 'getTotalTokens' ) ? $usage->getTotalTokens() : null );
+
+		// Compute total from prompt + completion if not directly available.
+		if ( null === $total_tokens && null !== $prompt_tokens && null !== $completion_tokens ) {
+			$total_tokens = $prompt_tokens + $completion_tokens;
+		}
+
+		if ( null === $prompt_tokens && null === $completion_tokens && null === $total_tokens ) {
+			return null;
+		}
+
+		return array_filter(
+			array(
+				'prompt_tokens'     => $prompt_tokens,
+				'completion_tokens' => $completion_tokens,
+				'total_tokens'      => $total_tokens,
+			),
+			static function ( $value ) {
+				return null !== $value;
 			}
 		);
 	}
@@ -496,7 +654,7 @@ trait AI_Check_Names {
 			$text .= ' (' . implode( ', ', $decoded['disallowed_type'] ) . ')';
 		}
 		if ( ! empty( $text ) ) {
-			$parts[] = '<strong>' . __( '🚫 Disallowed:', 'plugin-check' ) . '</strong> ' . $text;
+			$parts[] = '<strong>🚫 ' . esc_html__( 'Disallowed:', 'plugin-check' ) . '</strong> ' . $text;
 		}
 	}
 
@@ -511,7 +669,7 @@ trait AI_Check_Names {
 	 */
 	protected function add_naming_section( &$parts, $decoded ) {
 		if ( ! empty( $decoded['possible_naming_issues'] ) && ! empty( $decoded['naming_explanation'] ) ) {
-			$parts[] = '<strong>' . __( '📝 Naming:', 'plugin-check' ) . '</strong> ' . $decoded['naming_explanation'];
+			$parts[] = '<strong>📝 ' . esc_html__( 'Naming:', 'plugin-check' ) . '</strong> ' . $decoded['naming_explanation'];
 		}
 	}
 
@@ -526,7 +684,7 @@ trait AI_Check_Names {
 	 */
 	protected function add_owner_section( &$parts, $decoded ) {
 		if ( ! empty( $decoded['possible_owner_issues'] ) && ! empty( $decoded['owner_explanation'] ) ) {
-			$parts[] = '<strong>' . __( '©️ Owner/Trademark:', 'plugin-check' ) . '</strong> ' . $decoded['owner_explanation'];
+			$parts[] = '<strong>©️ ' . esc_html__( 'Owner/Trademark:', 'plugin-check' ) . '</strong> ' . $decoded['owner_explanation'];
 		}
 	}
 
@@ -541,7 +699,7 @@ trait AI_Check_Names {
 	 */
 	protected function add_description_section( &$parts, $decoded ) {
 		if ( ! empty( $decoded['possible_description_issues'] ) && ! empty( $decoded['description_explanation'] ) ) {
-			$parts[] = '<strong>' . __( '📄 Description:', 'plugin-check' ) . '</strong> ' . $decoded['description_explanation'];
+			$parts[] = '<strong>📄 ' . esc_html__( 'Description:', 'plugin-check' ) . '</strong> ' . $decoded['description_explanation'];
 		}
 	}
 
@@ -557,7 +715,7 @@ trait AI_Check_Names {
 	protected function add_trademarks_section( &$parts, $decoded ) {
 		if ( ! empty( $decoded['trademarks_or_project_names_array'] ) && is_array( $decoded['trademarks_or_project_names_array'] ) ) {
 			$trademarks = implode( ', ', array_map( 'esc_html', $decoded['trademarks_or_project_names_array'] ) );
-			$parts[]    = '<strong>' . __( '™️ Trademarks Detected:', 'plugin-check' ) . '</strong> ' . $trademarks;
+			$parts[]    = '<strong>™️ ' . esc_html__( 'Trademarks Detected:', 'plugin-check' ) . '</strong> ' . $trademarks;
 		}
 	}
 
@@ -587,7 +745,7 @@ trait AI_Check_Names {
 		}
 
 		if ( ! empty( $suggestions ) ) {
-			$parts[] = '<br><strong>' . __( '💡 Suggestions:', 'plugin-check' ) . '</strong><br>' . implode( '<br>', $suggestions );
+			$parts[] = '<br><strong>💡 ' . esc_html__( 'Suggestions:', 'plugin-check' ) . '</strong><br>' . implode( '<br>', $suggestions );
 		}
 	}
 
@@ -603,7 +761,7 @@ trait AI_Check_Names {
 	protected function add_language_section( &$parts, $decoded ) {
 		if ( isset( $decoded['description_language_is_in_english'] ) && false === $decoded['description_language_is_in_english'] ) {
 			if ( ! empty( $decoded['description_what_is_not_in_english'] ) ) {
-				$parts[] = '<strong>' . __( '🌐 Language:', 'plugin-check' ) . '</strong> ' . $decoded['description_what_is_not_in_english'];
+				$parts[] = '<strong>🌐 ' . esc_html__( 'Language:', 'plugin-check' ) . '</strong> ' . $decoded['description_what_is_not_in_english'];
 			}
 		}
 	}
@@ -613,8 +771,8 @@ trait AI_Check_Names {
 	 *
 	 * @since 1.8.0
 	 *
-	 * @param PromptBuilder $builder The PromptBuilder instance.
-	 * @param string        $query_type Type of query: 'similar_name' or 'prereview'.
+	 * @param object $builder The prompt builder instance.
+	 * @param string $query_type Type of query: 'similar_name' or 'prereview'.
 	 * @return void
 	 */
 	protected function maybe_set_structured_output( $builder, $query_type = 'similar_name' ) {
@@ -626,7 +784,16 @@ trait AI_Check_Names {
 		}
 
 		// Try different method names that might be used for structured output.
-		$methods = array( 'withStructuredOutput', 'setResponseFormat', 'usingResponseFormat', 'withJsonSchema' );
+		$methods = array(
+			'withStructuredOutput',
+			'setResponseFormat',
+			'usingResponseFormat',
+			'withJsonSchema',
+			'with_structured_output',
+			'set_response_format',
+			'using_response_format',
+			'with_json_schema',
+		);
 
 		foreach ( $methods as $method ) {
 			if ( method_exists( $builder, $method ) ) {

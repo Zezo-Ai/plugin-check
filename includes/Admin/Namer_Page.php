@@ -8,7 +8,7 @@
 namespace WordPress\Plugin_Check\Admin;
 
 use WordPress\Plugin_Check\Traits\AI_Check_Names;
-use WordPress\Plugin_Check\Traits\AI_Connect;
+use WordPress\Plugin_Check\Traits\AI_Utils;
 use WP_Error;
 
 /**
@@ -18,8 +18,8 @@ use WP_Error;
  */
 final class Namer_Page {
 
-	use AI_Connect;
 	use AI_Check_Names;
+	use AI_Utils;
 
 	/**
 	 * Menu slug.
@@ -28,14 +28,6 @@ final class Namer_Page {
 	 * @var string
 	 */
 	const MENU_SLUG = 'plugin-check-namer';
-
-	/**
-	 * Option name used by Plugin Check settings.
-	 *
-	 * @since 1.8.0
-	 * @var string
-	 */
-	const OPTION_NAME = 'plugin_check_settings';
 
 	/**
 	 * Admin-post action for analysis.
@@ -62,6 +54,7 @@ final class Namer_Page {
 		add_action( 'admin_menu', array( $this, 'add_page' ) );
 		add_action( 'admin_post_' . self::ACTION_ANALYZE, array( $this, 'handle_analyze' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
+		add_action( 'admin_notices', array( $this, 'render_ai_notice' ) );
 		add_action( 'wp_ajax_plugin_check_namer_analyze', array( $this, 'ajax_analyze' ) );
 	}
 
@@ -140,12 +133,13 @@ final class Namer_Page {
 
 		$author = $this->get_author_name_from_request();
 
-		$ai_config = $this->get_ai_config();
+		$model_preference = $this->get_model_preference_from_request();
+		$ai_config        = $this->get_ai_config( $model_preference );
 		if ( is_wp_error( $ai_config ) ) {
 			wp_send_json_error( array( 'message' => $ai_config->get_error_message() ) );
 		}
 
-		$analysis = $this->run_name_analysis( $ai_config['provider'], $ai_config['api_key'], $ai_config['model'], $name, $author );
+		$analysis = $this->run_name_analysis( $ai_config['model_preference'], $name, $author );
 		if ( is_wp_error( $analysis ) ) {
 			wp_send_json_error( array( 'message' => $analysis->get_error_message() ) );
 		}
@@ -163,7 +157,7 @@ final class Namer_Page {
 	 *
 	 * @param array        $parsed    Parsed analysis.
 	 * @param string|array $analysis  Raw analysis.
-	 * @param array        $ai_config AI configuration with provider and model info.
+	 * @param array        $ai_config AI configuration with model preference info.
 	 * @return array Response array.
 	 */
 	protected function build_ajax_response( $parsed, $analysis, $ai_config = array() ) {
@@ -186,40 +180,14 @@ final class Namer_Page {
 			$response['token_usage'] = $parsed['token_usage'];
 		}
 
-		// Add AI model and provider information.
-		if ( ! empty( $ai_config ) ) {
+		// Add AI model preference information.
+		if ( ! empty( $ai_config['model_preference'] ) ) {
 			$response['ai_info'] = array(
-				'provider' => $ai_config['provider'],
-				'model'    => $ai_config['model'],
+				'model' => $ai_config['model_preference'],
 			);
 		}
 
 		return $response;
-	}
-
-	/**
-	 * Gets raw output from parsed or analysis data.
-	 *
-	 * @since 1.8.0
-	 *
-	 * @param array        $parsed   Parsed analysis.
-	 * @param string|array $analysis Raw analysis.
-	 * @return string Raw output.
-	 */
-	protected function get_raw_output( $parsed, $analysis ) {
-		if ( ! empty( $parsed['raw'] ) ) {
-			return $parsed['raw'];
-		}
-
-		if ( is_array( $analysis ) && isset( $analysis['text'] ) ) {
-			return $analysis['text'];
-		}
-
-		if ( is_string( $analysis ) ) {
-			return $analysis;
-		}
-
-		return '';
 	}
 
 	/**
@@ -247,45 +215,71 @@ final class Namer_Page {
 	}
 
 	/**
-	 * Gets AI configuration from settings.
+	 * Renders admin notice when AI connectors are not configured.
 	 *
-	 * @since 1.8.0
-	 *
-	 * @return array|WP_Error AI config array or error.
+	 * @since 1.9.0
 	 */
-	protected function get_ai_config() {
-		$settings = get_option( self::OPTION_NAME, array() );
-		$provider = isset( $settings['ai_provider'] ) ? (string) $settings['ai_provider'] : '';
-		$api_key  = isset( $settings['ai_api_key'] ) ? (string) $settings['ai_api_key'] : '';
-		$model    = isset( $settings['ai_model'] ) ? (string) $settings['ai_model'] : '';
-
-		if ( empty( $provider ) || empty( $api_key ) || empty( $model ) ) {
-			return new WP_Error(
-				'missing_ai_config',
-				__( 'AI settings are not configured. Please configure Provider, API key, and Model in Plugin Check settings first.', 'plugin-check' )
-			);
+	public function render_ai_notice() {
+		$screen = get_current_screen();
+		if ( ! $screen || $screen->id !== $this->hook_suffix ) {
+			return;
 		}
 
-		return array(
-			'provider' => $provider,
-			'api_key'  => $api_key,
-			'model'    => $model,
-		);
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
+		$ai_config = $this->get_ai_config();
+		if ( ! is_wp_error( $ai_config ) ) {
+			return;
+		}
+		?>
+		<div class="notice notice-warning is-dismissible">
+			<p>
+				<?php
+				printf(
+					/* translators: %s: Error message. */
+					__( 'To use the Namer tool, configure AI connectors in WordPress 7.0+ settings. Details: %s', 'plugin-check' ),
+					esc_html( $ai_config->get_error_message() )
+				);
+				?>
+			</p>
+		</div>
+		<?php
 	}
 
 	/**
 	 * Renders the page.
 	 *
 	 * @since 1.8.0
+	 *
+	 * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
 	 */
 	public function render_page() {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
 		}
 
+		$ai_config = $this->get_ai_config();
 		?>
 		<div class="wrap">
 			<h1><?php echo esc_html__( 'Plugin Check Namer Tool', 'plugin-check' ); ?></h1>
+
+			<?php
+			if ( is_wp_error( $ai_config ) ) {
+				?>
+				<p class="description">
+					<?php esc_html_e( 'The Plugin Namer requires WordPress 7.0+ with configured AI connectors. Please enable AI connectors in core to use this tool.', 'plugin-check' ); ?>
+				</p>
+				<p>
+					<a class="button button-primary" href="<?php echo esc_url( admin_url( 'options-connectors.php' ) ); ?>">
+						<?php esc_html_e( 'Configure AI Connectors', 'plugin-check' ); ?>
+					</a>
+				</p>
+				<?php
+				return;
+			}
+			?>
 
 			<form id="plugin-check-namer-form" method="post">
 				<table class="form-table" role="presentation">
@@ -325,11 +319,42 @@ final class Namer_Page {
 								</p>
 							</td>
 						</tr>
+						<tr>
+							<th scope="row">
+								<label for="plugin_check_namer_model"><?php echo esc_html__( 'AI model', 'plugin-check' ); ?></label>
+							</th>
+							<td>
+								<?php $model_groups = $this->get_available_model_preferences(); ?>
+								<select
+									id="plugin_check_namer_model"
+									name="model_preference"
+									class="regular-text"
+								>
+									<option value=""><?php echo esc_html__( 'Automatic (recommended)', 'plugin-check' ); ?></option>
+									<?php foreach ( $model_groups as $group_label => $group_options ) : ?>
+										<?php if ( ! empty( $group_label ) ) : ?>
+											<optgroup label="<?php echo esc_attr( $group_label ); ?>">
+										<?php endif; ?>
+										<?php foreach ( $group_options as $model_option ) : ?>
+											<option value="<?php echo esc_attr( $model_option['value'] ); ?>">
+												<?php echo esc_html( $model_option['label'] ); ?>
+											</option>
+										<?php endforeach; ?>
+										<?php if ( ! empty( $group_label ) ) : ?>
+											</optgroup>
+										<?php endif; ?>
+									<?php endforeach; ?>
+								</select>
+								<p class="description">
+									<?php echo esc_html__( 'Choose a specific model from connected AI providers, or leave as automatic to let WordPress decide.', 'plugin-check' ); ?>
+								</p>
+							</td>
+						</tr>
 					</tbody>
 				</table>
 
 				<p class="description">
-					<strong><?php echo esc_html__( 'Note:', 'plugin-check' ); ?></strong> 
+					<strong><?php echo esc_html__( 'Note:', 'plugin-check' ); ?></strong>
 					<br/>
 					<?php echo esc_html__( 'This tool provides guidance only and is not definitive. It contains a prompt that is used to evaluate the similarity of a plugin name to other plugin names and ensure compliance with trademark regulations.', 'plugin-check' ); ?>
 					<br/>
@@ -395,20 +420,21 @@ final class Namer_Page {
 		$author = isset( $_POST['plugin_check_namer_author'] ) ? sanitize_text_field( wp_unslash( $_POST['plugin_check_namer_author'] ) ) : '';
 		$author = trim( $author );
 
-		$user_id = get_current_user_id();
+		$model_preference = $this->get_model_preference_from_request();
+		$user_id          = get_current_user_id();
 
 		if ( empty( $input ) ) {
 			$this->handle_analyze_error( $user_id, '', new WP_Error( 'missing_input', __( 'Please enter a plugin name.', 'plugin-check' ) ) );
 			return;
 		}
 
-		$ai_config = $this->get_ai_config();
+		$ai_config = $this->get_ai_config( $model_preference );
 		if ( is_wp_error( $ai_config ) ) {
 			$this->handle_analyze_error( $user_id, $input, $ai_config );
 			return;
 		}
 
-		$analysis = $this->run_name_analysis( $ai_config['provider'], $ai_config['api_key'], $ai_config['model'], $input, $author );
+		$analysis = $this->run_name_analysis( $ai_config['model_preference'], $input, $author );
 
 		if ( is_wp_error( $analysis ) ) {
 			$this->handle_analyze_error( $user_id, $input, $analysis );
@@ -456,110 +482,5 @@ final class Namer_Page {
 	 */
 	protected function get_page_url() {
 		return add_query_arg( array( 'page' => self::MENU_SLUG ), admin_url( 'tools.php' ) );
-	}
-
-	/**
-	 * Formats JSON output with proper indentation if the text is valid JSON.
-	 *
-	 * @since 1.8.0
-	 *
-	 * @param string $text Text that might be JSON.
-	 * @return string Formatted JSON or original text.
-	 */
-	protected function format_json_output( $text ) {
-		if ( empty( $text ) || ! is_string( $text ) ) {
-			return $text;
-		}
-
-		$trimmed = $this->remove_markdown_fences( trim( $text ) );
-
-		if ( ! $this->looks_like_json( $trimmed ) ) {
-			return $text;
-		}
-
-		$json_text = $this->extract_json_text( $trimmed );
-		$decoded   = json_decode( $json_text, true );
-
-		if ( JSON_ERROR_NONE === json_last_error() && is_array( $decoded ) ) {
-			return wp_json_encode( $decoded, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES );
-		}
-
-		return $text;
-	}
-
-	/**
-	 * Removes markdown code fences from text.
-	 *
-	 * @since 1.8.0
-	 *
-	 * @param string $text Text with possible markdown fences.
-	 * @return string Text without markdown fences.
-	 */
-	protected function remove_markdown_fences( $text ) {
-		$text = preg_replace( '/^```(?:json)?\s*\n?/m', '', $text );
-		$text = preg_replace( '/\n?```\s*$/m', '', $text );
-		return trim( $text );
-	}
-
-	/**
-	 * Checks if text looks like JSON.
-	 *
-	 * @since 1.8.0
-	 *
-	 * @param string $text Text to check.
-	 * @return bool True if looks like JSON.
-	 */
-	protected function looks_like_json( $text ) {
-		return ! empty( $text ) && ( '{' === $text[0] || '[' === $text[0] );
-	}
-
-	/**
-	 * Extracts JSON text from mixed content.
-	 *
-	 * @since 1.8.0
-	 *
-	 * @param string $text Text containing JSON.
-	 * @return string Extracted JSON text.
-	 */
-	protected function extract_json_text( $text ) {
-		$bounds = $this->find_json_bounds( $text );
-
-		if ( -1 !== $bounds['start'] && -1 !== $bounds['end'] && $bounds['end'] > $bounds['start'] ) {
-			return substr( $text, $bounds['start'], $bounds['end'] - $bounds['start'] + 1 );
-		}
-
-		return $text;
-	}
-
-	/**
-	 * Finds JSON boundaries in text.
-	 *
-	 * @since 1.8.0
-	 *
-	 * @param string $text Text to search.
-	 * @return array Array with 'start' and 'end' positions.
-	 */
-	protected function find_json_bounds( $text ) {
-		$first_brace   = strpos( $text, '{' );
-		$first_bracket = strpos( $text, '[' );
-
-		if ( false !== $first_brace && ( false === $first_bracket || $first_brace < $first_bracket ) ) {
-			return array(
-				'start' => $first_brace,
-				'end'   => strrpos( $text, '}' ),
-			);
-		}
-
-		if ( false !== $first_bracket ) {
-			return array(
-				'start' => $first_bracket,
-				'end'   => strrpos( $text, ']' ),
-			);
-		}
-
-		return array(
-			'start' => -1,
-			'end'   => -1,
-		);
 	}
 }

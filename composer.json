@@ -14,7 +14,6 @@
     "patrickschur/language-detection": "^5.3",
     "php-http/curl-client": "^2.3",
     "plugin-check/phpcs-sniffs": "@dev",
-    "wordpress/wp-ai-client": "^0.2.1",
     "wp-coding-standards/wpcs": "^3.2.0"
   },
   "require-dev": {
@@ -59,8 +58,8 @@
       "composer/installers": true,
       "cweagans/composer-patches": false,
       "dealerdirect/phpcodesniffer-composer-installer": true,
-      "php-http/discovery": true,
-      "phpstan/extension-installer": true
+      "phpstan/extension-installer": true,
+      "php-http/discovery": true
     },
     "platform": {
       "php": "7.4"
@@ -75,6 +74,7 @@
     "lint": "phpcs --standard=phpcs.xml.dist",
     "phpmd": "phpmd . text phpmd.xml",
     "phpstan": "phpstan analyse --memory-limit=2048M",
+    "generate-wp-functions-since-data": "php tools/generate-wp-function-since-data.php --wordpress-dir=../../../ --output=includes/Vars/wp-functions-since.json",
     "prepare-behat-tests": "install-package-tests",
     "test": "phpunit"
   },
@@ -85,6 +85,7 @@
     "lint": "Detect coding standards issues",
     "phpmd": "Run PHP mess detector",
     "phpstan": "Run static analysis",
+    "generate-wp-functions-since-data": "Generate the WordPress function @since dataset used by wp_functions_compatibility check",
     "prepare-behat-tests": "Prepare functional tests",
     "test": "Run unit tests"
   }
