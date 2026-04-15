@@ -26,7 +26,7 @@ class WP_Functions_Compatibility_Check extends Abstract_File_Check {
 	/**
 	 * Path to WordPress function since data file.
 	 *
-	 * @since 1.10.0
+	 * @since 2.0.0
 	 * @var string
 	 */
 	private const DATA_FILE = __DIR__ . '/../../../Vars/wp-functions-since.json';
@@ -34,7 +34,7 @@ class WP_Functions_Compatibility_Check extends Abstract_File_Check {
 	/**
 	 * Cached dataset.
 	 *
-	 * @since 1.10.0
+	 * @since 2.0.0
 	 * @var array<string, string>|null
 	 */
 	private static $functions_since_map = null;
@@ -42,7 +42,7 @@ class WP_Functions_Compatibility_Check extends Abstract_File_Check {
 	/**
 	 * Gets the categories for the check.
 	 *
-	 * @since 1.10.0
+	 * @since 2.0.0
 	 *
 	 * @return array
 	 */
@@ -53,7 +53,7 @@ class WP_Functions_Compatibility_Check extends Abstract_File_Check {
 	/**
 	 * Runs the check on all plugin PHP files.
 	 *
-	 * @since 1.10.0
+	 * @since 2.0.0
 	 *
 	 * @param Check_Result $result The check result to amend.
 	 * @param array        $files  Plugin files.
@@ -105,7 +105,7 @@ class WP_Functions_Compatibility_Check extends Abstract_File_Check {
 	/**
 	 * Gets the check description.
 	 *
-	 * @since 1.10.0
+	 * @since 2.0.0
 	 *
 	 * @return string
 	 */
@@ -116,7 +116,7 @@ class WP_Functions_Compatibility_Check extends Abstract_File_Check {
 	/**
 	 * Gets the check documentation URL.
 	 *
-	 * @since 1.10.0
+	 * @since 2.0.0
 	 *
 	 * @return string
 	 */
@@ -127,7 +127,7 @@ class WP_Functions_Compatibility_Check extends Abstract_File_Check {
 	/**
 	 * Loads and caches the WordPress function since dataset.
 	 *
-	 * @since 1.10.0
+	 * @since 2.0.0
 	 *
 	 * @return array<string, string>
 	 */
@@ -144,7 +144,7 @@ class WP_Functions_Compatibility_Check extends Abstract_File_Check {
 	/**
 	 * Loads the raw function-since map from the JSON dataset file.
 	 *
-	 * @since 1.10.0
+	 * @since 2.0.0
 	 *
 	 * @return array<string, string>
 	 */
@@ -171,7 +171,7 @@ class WP_Functions_Compatibility_Check extends Abstract_File_Check {
 	/**
 	 * Normalizes raw function-since map values.
 	 *
-	 * @since 1.10.0
+	 * @since 2.0.0
 	 *
 	 * @param array $raw_map Raw function map from the dataset.
 	 * @return array<string, string>
@@ -198,7 +198,7 @@ class WP_Functions_Compatibility_Check extends Abstract_File_Check {
 	/**
 	 * Gets plugin minimum supported WordPress version.
 	 *
-	 * @since 1.10.0
+	 * @since 2.0.0
 	 *
 	 * @param Check_Result $result The check result.
 	 * @return string
@@ -210,7 +210,7 @@ class WP_Functions_Compatibility_Check extends Abstract_File_Check {
 	/**
 	 * Normalizes a WordPress version string.
 	 *
-	 * @since 1.10.0
+	 * @since 2.0.0
 	 *
 	 * @param string $version Version to normalize.
 	 * @return string
@@ -240,7 +240,7 @@ class WP_Functions_Compatibility_Check extends Abstract_File_Check {
 	/**
 	 * Finds function calls in a PHP file.
 	 *
-	 * @since 1.10.0
+	 * @since 2.0.0
 	 *
 	 * @param string $file Absolute file path.
 	 * @return array<int, array{name: string, line: int}>
@@ -281,7 +281,7 @@ class WP_Functions_Compatibility_Check extends Abstract_File_Check {
 	/**
 	 * Checks whether a tokenized T_STRING is a global function call.
 	 *
-	 * @since 1.10.0
+	 * @since 2.0.0
 	 *
 	 * @param array $tokens Token stream.
 	 * @param int   $index  Current token index.
@@ -319,7 +319,7 @@ class WP_Functions_Compatibility_Check extends Abstract_File_Check {
 	/**
 	 * Finds the next significant token index.
 	 *
-	 * @since 1.10.0
+	 * @since 2.0.0
 	 *
 	 * @param array $tokens Token stream.
 	 * @param int   $index  Current token index.
@@ -342,7 +342,7 @@ class WP_Functions_Compatibility_Check extends Abstract_File_Check {
 	/**
 	 * Finds the previous significant token index.
 	 *
-	 * @since 1.10.0
+	 * @since 2.0.0
 	 *
 	 * @param array $tokens Token stream.
 	 * @param int   $index  Current token index.
