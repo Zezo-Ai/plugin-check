@@ -221,11 +221,20 @@ class WP_Functions_Compatibility_Check extends Abstract_File_Check {
 		}
 
 		$normalized = strtok( trim( $version ), '-' );
-		if ( preg_match( '/^\d+(?:\.\d+){1,2}$/', (string) $normalized ) ) {
-			return (string) $normalized;
+		if ( ! preg_match( '/^\d+(?:\.\d+){1,2}$/', (string) $normalized ) ) {
+			return '';
 		}
 
-		return '';
+		$parts = array_map(
+			'intval',
+			explode( '.', (string) $normalized )
+		);
+
+		while ( count( $parts ) < 3 ) {
+			$parts[] = 0;
+		}
+
+		return implode( '.', array_slice( $parts, 0, 3 ) );
 	}
 
 	/**
