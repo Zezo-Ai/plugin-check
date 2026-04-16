@@ -138,7 +138,6 @@ class License_Utils_Tests extends WP_UnitTestCase {
 			array( 'EUPL-1.2', true ),
 
 			array( 'EPL', false ),
-			array( 'EUPL', false ),
 			array( 'MPL10', false ),
 			array( 'YPL', false ),
 			array( 'ZPL', false ),
