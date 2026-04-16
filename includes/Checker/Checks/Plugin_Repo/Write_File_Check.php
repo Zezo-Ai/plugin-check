@@ -47,7 +47,7 @@ class Write_File_Check extends Abstract_PHP_CodeSniffer_Check {
 	/**
 	 * Returns an associative array of arguments to pass to PHPCS.
 	 *
-	 * @since 1.0.0
+	 * @since 2.0.0
 	 *
 	 * @param Check_Result $result The check result to amend.
 	 * @return array An associative array of PHPCS CLI arguments.
