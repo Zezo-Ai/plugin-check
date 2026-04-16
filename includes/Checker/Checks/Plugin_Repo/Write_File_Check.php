@@ -16,7 +16,7 @@ use WordPress\Plugin_Check\Traits\Stable_Check;
 /**
  * Check to detect loading files from external sites.
  *
- * @since n.e.x.t.
+ * @since 2.0.0
  */
 class Write_File_Check extends Abstract_PHP_CodeSniffer_Check {
 
