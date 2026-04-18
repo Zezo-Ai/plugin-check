@@ -47,6 +47,7 @@ trait License_Utils {
 				}
 			}
 		}
+		
 		// Versions.
 		$license = str_replace( '-', '', $license );
 		$license = str_replace( 'GNU General Public License (GPL)', 'GPL', $license );
