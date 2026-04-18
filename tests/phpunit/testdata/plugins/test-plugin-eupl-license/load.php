@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: Test Plugin with WTFPL License
+ * Plugin Name: Test Plugin with EUPL License
  * Plugin URI:  https://wordpress.org/plugins/test-plugin/
  * Description: Test plugin for WTFPL license validation.
  * Version:     1.0.0
