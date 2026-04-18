@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Test Plugin with EUPL License
  * Plugin URI:  https://wordpress.org/plugins/test-plugin/
- * Description: Test plugin for WTFPL license validation.
+ * Description: Test plugin for EUPL license validation.
  * Version:     1.0.0
  * Author:      plugin-check
  * Author URI:  https://wordpress.org/plugins/test-plugin/
