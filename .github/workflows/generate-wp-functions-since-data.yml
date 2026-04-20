@@ -15,10 +15,10 @@ jobs:
 
     steps:
       - name: Checkout plugin-check
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Checkout WordPress core
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: WordPress/WordPress
           path: wordpress-core
