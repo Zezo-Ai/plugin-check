@@ -35,7 +35,7 @@ jobs:
             --output=includes/Vars/wp-functions-since.json
 
       - name: Create pull request with updated dataset
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           branch: codex/update-wp-functions-since-data
           commit-message: 'Update WordPress function since dataset'
