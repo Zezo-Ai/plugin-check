@@ -207,6 +207,7 @@ final class Admin_Page {
 					'strings'                         => array(
 						'exportCsv'      => __( 'Export CSV', 'plugin-check' ),
 						'exportJson'     => __( 'Export JSON', 'plugin-check' ),
+						'exportCtrf'     => __( 'Export CTRF', 'plugin-check' ),
 						'exportMarkdown' => __( 'Export Markdown', 'plugin-check' ),
 						'exporting'      => __( 'Preparing export…', 'plugin-check' ),
 						'exportError'    => __( 'Export failed.', 'plugin-check' ),

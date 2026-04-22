@@ -43,9 +43,11 @@ final class Plugin_Check_Command {
 		'table',
 		'csv',
 		'json',
+		'ctrf',
 		'strict-table',
 		'strict-csv',
 		'strict-json',
+		'strict-ctrf',
 	);
 
 	/**
@@ -78,16 +80,18 @@ final class Plugin_Check_Command {
 	 * : Ignore error codes provided as an argument in comma-separated values.
 	 *
 	 * [--format=<format>]
-	 * : Format to display the results. Options are table, csv, json, strict-table, strict-csv, and strict-json. The default will be a table.
+	 * : Format to display the results. Options are table, csv, json, ctrf, strict-table, strict-csv, strict-json, and strict-ctrf. The default will be a table.
 	 * ---
 	 * default: table
 	 * options:
 	 *   - table
 	 *   - csv
 	 *   - json
+	 *   - ctrf
 	 *   - strict-table
 	 *   - strict-csv
 	 *   - strict-json
+	 *   - strict-ctrf
 	 * ---
 	 *
 	 * [--categories]
@@ -322,6 +326,19 @@ final class Plugin_Check_Command {
 				$item['file']  = $file_name;
 				$all_results[] = $item;
 			}
+		}
+
+		// Handle CTRF formats.
+		if ( Results_Exporter::FORMAT_CTRF === $options['format'] || 'strict-' . Results_Exporter::FORMAT_CTRF === $options['format'] ) {
+			$ctrf_report = Results_Exporter::to_ctrf_json(
+				$all_results,
+				array(
+					'timestamp_iso' => gmdate( 'c' ),
+				)
+			);
+
+			WP_CLI::line( $ctrf_report );
+			return;
 		}
 
 		// Handle strict-* formats.
