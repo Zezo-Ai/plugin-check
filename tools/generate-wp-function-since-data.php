@@ -83,11 +83,16 @@ foreach ( $scan_dirs as $scan_dir ) {
 				$pending_class_like = false;
 				continue;
 			} elseif ( '}' === $token ) {
-				if ( ! empty( $class_brace_depths ) && end( $class_brace_depths ) === $brace_depth ) {
-					array_pop( $class_brace_depths );
-				}
+				$closing_brace_depth = $brace_depth;
 				if ( $brace_depth > 0 ) {
 					--$brace_depth;
+				}
+
+				if ( ! empty( $class_brace_depths ) ) {
+					$last_class_brace_depth = $class_brace_depths[ count( $class_brace_depths ) - 1 ];
+					if ( $last_class_brace_depth === $closing_brace_depth ) {
+						array_pop( $class_brace_depths );
+					}
 				}
 				continue;
 			}
