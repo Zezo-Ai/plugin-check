@@ -58,6 +58,12 @@ class Plugin_Request_Utility_Tests extends WP_UnitTestCase {
 		Plugin_Request_Utility::get_plugin_basename_from_input( 'invalid' );
 	}
 
+	public function test_get_slug_from_url() {
+		$slug = Plugin_Request_Utility::get_slug_from_url( 'http://example.com/wp-content/plugins/plugin-check/' );
+
+		$this->assertSame( 'plugin-check', $slug );
+	}
+
 	/**
 	 * @runInSeparateProcess
 	 * @preserveGlobalState disabled

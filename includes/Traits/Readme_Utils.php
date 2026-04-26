@@ -1,6 +1,6 @@
 <?php
 /**
- * Trait WordPress\Plugin_Check\Traits\Find_Readme
+ * Trait WordPress\Plugin_Check\Traits\Readme_Utils
  *
  * @package plugin-check
  */
@@ -8,11 +8,11 @@
 namespace WordPress\Plugin_Check\Traits;
 
 /**
- * Trait for find readme.
+ * Trait for readme utilities.
  *
  * @since 1.0.0
  */
-trait Find_Readme {
+trait Readme_Utils {
 
 	/**
 	 * Filter the given array of files for readme files (readme.txt or readme.md).

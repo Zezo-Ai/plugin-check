@@ -14,6 +14,7 @@ use WordPress\Plugin_Check\Checker\Static_Check;
 use WordPress\Plugin_Check\Traits\Amend_Check_Result;
 use WordPress\Plugin_Check\Traits\License_Utils;
 use WordPress\Plugin_Check\Traits\Mode_Aware;
+use WordPress\Plugin_Check\Traits\Readme_Utils;
 use WordPress\Plugin_Check\Traits\Stable_Check;
 use WordPress\Plugin_Check\Traits\URL_Utils;
 use WordPress\Plugin_Check\Traits\Version_Utils;
@@ -22,15 +23,18 @@ use WordPress\Plugin_Check\Traits\Version_Utils;
  * Check for plugin header fields.
  *
  * @since 1.2.0
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
  */
 class Plugin_Header_Fields_Check implements Static_Check {
 
 	use Amend_Check_Result;
 	use License_Utils;
+	use Mode_Aware;
+	use Readme_Utils;
 	use Stable_Check;
 	use URL_Utils;
 	use Version_Utils;
-	use Mode_Aware;
 
 	/**
 	 * Gets the categories for the check.

@@ -46,12 +46,6 @@ class File_Type_Check_Tests extends WP_UnitTestCase {
 				'load.phar',
 				'phar_files',
 			),
-			'hidden'      => array(
-				File_Type_Check::TYPE_HIDDEN,
-				'test-plugin-file-type-vcs-hidden-errors/load.php',
-				'.gitignore',
-				'hidden_files',
-			),
 			'application' => array(
 				File_Type_Check::TYPE_APPLICATION,
 				'test-plugin-file-type-application-errors/load.php',
@@ -83,6 +77,26 @@ class File_Type_Check_Tests extends WP_UnitTestCase {
 
 		$this->assertTrue( isset( $problems['.bzr'][0][0][0] ) );
 		$this->assertSame( 'vcs_present', $problems['.bzr'][0][0][0]['code'] );
+	}
+
+	public function test_run_with_hidden_file_errors() {
+		// Test plugin with a hidden file which is forbidden.
+		// Non-dev files should always show errors, regardless of environment.
+		$check_context = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-file-type-vcs-hidden-errors/load.php' );
+		$check_result  = new Check_Result( $check_context );
+
+		$check = new File_Type_Check( File_Type_Check::TYPE_HIDDEN );
+		$check->run( $check_result );
+
+		// .hidden-test is not an allowed dev file, so it should always be an error.
+		$errors = $check_result->get_errors();
+
+		$this->assertNotEmpty( $errors );
+		$this->assertArrayHasKey( '.hidden-test', $errors );
+		$this->assertGreaterThanOrEqual( 1, $check_result->get_error_count() );
+
+		$this->assertTrue( isset( $errors['.hidden-test'][0][0][0] ) );
+		$this->assertSame( 'hidden_files', $errors['.hidden-test'][0][0][0]['code'] );
 	}
 
 	public function test_run_without_any_file_type_errors() {
@@ -222,5 +236,172 @@ class File_Type_Check_Tests extends WP_UnitTestCase {
 		$this->assertNotEmpty( $warnings );
 
 		$this->assertCount( 1, wp_list_filter( $warnings['composer.json'][0][0], array( 'code' => 'missing_composer_json_file' ) ) );
+	}
+
+	public function test_run_with_distignore_shows_warning_in_local_dev() {
+		$filter_callback = function () {
+			return 'local';
+		};
+		add_filter( 'wp_get_environment_type', $filter_callback );
+
+		$check_context = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-file-type-vcs-hidden-errors/load.php' );
+		$check_result  = new Check_Result( $check_context );
+
+		$check = new File_Type_Check( File_Type_Check::TYPE_HIDDEN );
+		$check->run( $check_result );
+
+		$warnings      = $check_result->get_warnings();
+		$warning_count = $check_result->get_warning_count();
+		$errors        = $check_result->get_errors();
+
+		// .gitignore should be in warnings in local dev.
+		$this->assertArrayHasKey( '.gitignore', $warnings );
+		$this->assertArrayNotHasKey( '.gitignore', $errors );
+		$this->assertGreaterThanOrEqual( 1, $warning_count );
+		$this->assertTrue( isset( $warnings['.gitignore'][0][0][0] ) );
+		$this->assertSame( 'hidden_files', $warnings['.gitignore'][0][0][0]['code'] );
+
+		// Verify that .hidden-test (non-dev file) always shows as error, even in local dev.
+		$this->assertArrayHasKey( '.hidden-test', $errors );
+		$this->assertArrayNotHasKey( '.hidden-test', $warnings, 'Expected .hidden-test NOT to be in warnings' );
+		$this->assertTrue( isset( $errors['.hidden-test'][0][0][0] ) );
+		$this->assertSame( 'hidden_files', $errors['.hidden-test'][0][0][0]['code'] );
+
+		// Clean up.
+		remove_filter( 'wp_get_environment_type', $filter_callback );
+	}
+
+	public function test_run_with_distignore_shows_error_in_production() {
+		$check_context = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-file-type-vcs-hidden-errors/load.php' );
+		$check_result  = new Check_Result( $check_context );
+
+		$check = new File_Type_Check( File_Type_Check::TYPE_HIDDEN );
+		$check->run( $check_result );
+
+		$errors      = $check_result->get_errors();
+		$error_count = $check_result->get_error_count();
+		$warnings    = $check_result->get_warnings();
+
+		// Check actual environment to determine expected behavior.
+		$actual_env        = wp_get_environment_type();
+		$is_production_env = ( ! defined( 'WP_DEBUG' ) || ! WP_DEBUG ) && 'production' === $actual_env;
+
+		if ( $is_production_env ) {
+			// Production environment - .distignore should be in errors.
+			$this->assertArrayHasKey( '.distignore', $errors, 'Expected .distignore to be in errors for production environment' );
+			$this->assertArrayNotHasKey( '.distignore', $warnings, 'Expected .distignore NOT to be in warnings for production' );
+			$this->assertGreaterThanOrEqual( 1, $error_count );
+			$this->assertTrue( isset( $errors['.distignore'][0][0][0] ) );
+			$this->assertSame( 'hidden_files', $errors['.distignore'][0][0][0]['code'] );
+		} else {
+			// Local development - .distignore should be in warnings.
+			$this->assertArrayHasKey( '.distignore', $warnings, 'Expected .distignore to be in warnings for local dev environment' );
+			$this->assertArrayNotHasKey( '.distignore', $errors, 'Expected .distignore NOT to be in errors for local dev' );
+		}
+
+		// Verify that .hidden-test (non-dev file) always shows as error, regardless of environment.
+		$this->assertArrayHasKey( '.hidden-test', $errors, 'Expected .hidden-test to always be in errors regardless of environment' );
+		$this->assertArrayNotHasKey( '.hidden-test', $warnings, 'Expected .hidden-test NOT to be in warnings' );
+		$this->assertTrue( isset( $errors['.hidden-test'][0][0][0] ) );
+		$this->assertSame( 'hidden_files', $errors['.hidden-test'][0][0][0]['code'] );
+	}
+
+	public function test_run_with_ai_instructions_errors() {
+		$check_context = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-ai-instructions-errors/load.php' );
+		$check_result  = new Check_Result( $check_context );
+
+		$check = new File_Type_Check( File_Type_Check::TYPE_AI_INSTRUCTIONS );
+		$check->run( $check_result );
+
+		$problems      = $check_result->get_warnings();
+		$problem_count = $check_result->get_warning_count();
+		$errors        = $check_result->get_errors();
+
+		$this->assertNotEmpty( $problems );
+		$this->assertGreaterThanOrEqual( 3, $problem_count );
+		$this->assertEmpty( $errors );
+
+		$found_cursor = false;
+		$found_github = false;
+		$found_dev    = false;
+
+		foreach ( $problems as $file => $messages ) {
+			if ( strpos( $file, '.cursor' ) !== false ) {
+				$found_cursor = true;
+				$this->assertTrue( isset( $messages[0][0][0] ) );
+				$this->assertSame( 'ai_instruction_directory', $messages[0][0][0]['code'] );
+			}
+			if ( strpos( $file, '.github' ) !== false ) {
+				$found_github = true;
+				$this->assertTrue( isset( $messages[0][0][0] ) );
+				$this->assertSame( 'github_directory', $messages[0][0][0]['code'] );
+			}
+			if ( strpos( $file, 'DEVELOPMENT.md' ) !== false ) {
+				$found_dev = true;
+				$this->assertTrue( isset( $messages[0][0][0] ) );
+				$this->assertSame( 'unexpected_markdown_file', $messages[0][0][0]['code'] );
+			}
+		}
+
+		$this->assertTrue( $found_cursor, 'Expected .cursor directory to be detected' );
+		$this->assertTrue( $found_github, 'Expected .github directory to be detected' );
+		$this->assertTrue( $found_dev, 'Expected DEVELOPMENT.md to be detected as unexpected' );
+	}
+
+	public function test_run_with_ai_instructions_in_local_dev() {
+		$filter_callback = function () {
+			return 'local';
+		};
+		add_filter( 'wp_get_environment_type', $filter_callback );
+
+		$check_context = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-ai-instructions-errors/load.php' );
+		$check_result  = new Check_Result( $check_context );
+
+		$check = new File_Type_Check( File_Type_Check::TYPE_AI_INSTRUCTIONS );
+		$check->run( $check_result );
+
+		$warnings      = $check_result->get_warnings();
+		$warning_count = $check_result->get_warning_count();
+		$errors        = $check_result->get_errors();
+
+		$this->assertGreaterThanOrEqual( 3, $warning_count );
+		$this->assertNotEmpty( $warnings );
+		$this->assertEmpty( $errors );
+
+		remove_filter( 'wp_get_environment_type', $filter_callback );
+	}
+
+	public function test_run_without_ai_instructions_errors() {
+		$check_context = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-ai-instructions-without-errors/load.php' );
+		$check_result  = new Check_Result( $check_context );
+
+		$check = new File_Type_Check( File_Type_Check::TYPE_AI_INSTRUCTIONS );
+		$check->run( $check_result );
+
+		$errors   = $check_result->get_errors();
+		$warnings = $check_result->get_warnings();
+
+		$this->assertEmpty( $errors );
+		$this->assertEmpty( $warnings );
+	}
+
+	public function test_markdown_files_in_subfolders_allowed() {
+		$check_context = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-ai-instructions-without-errors/load.php' );
+		$check_result  = new Check_Result( $check_context );
+
+		$check = new File_Type_Check( File_Type_Check::TYPE_AI_INSTRUCTIONS );
+		$check->run( $check_result );
+
+		$errors   = $check_result->get_errors();
+		$warnings = $check_result->get_warnings();
+
+		$this->assertEmpty( $errors, 'Markdown files in subfolders should not trigger errors' );
+		$this->assertEmpty( $warnings, 'Markdown files in subfolders should not trigger warnings' );
+
+		foreach ( array_merge( $errors, $warnings ) as $file => $messages ) {
+			$this->assertStringNotContainsString( 'docs/', $file, 'Files in docs/ subfolder should not be flagged' );
+			$this->assertStringNotContainsString( 'GUIDE.md', $file, 'GUIDE.md in subfolder should not be flagged' );
+			$this->assertStringNotContainsString( 'API.md', $file, 'API.md in subfolder should not be flagged' );
+		}
 	}
 }

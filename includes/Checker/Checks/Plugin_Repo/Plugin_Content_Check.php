@@ -12,6 +12,7 @@ use WordPress\Plugin_Check\Checker\Check_Categories;
 use WordPress\Plugin_Check\Checker\Check_Result;
 use WordPress\Plugin_Check\Checker\Checks\Abstract_File_Check;
 use WordPress\Plugin_Check\Traits\Amend_Check_Result;
+use WordPress\Plugin_Check\Traits\Mode_Aware;
 use WordPress\Plugin_Check\Traits\Stable_Check;
 
 /**
@@ -22,6 +23,7 @@ use WordPress\Plugin_Check\Traits\Stable_Check;
 class Plugin_Content_Check extends Abstract_File_Check {
 
 	use Amend_Check_Result;
+	use Mode_Aware;
 	use Stable_Check;
 
 	/**
@@ -49,9 +51,11 @@ class Plugin_Content_Check extends Abstract_File_Check {
 	 *                   the check).
 	 */
 	protected function check_files( Check_Result $result, array $files ) {
-		$php_files = self::filter_files_by_extension( $files, 'php' );
+		$php_files        = self::filter_files_by_extension( $files, 'php' );
+		$block_json_files = self::filter_files_by_regex( $files, '/(?:^|\/)block\.json$/' );
 
 		$this->look_for_five_star_reviews( $result, $php_files );
+		$this->look_for_incompatible_block_api_versions( $result, $block_json_files );
 	}
 
 	/**
@@ -78,6 +82,74 @@ class Plugin_Content_Check extends Abstract_File_Check {
 				);
 			}
 		}
+	}
+
+	/**
+	 * Looks for block.json files with an apiVersion lower than 3.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @param Check_Result $result           The check result to amend, including the plugin context to check.
+	 * @param array        $block_json_files List of absolute block.json file paths.
+	 */
+	protected function look_for_incompatible_block_api_versions( Check_Result $result, array $block_json_files ) {
+		foreach ( $block_json_files as $file ) {
+			$this->validate_block_api_version( $result, $file );
+		}
+	}
+
+	/**
+	 * Validates apiVersion in a block.json file.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @param Check_Result $result The check result to amend.
+	 * @param string       $file   Absolute path to block.json.
+	 */
+	private function validate_block_api_version( Check_Result $result, string $file ) {
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+		$contents = file_get_contents( $file );
+		if ( false === $contents ) {
+			return;
+		}
+
+		$decoded = json_decode( $contents, true );
+		if ( ! is_array( $decoded ) ) {
+			$this->add_block_api_version_result( $result, $file );
+			return;
+		}
+
+		$api_version = $decoded['apiVersion'] ?? null;
+		if ( is_numeric( $api_version ) && intval( $api_version ) >= 3 ) {
+			return;
+		}
+
+		$this->add_block_api_version_result( $result, $file );
+	}
+
+	/**
+	 * Adds a result for an incompatible block apiVersion.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @param Check_Result $result The check result to amend.
+	 * @param string       $file   Absolute path to block.json.
+	 */
+	private function add_block_api_version_result( Check_Result $result, string $file ) {
+		$is_error = true;
+		$severity = $this->is_update_mode( $result ) ? 5 : 7;
+
+		$this->add_result_message_for_file(
+			$result,
+			$is_error,
+			__( 'Editor blocks must define "apiVersion" 3 or higher in block.json for WordPress 7.0+ iframe editor compatibility.', 'plugin-check' ),
+			'block_api_version_too_low',
+			$file,
+			0,
+			0,
+			'https://developer.wordpress.org/block-editor/reference-guides/block-api/block-api-versions/block-migration-for-iframe-editor-compatibility/',
+			$severity
+		);
 	}
 
 	/**

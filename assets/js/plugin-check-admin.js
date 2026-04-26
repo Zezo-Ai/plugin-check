@@ -553,7 +553,7 @@
 					aiStats.false_positives += results.ai_stats.false_positives || 0;
 					aiStats.issues_analyzed += results.ai_stats.issues_analyzed || 0;
 				}
-			} catch ( e ) {
+			} catch {
 				// Ignore for now.
 			}
 		}
@@ -888,4 +888,4 @@
 		const template = templates[ templateSlug ];
 		return template( data );
 	}
-} )( PLUGIN_CHECK ); /* global PLUGIN_CHECK */
+} )( PLUGIN_CHECK );

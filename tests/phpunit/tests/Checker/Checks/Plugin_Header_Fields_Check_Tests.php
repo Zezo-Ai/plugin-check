@@ -78,7 +78,39 @@ class Plugin_Header_Fields_Check_Tests extends WP_UnitTestCase {
 
 		if ( is_wp_version_compatible( '6.5' ) ) {
 			$this->assertCount( 0, wp_list_filter( $errors['load.php'][0][0], array( 'code' => 'plugin_header_invalid_requires_plugins' ) ) );
+		} else {
+			// For WordPress < 6.5, the check doesn't run.
+			$this->assertTrue( true );
 		}
+	}
+
+	public function test_run_with_mismatched_tested_up_to() {
+		$check         = new Plugin_Header_Fields_Check();
+		$check_context = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-tested-up-to-mismatch/load.php' );
+		$check_result  = new Check_Result( $check_context );
+
+		$check->run( $check_result );
+
+		$errors = $check_result->get_errors();
+
+		// The "Tested up to" mismatch check has been moved to Plugin_Readme_Check.
+		// This test now verifies that Plugin_Header_Fields_Check does NOT report this error.
+		$error_items = wp_list_filter( $errors['load.php'][0][0] ?? array(), array( 'code' => 'mismatched_tested_up_to_header' ) );
+		$this->assertCount( 0, $error_items );
+	}
+
+	public function test_run_with_matching_tested_up_to() {
+		$check         = new Plugin_Header_Fields_Check();
+		$check_context = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-tested-up-to-match/load.php' );
+		$check_result  = new Check_Result( $check_context );
+
+		$check->run( $check_result );
+
+		$errors = $check_result->get_errors();
+
+		// Should not have mismatched tested up to error.
+		$error_items = wp_list_filter( $errors['load.php'][0][0] ?? array(), array( 'code' => 'mismatched_tested_up_to_header' ) );
+		$this->assertCount( 0, $error_items );
 	}
 
 	public function test_run_with_invalid_mpl1_license() {
@@ -94,6 +126,44 @@ class Plugin_Header_Fields_Check_Tests extends WP_UnitTestCase {
 
 		// Check for invalid license.
 		$this->assertCount( 1, wp_list_filter( $errors['load.php'][0][0], array( 'code' => 'plugin_header_invalid_license' ) ) );
+	}
+
+	public function test_run_with_valid_wtfpl_license() {
+		$check         = new Plugin_Header_Fields_Check();
+		$check_context = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-wtfpl-license/load.php' );
+		$check_result  = new Check_Result( $check_context );
+
+		$check->run( $check_result );
+
+		$errors = $check_result->get_errors();
+
+		// Should not have invalid license error for WTFPL.
+		if ( isset( $errors['load.php'] ) && isset( $errors['load.php'][0][0] ) ) {
+			$invalid_license_errors = wp_list_filter( $errors['load.php'][0][0], array( 'code' => 'plugin_header_invalid_license' ) );
+			$this->assertEmpty( $invalid_license_errors, 'WTFPL license should be recognized as GPL-compatible' );
+		} else {
+			// If no errors at all, that's also fine - the license is valid.
+			$this->assertTrue( true );
+		}
+	}
+
+	public function test_run_with_valid_eupl_license() {
+		$check         = new Plugin_Header_Fields_Check();
+		$check_context = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-eupl-license/load.php' );
+		$check_result  = new Check_Result( $check_context );
+
+		$check->run( $check_result );
+
+		$errors = $check_result->get_errors();
+
+		// Should not have invalid license error for EUPL.
+		if ( isset( $errors['load.php'] ) && isset( $errors['load.php'][0][0] ) ) {
+			$invalid_license_errors = wp_list_filter( $errors['load.php'][0][0], array( 'code' => 'plugin_header_invalid_license' ) );
+			$this->assertEmpty( $invalid_license_errors, 'EUPL license should be recognized as GPL-compatible' );
+		} else {
+			// If no errors at all, that's also fine - the license is valid.
+			$this->assertTrue( true );
+		}
 	}
 
 	public function test_run_with_invalid_header_fields() {
