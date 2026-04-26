@@ -88,6 +88,12 @@
 		for ( let i = 0; i < typesList.length; i++ ) {
 			typesList[ i ].disabled = true;
 		}
+		if ( useAi ) {
+			useAi.disabled = true;
+		}
+		if ( includeExperimental ) {
+			includeExperimental.disabled = true;
+		}
 
 		getChecksToRun()
 			.then( setUpEnvironment )
@@ -133,6 +139,12 @@
 		}
 		for ( let i = 0; i < typesList.length; i++ ) {
 			typesList[ i ].disabled = false;
+		}
+		if ( useAi ) {
+			useAi.disabled = false;
+		}
+		if ( includeExperimental ) {
+			includeExperimental.disabled = false;
 		}
 	}
 

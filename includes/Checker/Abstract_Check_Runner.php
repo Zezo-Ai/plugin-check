@@ -8,7 +8,6 @@
 namespace WordPress\Plugin_Check\Checker;
 
 use Exception;
-use WordPress\Plugin_Check\Admin\Settings_Page;
 use WordPress\Plugin_Check\Checker\Exception\Invalid_Check_Slug_Exception;
 use WordPress\Plugin_Check\Checker\Preparations\Universal_Runtime_Preparation;
 use WordPress\Plugin_Check\Traits\AI_Analyzer;
@@ -41,6 +40,14 @@ abstract class Abstract_Check_Runner implements Check_Runner {
 	 * @var bool
 	 */
 	protected $use_ai = false;
+
+	/**
+	 * AI model preference for analysis.
+	 *
+	 * @since 1.8.0
+	 * @var string
+	 */
+	protected $ai_model_preference = '';
 
 	/**
 	 * The check slugs to run.
@@ -317,6 +324,17 @@ abstract class Abstract_Check_Runner implements Check_Runner {
 	}
 
 	/**
+	 * Sets the AI model preference for analysis.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param string $model_preference Model preference (e.g., 'openai::gpt-4o').
+	 */
+	final public function set_ai_model_preference( $model_preference ) {
+		$this->ai_model_preference = (string) $model_preference;
+	}
+
+	/**
 	 * Determines if AI analysis should be used.
 	 *
 	 * @since 1.8.0
@@ -427,7 +445,12 @@ abstract class Abstract_Check_Runner implements Check_Runner {
 
 		// Run AI analysis if enabled.
 		if ( $this->should_use_ai() ) {
-			$ai_result = $this->analyze_results_with_ai( $results, $this->get_check_context() );
+			// Use CLI model preference, or fall back to saved settings.
+			$model_preference = $this->ai_model_preference;
+			if ( empty( $model_preference ) && class_exists( '\WordPress\Plugin_Check\Admin\Settings_Page' ) ) {
+				$model_preference = \WordPress\Plugin_Check\Admin\Settings_Page::get_model_preference();
+			}
+			$ai_result = $this->analyze_results_with_ai( $results, $this->get_check_context(), $model_preference );
 			if ( ! is_wp_error( $ai_result ) ) {
 				$ai_analysis = isset( $ai_result['analysis'] ) ? $ai_result['analysis'] : array();
 				$ai_stats    = isset( $ai_result['stats'] ) ? $ai_result['stats'] : array();

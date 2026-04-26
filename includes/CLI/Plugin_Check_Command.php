@@ -142,6 +142,9 @@ final class Plugin_Check_Command {
 	 * [--use-ai]
 	 * : Enable AI-based analysis to detect false positives in check results.
 	 *
+	 * [--ai-model=<model>]
+	 * : AI model preference for analysis (e.g., 'openai::gpt-4o'). Requires --use-ai.
+	 *
 	 * ## EXAMPLES
 	 *
 	 *   wp plugin check akismet
@@ -149,6 +152,7 @@ final class Plugin_Check_Command {
 	 *   wp plugin check akismet --format=json
 	 *   wp plugin check akismet --mode=update
 	 *   wp plugin check akismet --use-ai
+	 *   wp plugin check akismet --use-ai --ai-model=openai::gpt-4o
 	 *
 	 * @subcommand check
 	 *
@@ -182,6 +186,7 @@ final class Plugin_Check_Command {
 				'ignore-codes'                  => '',
 				'mode'                          => 'new',
 				'use-ai'                        => false,
+				'ai-model'                      => '',
 			)
 		);
 
@@ -243,6 +248,9 @@ final class Plugin_Check_Command {
 			$runner->set_slug( $options['slug'] );
 			$runner->set_mode( $options['mode'] );
 			$runner->set_use_ai( $options['use-ai'] );
+			if ( ! empty( $options['ai-model'] ) ) {
+				$runner->set_ai_model_preference( $options['ai-model'] );
+			}
 		} catch ( Exception $error ) {
 			WP_CLI::error( $error->getMessage() );
 		}
@@ -383,6 +391,11 @@ final class Plugin_Check_Command {
 
 		foreach ( $results_by_file as $file_name => $file_results ) {
 			$this->display_results( $formatter, $file_name, $file_results );
+		}
+
+		// Display AI analysis summary if available.
+		if ( ! empty( $ai_analysis ) || ! empty( $ai_stats ) ) {
+			$this->display_ai_summary( $ai_analysis, $ai_stats );
 		}
 	}
 
@@ -662,6 +675,82 @@ final class Plugin_Check_Command {
 
 		WP_CLI::line();
 		WP_CLI::line();
+	}
+
+	/**
+	 * Displays AI analysis summary.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param array $ai_analysis AI analysis results.
+	 * @param array $ai_stats    AI statistics.
+	 */
+	private function display_ai_summary( array $ai_analysis, array $ai_stats ) {
+		WP_CLI::line( '' );
+		WP_CLI::line( str_repeat( '─', 60 ) );
+		WP_CLI::line( '✨ ' . __( 'AI False Positive Analysis', 'plugin-check' ) );
+		WP_CLI::line( str_repeat( '─', 60 ) );
+
+		if ( ! empty( $ai_stats ) ) {
+			$issues_analyzed = isset( $ai_stats['issues_analyzed'] ) ? (int) $ai_stats['issues_analyzed'] : 0;
+			$false_positives = isset( $ai_stats['false_positives'] ) ? (int) $ai_stats['false_positives'] : 0;
+			$tokens_spent    = isset( $ai_stats['tokens_spent'] ) ? (int) $ai_stats['tokens_spent'] : 0;
+
+			WP_CLI::line(
+				sprintf(
+					/* translators: %d: Number of issues analyzed. */
+					__( 'Issues analyzed: %d', 'plugin-check' ),
+					$issues_analyzed
+				)
+			);
+			WP_CLI::line(
+				sprintf(
+					/* translators: %d: Number of false positives detected. */
+					__( 'False positives detected: %d', 'plugin-check' ),
+					$false_positives
+				)
+			);
+
+			if ( $tokens_spent > 0 ) {
+				WP_CLI::line(
+					sprintf(
+						/* translators: %s: Number of tokens spent. */
+						__( 'Tokens spent: %s', 'plugin-check' ),
+						number_format_i18n( $tokens_spent )
+					)
+				);
+			}
+		}
+
+		// Show individual false positive details.
+		$fp_items = array();
+		foreach ( $ai_analysis as $key => $analysis ) {
+			if ( ! empty( $analysis['is_false_positive'] ) ) {
+				$fp_items[] = $analysis;
+			}
+		}
+
+		if ( ! empty( $fp_items ) ) {
+			WP_CLI::line( '' );
+			WP_CLI::line( __( 'Likely false positives:', 'plugin-check' ) );
+
+			foreach ( $fp_items as $item ) {
+				$location = isset( $item['file'] ) ? $item['file'] : '';
+				if ( isset( $item['line'] ) ) {
+					$location .= ':' . $item['line'];
+				}
+
+				WP_CLI::line(
+					sprintf(
+						'  ✨ %s — %s',
+						$location,
+						isset( $item['reasoning'] ) ? $item['reasoning'] : ''
+					)
+				);
+			}
+		}
+
+		WP_CLI::line( '' );
 	}
 
 	/**
