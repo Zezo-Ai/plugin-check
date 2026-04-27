@@ -17,10 +17,18 @@ jobs:
       - name: Checkout plugin-check
         uses: actions/checkout@v6
 
+      - name: Resolve latest stable WordPress version
+        id: wp
+        run: |
+          VERSION=$(curl -fsSL 'https://api.wordpress.org/core/version-check/1.7/' | jq -r '.offers[0].version')
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Using WordPress $VERSION (latest stable from WordPress.org)"
+
       - name: Checkout WordPress core
         uses: actions/checkout@v6
         with:
           repository: WordPress/WordPress
+          ref: ${{ steps.wp.outputs.version }}
           path: wordpress-core
 
       - name: Set up PHP
