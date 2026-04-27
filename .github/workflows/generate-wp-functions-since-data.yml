@@ -21,6 +21,10 @@ jobs:
         id: wp
         run: |
           VERSION=$(curl -fsSL 'https://api.wordpress.org/core/version-check/1.7/' | jq -r '.offers[0].version')
+          if [ -z "$VERSION" ] || [ "$VERSION" = "null" ]; then
+            echo "::error::Failed to resolve WordPress version from API"
+            exit 1
+          fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Using WordPress $VERSION (latest stable from WordPress.org)"
 
