@@ -320,7 +320,7 @@ final class Results_Exporter {
 			'rawStatus' => $type,
 			'filePath'  => $file,
 			'type'      => 'static-analysis',
-			'labels'    => self::build_ctrf_labels( $item, $code, $type ),
+			'extra'     => self::build_ctrf_labels( $item, $code, $type ),
 			'suite'     => array_filter(
 				array(
 					'plugin-check',
