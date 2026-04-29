@@ -43,7 +43,7 @@ final class Results_Exporter {
 	/**
 	 * CTRF export format slug.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 * @var string
 	 */
 	public const FORMAT_CTRF = 'ctrf';
@@ -206,7 +206,7 @@ final class Results_Exporter {
 	/**
 	 * Generates CTRF JSON content for the results.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param array $flat_results Flat list of results including the file name.
 	 * @param array $args         Additional arguments.
@@ -242,7 +242,7 @@ final class Results_Exporter {
 	/**
 	 * Builds CTRF summary payload.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param int $test_count Total number of findings.
 	 * @param int $start_time Start timestamp in milliseconds.
@@ -265,7 +265,7 @@ final class Results_Exporter {
 	/**
 	 * Builds CTRF labels for a single finding.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param array  $item Finding data.
 	 * @param string $code Normalized finding code.
@@ -298,7 +298,7 @@ final class Results_Exporter {
 	/**
 	 * Builds a single CTRF test entry.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param array $item Finding data.
 	 * @return array CTRF test payload.
