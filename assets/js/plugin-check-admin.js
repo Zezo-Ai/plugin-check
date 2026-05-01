@@ -248,6 +248,10 @@
 				label: defaultString( 'exportJson' ),
 			},
 			{
+				format: 'ctrf',
+				label: defaultString( 'exportCtrf' ),
+			},
+			{
 				format: 'markdown',
 				label: defaultString( 'exportMarkdown' ),
 			},
