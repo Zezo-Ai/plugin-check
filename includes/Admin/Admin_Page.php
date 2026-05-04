@@ -212,6 +212,10 @@ final class Admin_Page {
 					'warningString'                   => __( '%d warning', 'plugin-check' ),
 					/* translators: %d: Number of warnings found. */
 					'warningsString'                  => __( '%d warnings', 'plugin-check' ),
+					/* translators: 1: Formatted error count string (e.g. "3 errors"), 2: Formatted warning count string (e.g. "2 warnings"). */
+					'summaryBothTemplate'             => __( '%1$s and %2$s found.', 'plugin-check' ),
+					/* translators: %s: Formatted issue count string (e.g. "3 errors" or "2 warnings"). */
+					'summarySingleTemplate'           => __( '%s found.', 'plugin-check' ),
 					'strings'                         => array(
 						'exportCsv'      => __( 'Export CSV', 'plugin-check' ),
 						'exportJson'     => __( 'Export JSON', 'plugin-check' ),

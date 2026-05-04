@@ -584,44 +584,86 @@
 	 * @param {boolean} isSuccessMessage Whether the message is a success message.
 	 */
 	function renderResultsMessage( isSuccessMessage ) {
-		const messageType = isSuccessMessage ? 'success' : 'error';
+		// Count errors and warnings to determine notice severity and compose the message.
+		const { errorCount, warningCount } = isSuccessMessage
+			? { errorCount: 0, warningCount: 0 }
+			: countResults();
+
+		// Derive notice type from actual counts: errors → error, warnings-only → warning, none → success.
+		let messageType;
+		if ( errorCount > 0 ) {
+			messageType = 'error';
+		} else if ( warningCount > 0 ) {
+			messageType = 'warning';
+		} else {
+			messageType = 'success';
+		}
+
 		let messageText;
 
 		if ( isSuccessMessage ) {
 			messageText = pluginCheck.successMessage;
 		} else {
-			// Count errors and warnings.
-			const { errorCount, warningCount } = countResults();
+			/**
+			 * Substitutes printf-style placeholders in a translated string.
+			 * Handles both simple (%d, %s) and positional (%1$d, %2$s) placeholders.
+			 *
+			 * @param {string}    template The translated format string.
+			 * @param {...string} args     Replacement values.
+			 * @return {string} Formatted string with placeholders replaced.
+			 */
+			function sprintfReplace( template, ...args ) {
+				let i = 0;
+				return template.replace(
+					/%(\d+\$)?[ds]/g,
+					function ( _match, pos ) {
+						const index = pos ? parseInt( pos, 10 ) - 1 : i++;
+						return args[ index ] !== undefined
+							? args[ index ]
+							: _match;
+					}
+				);
+			}
 
-			// Build the message with counts.
+			// Build the individual count parts with proper plural/singular forms.
 			let errorPart = '';
 			if ( errorCount > 0 ) {
-				errorPart =
+				errorPart = sprintfReplace(
 					errorCount === 1
-						? pluginCheck.errorString.replace( '%d', errorCount )
-						: pluginCheck.errorsString.replace( '%d', errorCount );
+						? pluginCheck.errorString
+						: pluginCheck.errorsString,
+					errorCount
+				);
 			}
 
 			let warningPart = '';
 			if ( warningCount > 0 ) {
-				warningPart =
+				warningPart = sprintfReplace(
 					warningCount === 1
-						? pluginCheck.warningString.replace(
-								'%d',
-								warningCount
-						  )
-						: pluginCheck.warningsString.replace(
-								'%d',
-								warningCount
-						  );
+						? pluginCheck.warningString
+						: pluginCheck.warningsString,
+					warningCount
+				);
 			}
 
+			// Assemble the final sentence from fully translatable PHP-provided templates
+			// so that word order and connector phrases can be adapted for all languages.
 			if ( errorPart && warningPart ) {
-				messageText = errorPart + ' and ' + warningPart + ' found.';
+				messageText = sprintfReplace(
+					pluginCheck.summaryBothTemplate,
+					errorPart,
+					warningPart
+				);
 			} else if ( errorPart ) {
-				messageText = errorPart + ' found.';
+				messageText = sprintfReplace(
+					pluginCheck.summarySingleTemplate,
+					errorPart
+				);
 			} else if ( warningPart ) {
-				messageText = warningPart + ' found.';
+				messageText = sprintfReplace(
+					pluginCheck.summarySingleTemplate,
+					warningPart
+				);
 			} else {
 				// Fallback to default message if somehow no errors/warnings.
 				messageText = pluginCheck.errorMessage;
