@@ -1,6 +1,6 @@
 <?php
 /**
- * Class Write_File.
+ * Class Write_File_Check.
  *
  * @package plugin-check
  */
