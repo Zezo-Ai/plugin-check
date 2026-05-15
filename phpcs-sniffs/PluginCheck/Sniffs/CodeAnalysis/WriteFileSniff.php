@@ -131,14 +131,6 @@ final class WriteFileSniff extends AbstractFunctionParameterSniff {
 
 		$path_content = $this->get_path_content_with_resolved_variables( $path_param['start'], $path_param['end'], $stackPtr );
 
-		// Check if the path uses safe functions (uploads directory or temp).
-		foreach ( $this->safe_functions as $safe_func ) {
-			if ( stripos( $path_content, $safe_func ) !== false ) {
-				// Safe function detected, no error needed.
-				return;
-			}
-		}
-
 		// Check for plugin constants.
 		foreach ( $this->plugin_constants as $constant ) {
 			if ( stripos( $path_content, $constant ) !== false ) {
@@ -146,7 +138,7 @@ final class WriteFileSniff extends AbstractFunctionParameterSniff {
 					return;
 				}
 
-				$this->add_error( $stackPtr, $matched_content, $path_param['start'], 'constant ' . $constant );
+				$this->add_error( $matched_content, $path_param['start'], 'constant ' . $constant );
 				return;
 			}
 		}
@@ -154,15 +146,23 @@ final class WriteFileSniff extends AbstractFunctionParameterSniff {
 		// Check for plugin functions.
 		foreach ( $this->plugin_functions as $func ) {
 			if ( stripos( $path_content, $func ) !== false ) {
-				$this->add_error( $stackPtr, $matched_content, $path_param['start'], 'function ' . $func . '()' );
+				$this->add_error( $matched_content, $path_param['start'], 'function ' . $func . '()' );
 				return;
 			}
 		}
 
 		// Check for __FILE__ or __DIR__ magic constants.
 		if ( stripos( $path_content, '__FILE__' ) !== false || stripos( $path_content, '__DIR__' ) !== false ) {
-			$this->add_error( $stackPtr, $matched_content, $path_param['start'], '__FILE__ or __DIR__ magic constant' );
+			$this->add_error( $matched_content, $path_param['start'], '__FILE__ or __DIR__ magic constant' );
 			return;
+		}
+
+		// Check if the path uses safe functions (uploads directory or temp).
+		foreach ( $this->safe_functions as $safe_func ) {
+			if ( stripos( $path_content, $safe_func ) !== false ) {
+				// Safe function detected, no error needed.
+				return;
+			}
 		}
 
 		// Check for ABSPATH usage (could be writing to WordPress root or plugin folder).
@@ -179,14 +179,13 @@ final class WriteFileSniff extends AbstractFunctionParameterSniff {
 	/**
 	 * Adds an error message for plugin directory write attempt.
 	 *
-	 * @param int    $stackPtr        The position of the function call.
 	 * @param string $function_name   The name of the function being called.
 	 * @param int    $error_ptr       The position to report the error.
 	 * @param string $indicator       What indicated this is a plugin path.
 	 *
 	 * @return void
 	 */
-	private function add_error( $stackPtr, $function_name, $error_ptr, $indicator ) {
+	private function add_error( $function_name, $error_ptr, $indicator ) {
 		$this->phpcsFile->addError(
 			'Plugin folders are deleted when upgraded. Do not save data to the plugin folder using %s(). Detected usage of %s. Use wp_upload_dir() to get the uploads directory path or save to the database instead.',
 			$error_ptr,

@@ -26,6 +26,9 @@ file_put_contents( plugins_url() . '/test-plugin/data.json', '{}' );
 $plugin_path = plugin_dir_path( __FILE__ ) . 'cache/indirect.txt';
 file_put_contents( $plugin_path, 'Some data' );
 
+// Error: Safe helper combined with plugin directory path.
+file_put_contents( plugin_dir_path( __FILE__ ) . wp_upload_dir()['subdir'] . '/mixed.txt', 'Some data' );
+
 // OK: Writing to uploads directory (no error).
 file_put_contents( wp_upload_dir()['basedir'] . '/my-plugin/data.txt', 'Some data' );
 

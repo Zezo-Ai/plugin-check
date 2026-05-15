@@ -31,6 +31,7 @@ final class WriteFileUnitTest extends AbstractSniffUnitTest {
 			20 => 1, // touch with WP_CONTENT_DIR.
 			23 => 1, // file_put_contents with plugins_url().
 			27 => 1, // file_put_contents with variable assigned from plugin_dir_path().
+			30 => 1, // file_put_contents with plugin_dir_path() and wp_upload_dir().
 		);
 	}
 
