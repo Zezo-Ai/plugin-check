@@ -205,9 +205,22 @@ final class Admin_Page {
 					'successMessage'                  => __( 'No errors found.', 'plugin-check' ),
 					'errorMessage'                    => __( 'Errors were found.', 'plugin-check' ),
 					'settingsPageUrl'                 => admin_url( 'options-general.php?page=plugin-check-settings' ),
+					/* translators: %d: Number of errors found. */
+					'errorString'                     => __( '%d error', 'plugin-check' ),
+					/* translators: %d: Number of errors found. */
+					'errorsString'                    => __( '%d errors', 'plugin-check' ),
+					/* translators: %d: Number of warnings found. */
+					'warningString'                   => __( '%d warning', 'plugin-check' ),
+					/* translators: %d: Number of warnings found. */
+					'warningsString'                  => __( '%d warnings', 'plugin-check' ),
+					/* translators: 1: Formatted error count string (e.g. "3 errors"), 2: Formatted warning count string (e.g. "2 warnings"). */
+					'summaryBothTemplate'             => __( '%1$s and %2$s found.', 'plugin-check' ),
+					/* translators: %s: Formatted issue count string (e.g. "3 errors" or "2 warnings"). */
+					'summarySingleTemplate'           => __( '%s found.', 'plugin-check' ),
 					'strings'                         => array(
 						'exportCsv'      => __( 'Export CSV', 'plugin-check' ),
 						'exportJson'     => __( 'Export JSON', 'plugin-check' ),
+						'exportCtrf'     => __( 'Export CTRF', 'plugin-check' ),
 						'exportMarkdown' => __( 'Export Markdown', 'plugin-check' ),
 						'exporting'      => __( 'Preparing export…', 'plugin-check' ),
 						'exportError'    => __( 'Export failed.', 'plugin-check' ),

@@ -41,6 +41,27 @@ class Plugin_Header_Fields_Check_Tests extends WP_UnitTestCase {
 		}
 	}
 
+	public function test_plugin_header_nonexistent_domain_path_skipped_in_update_mode() {
+		$check         = new Plugin_Header_Fields_Check();
+		$check_context = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-header-fields-with-errors/load.php', '', 'update' );
+		$check_result  = new Check_Result( $check_context );
+
+		$check->run( $check_result );
+
+		$warnings = $check_result->get_warnings();
+
+		$this->assertArrayHasKey( 'load.php', $warnings, 'Fixture should still emit warnings for the main plugin file in update mode.' );
+		$this->assertCount(
+			1,
+			wp_list_filter( $warnings['load.php'][0][0], array( 'code' => 'textdomain_mismatch' ) ),
+			'Unrelated warnings must still run so we know the check executed (same fixture as test_run_with_errors).'
+		);
+		$this->assertCount(
+			0,
+			wp_list_filter( $warnings['load.php'][0][0], array( 'code' => 'plugin_header_nonexistent_domain_path' ) )
+		);
+	}
+
 	public function test_run_with_invalid_requires_wp_header() {
 		set_transient( 'wp_plugin_check_latest_version_info', array( 'current' => '6.5.1' ) );
 

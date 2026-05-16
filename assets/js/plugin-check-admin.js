@@ -231,6 +231,46 @@
 		return false;
 	}
 
+	/**
+	 * Counts the total number of errors and warnings in the aggregated results.
+	 *
+	 * @since 1.9.0
+	 *
+	 * @return {Object} Object with errorCount and warningCount properties.
+	 */
+	function countResults() {
+		let errorCount = 0;
+		let warningCount = 0;
+
+		// Count errors.
+		for ( const file of Object.keys( aggregatedResults.errors ) ) {
+			const lines = aggregatedResults.errors[ file ] || {};
+
+			for ( const line of Object.keys( lines ) ) {
+				const columns = lines[ line ] || {};
+
+				for ( const column of Object.keys( columns ) ) {
+					errorCount += ( columns[ column ] || [] ).length;
+				}
+			}
+		}
+
+		// Count warnings.
+		for ( const file of Object.keys( aggregatedResults.warnings ) ) {
+			const lines = aggregatedResults.warnings[ file ] || {};
+
+			for ( const line of Object.keys( lines ) ) {
+				const columns = lines[ line ] || {};
+
+				for ( const column of Object.keys( columns ) ) {
+					warningCount += ( columns[ column ] || [] ).length;
+				}
+			}
+		}
+
+		return { errorCount, warningCount };
+	}
+
 	function defaultString( key ) {
 		if (
 			pluginCheck.strings &&
@@ -259,6 +299,10 @@
 			{
 				format: 'json',
 				label: defaultString( 'exportJson' ),
+			},
+			{
+				format: 'ctrf',
+				label: defaultString( 'exportCtrf' ),
 			},
 			{
 				format: 'markdown',
@@ -562,8 +606,10 @@
 						};
 					}
 					aiStats.tokens_spent += results.ai_stats.tokens_spent || 0;
-					aiStats.false_positives += results.ai_stats.false_positives || 0;
-					aiStats.issues_analyzed += results.ai_stats.issues_analyzed || 0;
+					aiStats.false_positives +=
+						results.ai_stats.false_positives || 0;
+					aiStats.issues_analyzed +=
+						results.ai_stats.issues_analyzed || 0;
 				}
 			} catch {
 				// Ignore for now.
@@ -582,17 +628,104 @@
 	 * @param {Object}  aiStats          AI statistics.
 	 */
 	function renderResultsMessage( isSuccessMessage, aiStats ) {
-		const messageType = isSuccessMessage ? 'success' : 'error';
-		let messageText = isSuccessMessage
-			? pluginCheck.successMessage
-			: pluginCheck.errorMessage;
+		// Count errors and warnings to determine notice severity and compose the message.
+		const { errorCount, warningCount } = isSuccessMessage
+			? { errorCount: 0, warningCount: 0 }
+			: countResults();
+
+		// Derive notice type from actual counts: errors → error, warnings-only → warning, none → success.
+		let messageType;
+		if ( errorCount > 0 ) {
+			messageType = 'error';
+		} else if ( warningCount > 0 ) {
+			messageType = 'warning';
+		} else {
+			messageType = 'success';
+		}
+
+		let messageText;
+
+		if ( isSuccessMessage ) {
+			messageText = pluginCheck.successMessage;
+		} else {
+			/**
+			 * Substitutes printf-style placeholders in a translated string.
+			 * Handles both simple (%d, %s) and positional (%1$d, %2$s) placeholders.
+			 *
+			 * @param {string}    template The translated format string.
+			 * @param {...string} args     Replacement values.
+			 * @return {string} Formatted string with placeholders replaced.
+			 */
+			function sprintfReplace( template, ...args ) {
+				let i = 0;
+				return template.replace(
+					/%(\d+\$)?[ds]/g,
+					function ( _match, pos ) {
+						const index = pos ? parseInt( pos, 10 ) - 1 : i++;
+						return args[ index ] !== undefined
+							? args[ index ]
+							: _match;
+					}
+				);
+			}
+
+			// Build the individual count parts with proper plural/singular forms.
+			let errorPart = '';
+			if ( errorCount > 0 ) {
+				errorPart = sprintfReplace(
+					errorCount === 1
+						? pluginCheck.errorString
+						: pluginCheck.errorsString,
+					errorCount
+				);
+			}
+
+			let warningPart = '';
+			if ( warningCount > 0 ) {
+				warningPart = sprintfReplace(
+					warningCount === 1
+						? pluginCheck.warningString
+						: pluginCheck.warningsString,
+					warningCount
+				);
+			}
+
+			// Assemble the final sentence from fully translatable PHP-provided templates
+			// so that word order and connector phrases can be adapted for all languages.
+			if ( errorPart && warningPart ) {
+				messageText = sprintfReplace(
+					pluginCheck.summaryBothTemplate,
+					errorPart,
+					warningPart
+				);
+			} else if ( errorPart ) {
+				messageText = sprintfReplace(
+					pluginCheck.summarySingleTemplate,
+					errorPart
+				);
+			} else if ( warningPart ) {
+				messageText = sprintfReplace(
+					pluginCheck.summarySingleTemplate,
+					warningPart
+				);
+			} else {
+				// Fallback to default message if somehow no errors/warnings.
+				messageText = pluginCheck.errorMessage;
+			}
+		}
 
 		// Add AI statistics to the message if available.
 		if ( aiStats && aiStats.false_positives > 0 ) {
 			let aiInfo = ' AI detected ' + aiStats.false_positives + ' ';
-			aiInfo += ( 1 === aiStats.false_positives ) ? 'false positive' : 'false positives';
+			aiInfo +=
+				1 === aiStats.false_positives
+					? 'false positive'
+					: 'false positives';
 			if ( aiStats.tokens_spent > 0 ) {
-				aiInfo += ' (Tokens spent: ' + aiStats.tokens_spent.toLocaleString() + ')';
+				aiInfo +=
+					' (Tokens spent: ' +
+					aiStats.tokens_spent.toLocaleString() +
+					')';
 			}
 			messageText += '.' + aiInfo;
 		}

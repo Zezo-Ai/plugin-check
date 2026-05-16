@@ -41,3 +41,4 @@ phpunit.xml.dist
 plugin-check.iml
 README.md
 SECURITY.md
+AGENTS.md
