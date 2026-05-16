@@ -53,8 +53,8 @@ foreach ( $scan_dirs as $scan_dir ) {
 
 		$tokens = token_get_all( $source );
 		$count  = count( $tokens );
-		$stack  = array();
-
+		$brace_depth        = 0;
+		$class_brace_depths = array();
 		$pending_class_like = false;
 
 		for ( $i = 0; $i < $count; $i++ ) {
@@ -65,12 +65,35 @@ foreach ( $scan_dirs as $scan_dir ) {
 					$pending_class_like = true;
 					continue;
 				}
+
+				if ( defined( 'T_CURLY_OPEN' ) && T_CURLY_OPEN === $token[0] ) {
+					++$brace_depth;
+					continue;
+				}
+
+				if ( defined( 'T_DOLLAR_OPEN_CURLY_BRACES' ) && T_DOLLAR_OPEN_CURLY_BRACES === $token[0] ) {
+					++$brace_depth;
+					continue;
+				}
 			} elseif ( '{' === $token ) {
-				$stack[]            = $pending_class_like ? 'class' : 'block';
+				++$brace_depth;
+				if ( $pending_class_like ) {
+					$class_brace_depths[] = $brace_depth;
+				}
 				$pending_class_like = false;
 				continue;
 			} elseif ( '}' === $token ) {
-				array_pop( $stack );
+				$closing_brace_depth = $brace_depth;
+				if ( $brace_depth > 0 ) {
+					--$brace_depth;
+				}
+
+				if ( ! empty( $class_brace_depths ) ) {
+					$last_class_brace_depth = $class_brace_depths[ count( $class_brace_depths ) - 1 ];
+					if ( $last_class_brace_depth === $closing_brace_depth ) {
+						array_pop( $class_brace_depths );
+					}
+				}
 				continue;
 			}
 
@@ -78,7 +101,7 @@ foreach ( $scan_dirs as $scan_dir ) {
 				continue;
 			}
 
-			if ( in_array( 'class', $stack, true ) ) {
+			if ( ! empty( $class_brace_depths ) ) {
 				continue;
 			}
 
