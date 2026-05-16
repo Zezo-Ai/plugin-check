@@ -22,7 +22,7 @@ use WordPressCS\WordPress\AbstractFunctionParameterSniff;
  *
  * @link https://developer.wordpress.org/plugins/wordpress-org/detailed-plugin-guidelines/
  *
- * @since 1.1.0
+ * @since 2.0.0
  */
 final class WriteFileSniff extends AbstractFunctionParameterSniff {
 
