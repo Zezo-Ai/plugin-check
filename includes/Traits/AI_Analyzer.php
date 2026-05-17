@@ -117,8 +117,12 @@ trait AI_Analyzer {
 		// Process each group with its specific prompt.
 		$analysis_results = array();
 		$total_tokens     = 0;
+		$input_tokens     = 0;
+		$output_tokens    = 0;
 		$false_positives  = 0;
 		$issues_analyzed  = 0;
+		$models_used      = array();
+		$providers_used   = array();
 
 		foreach ( $grouped_issues as $prompt_file => $cases ) {
 			$batch_result = $this->analyze_batch( $prompt_file, $cases, $check_context, $model_preference );
@@ -152,14 +156,30 @@ trait AI_Analyzer {
 			if ( isset( $batch_result['token_usage']['total_tokens'] ) ) {
 				$total_tokens += (int) $batch_result['token_usage']['total_tokens'];
 			}
+			if ( isset( $batch_result['token_usage']['prompt_tokens'] ) ) {
+				$input_tokens += (int) $batch_result['token_usage']['prompt_tokens'];
+			}
+			if ( isset( $batch_result['token_usage']['completion_tokens'] ) ) {
+				$output_tokens += (int) $batch_result['token_usage']['completion_tokens'];
+			}
+			if ( ! empty( $batch_result['model_used'] ) ) {
+				$models_used[] = (string) $batch_result['model_used'];
+			}
+			if ( ! empty( $batch_result['provider_used'] ) ) {
+				$providers_used[] = (string) $batch_result['provider_used'];
+			}
 		}
 
 		return array(
 			'analysis' => $analysis_results,
 			'stats'    => array(
 				'tokens_spent'    => $total_tokens,
+				'input_tokens'    => $input_tokens,
+				'output_tokens'   => $output_tokens,
 				'false_positives' => $false_positives,
 				'issues_analyzed' => $issues_analyzed,
+				'model_used'      => implode( ', ', array_unique( $models_used ) ),
+				'provider_used'   => implode( ', ', array_unique( $providers_used ) ),
 			),
 		);
 	}
@@ -269,9 +289,13 @@ trait AI_Analyzer {
 		}
 
 		// Split into sub-batches if needed.
-		$batches      = array_chunk( $cases, self::AI_BATCH_SIZE, true );
-		$all_cases    = array();
-		$total_tokens = 0;
+		$batches        = array_chunk( $cases, self::AI_BATCH_SIZE, true );
+		$all_cases      = array();
+		$total_tokens   = 0;
+		$input_tokens   = 0;
+		$output_tokens  = 0;
+		$models_used    = array();
+		$providers_used = array();
 
 		foreach ( $batches as $batch ) {
 			$result = $this->execute_batch_ai_request( $issue_description, $batch, $check_context, $model_preference );
@@ -287,13 +311,29 @@ trait AI_Analyzer {
 			if ( isset( $result['token_usage']['total_tokens'] ) ) {
 				$total_tokens += (int) $result['token_usage']['total_tokens'];
 			}
+			if ( isset( $result['token_usage']['prompt_tokens'] ) ) {
+				$input_tokens += (int) $result['token_usage']['prompt_tokens'];
+			}
+			if ( isset( $result['token_usage']['completion_tokens'] ) ) {
+				$output_tokens += (int) $result['token_usage']['completion_tokens'];
+			}
+			if ( ! empty( $result['model_used'] ) ) {
+				$models_used[] = (string) $result['model_used'];
+			}
+			if ( ! empty( $result['provider_used'] ) ) {
+				$providers_used[] = (string) $result['provider_used'];
+			}
 		}
 
 		return array(
-			'cases'       => $all_cases,
-			'token_usage' => array(
-				'total_tokens' => $total_tokens,
+			'cases'         => $all_cases,
+			'token_usage'   => array(
+				'prompt_tokens'     => $input_tokens,
+				'completion_tokens' => $output_tokens,
+				'total_tokens'      => $total_tokens,
 			),
+			'model_used'    => implode( ', ', array_unique( $models_used ) ),
+			'provider_used' => implode( ', ', array_unique( $providers_used ) ),
 		);
 	}
 
@@ -351,17 +391,23 @@ trait AI_Analyzer {
 				}
 
 				return array(
-					'cases'       => $this->parse_batch_response( (string) $text ),
-					'token_usage' => array(),
+					'cases'         => $this->parse_batch_response( (string) $text ),
+					'token_usage'   => array(),
+					'model_used'    => $this->normalize_ai_model_used( $model_preference ),
+					'provider_used' => $this->normalize_ai_provider_used( $model_preference ),
 				);
 			}
 
-			$text  = method_exists( $result, 'to_text' ) ? $result->to_text() : ( method_exists( $result, 'toText' ) ? $result->toText() : '' );
-			$usage = $this->extract_ai_token_usage( $result );
+			$text     = method_exists( $result, 'to_text' ) ? $result->to_text() : ( method_exists( $result, 'toText' ) ? $result->toText() : '' );
+			$usage    = $this->extract_ai_token_usage( $result );
+			$model    = $this->extract_ai_model_used( $result );
+			$provider = $this->extract_ai_provider_used( $result );
 
 			return array(
-				'cases'       => $this->parse_batch_response( $text ),
-				'token_usage' => $usage ? $usage : array(),
+				'cases'         => $this->parse_batch_response( $text ),
+				'token_usage'   => $usage ? $usage : array(),
+				'model_used'    => $model ? $model : $this->normalize_ai_model_used( $model_preference ),
+				'provider_used' => $provider ? $provider : $this->normalize_ai_provider_used( $model_preference ),
 			);
 		} catch ( \Throwable $e ) {
 			return new WP_Error(
@@ -675,7 +721,11 @@ trait AI_Analyzer {
 		}
 
 		$prompt_tokens     = method_exists( $usage, 'get_prompt_tokens' ) ? $usage->get_prompt_tokens() : ( method_exists( $usage, 'getPromptTokens' ) ? $usage->getPromptTokens() : null );
+		$prompt_tokens     = null === $prompt_tokens && method_exists( $usage, 'get_input_tokens' ) ? $usage->get_input_tokens() : $prompt_tokens;
+		$prompt_tokens     = null === $prompt_tokens && method_exists( $usage, 'getInputTokens' ) ? $usage->getInputTokens() : $prompt_tokens;
 		$completion_tokens = method_exists( $usage, 'get_completion_tokens' ) ? $usage->get_completion_tokens() : ( method_exists( $usage, 'getCompletionTokens' ) ? $usage->getCompletionTokens() : null );
+		$completion_tokens = null === $completion_tokens && method_exists( $usage, 'get_output_tokens' ) ? $usage->get_output_tokens() : $completion_tokens;
+		$completion_tokens = null === $completion_tokens && method_exists( $usage, 'getOutputTokens' ) ? $usage->getOutputTokens() : $completion_tokens;
 		$total_tokens      = method_exists( $usage, 'get_total_tokens' ) ? $usage->get_total_tokens() : ( method_exists( $usage, 'getTotalTokens' ) ? $usage->getTotalTokens() : null );
 
 		if ( null === $total_tokens && null !== $prompt_tokens && null !== $completion_tokens ) {
@@ -699,6 +749,122 @@ trait AI_Analyzer {
 	}
 
 	/**
+	 * Extracts the model used from an AI result object.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param object $result Result object.
+	 * @return string Model identifier or empty string.
+	 */
+	protected function extract_ai_model_used( $result ) {
+		foreach ( array( 'get_model_metadata', 'getModelMetadata', 'get_model', 'getModel', 'get_model_id', 'getModelId', 'get_model_name', 'getModelName' ) as $method ) {
+			if ( ! method_exists( $result, $method ) ) {
+				continue;
+			}
+
+			$model = $result->$method();
+			if ( is_string( $model ) && '' !== trim( $model ) ) {
+				return trim( $model );
+			}
+
+			if ( is_object( $model ) ) {
+				foreach ( array( 'get_id', 'getId', 'get_name', 'getName' ) as $model_method ) {
+					if ( method_exists( $model, $model_method ) ) {
+						$value = $model->$model_method();
+						if ( is_string( $value ) && '' !== trim( $value ) ) {
+							return trim( $value );
+						}
+					}
+				}
+			}
+		}
+
+		return '';
+	}
+
+	/**
+	 * Extracts the provider used from an AI result object.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param object $result Result object.
+	 * @return string Provider identifier or empty string.
+	 */
+	protected function extract_ai_provider_used( $result ) {
+		foreach ( array( 'get_provider_metadata', 'getProviderMetadata', 'get_provider', 'getProvider', 'get_provider_id', 'getProviderId', 'get_provider_name', 'getProviderName' ) as $method ) {
+			if ( ! method_exists( $result, $method ) ) {
+				continue;
+			}
+
+			$provider = $result->$method();
+			if ( is_string( $provider ) && '' !== trim( $provider ) ) {
+				return trim( $provider );
+			}
+
+			if ( is_object( $provider ) ) {
+				foreach ( array( 'get_id', 'getId', 'get_name', 'getName' ) as $provider_method ) {
+					if ( method_exists( $provider, $provider_method ) ) {
+						$value = $provider->$provider_method();
+						if ( is_string( $value ) && '' !== trim( $value ) ) {
+							return trim( $value );
+						}
+					}
+				}
+			}
+		}
+
+		return '';
+	}
+
+	/**
+	 * Normalizes a configured model preference for display.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param string $model_preference Model preference.
+	 * @return string Model identifier or empty string.
+	 */
+	protected function normalize_ai_model_used( $model_preference ) {
+		$model_preference = trim( (string) $model_preference );
+		if ( '' === $model_preference ) {
+			return '';
+		}
+
+		foreach ( array( '::', '|', ':' ) as $separator ) {
+			if ( false !== strpos( $model_preference, $separator ) ) {
+				$parts = array_map( 'trim', explode( $separator, $model_preference, 2 ) );
+				return isset( $parts[1] ) && '' !== $parts[1] ? $parts[1] : $model_preference;
+			}
+		}
+
+		return $model_preference;
+	}
+
+	/**
+	 * Normalizes a configured model preference provider for display.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @param string $model_preference Model preference.
+	 * @return string Provider identifier or empty string.
+	 */
+	protected function normalize_ai_provider_used( $model_preference ) {
+		$model_preference = trim( (string) $model_preference );
+		if ( '' === $model_preference ) {
+			return '';
+		}
+
+		foreach ( array( '::', '|', ':' ) as $separator ) {
+			if ( false !== strpos( $model_preference, $separator ) ) {
+				$parts = array_map( 'trim', explode( $separator, $model_preference, 2 ) );
+				return isset( $parts[0] ) && '' !== $parts[0] ? $parts[0] : '';
+			}
+		}
+
+		return '';
+	}
+
+	/**
 	 * Returns an empty AI result structure.
 	 *
 	 * @since 1.8.0
@@ -710,8 +876,12 @@ trait AI_Analyzer {
 			'analysis' => array(),
 			'stats'    => array(
 				'tokens_spent'    => 0,
+				'input_tokens'    => 0,
+				'output_tokens'   => 0,
 				'false_positives' => 0,
 				'issues_analyzed' => 0,
+				'model_used'      => '',
+				'provider_used'   => '',
 			),
 		);
 	}

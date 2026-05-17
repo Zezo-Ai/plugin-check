@@ -595,21 +595,35 @@
 				mergeAggregatedResults( results );
 				renderResults( results );
 
-				// Collect AI stats from the last check.
+				// Collect AI stats across checks.
 				if ( results.ai_stats ) {
-					// Merge stats if multiple checks.
 					if ( ! aiStats ) {
 						aiStats = {
 							tokens_spent: 0,
+							input_tokens: 0,
+							output_tokens: 0,
 							false_positives: 0,
 							issues_analyzed: 0,
+							models_used: [],
+							providers_used: [],
 						};
 					}
 					aiStats.tokens_spent += results.ai_stats.tokens_spent || 0;
+					aiStats.input_tokens += results.ai_stats.input_tokens || 0;
+					aiStats.output_tokens +=
+						results.ai_stats.output_tokens || 0;
 					aiStats.false_positives +=
 						results.ai_stats.false_positives || 0;
 					aiStats.issues_analyzed +=
 						results.ai_stats.issues_analyzed || 0;
+					if ( results.ai_stats.model_used ) {
+						aiStats.models_used.push( results.ai_stats.model_used );
+					}
+					if ( results.ai_stats.provider_used ) {
+						aiStats.providers_used.push(
+							results.ai_stats.provider_used
+						);
+					}
 				}
 			} catch {
 				// Ignore for now.
@@ -714,20 +728,65 @@
 			}
 		}
 
-		// Add AI statistics to the message if available.
-		if ( aiStats && aiStats.false_positives > 0 ) {
-			let aiInfo = ' AI detected ' + aiStats.false_positives + ' ';
-			aiInfo +=
-				1 === aiStats.false_positives
-					? 'false positive'
-					: 'false positives';
-			if ( aiStats.tokens_spent > 0 ) {
-				aiInfo +=
-					' (Tokens spent: ' +
-					aiStats.tokens_spent.toLocaleString() +
-					')';
+		if ( aiStats ) {
+			const aiParts = [];
+			const modelsUsed = [
+				...new Set( aiStats.models_used.filter( Boolean ) ),
+			];
+			const providersUsed = [
+				...new Set( aiStats.providers_used.filter( Boolean ) ),
+			];
+
+			if ( aiStats.false_positives > 0 ) {
+				aiParts.push(
+					'AI detected ' +
+						aiStats.false_positives +
+						' ' +
+						( 1 === aiStats.false_positives
+							? 'false positive'
+							: 'false positives' )
+				);
 			}
-			messageText += '.' + aiInfo;
+			if ( aiStats.input_tokens > 0 ) {
+				aiParts.push(
+					'Input tokens: ' + aiStats.input_tokens.toLocaleString()
+				);
+			}
+			if ( aiStats.output_tokens > 0 ) {
+				aiParts.push(
+					'Output tokens: ' + aiStats.output_tokens.toLocaleString()
+				);
+			}
+			if ( aiStats.tokens_spent > 0 ) {
+				aiParts.push(
+					'Tokens spent: ' + aiStats.tokens_spent.toLocaleString()
+				);
+			}
+			if ( modelsUsed.length > 0 || providersUsed.length > 0 ) {
+				if ( 1 === modelsUsed.length && 1 === providersUsed.length ) {
+					aiParts.push(
+						'Model: ' + providersUsed[ 0 ] + ' ' + modelsUsed[ 0 ]
+					);
+				} else if (
+					modelsUsed.length > 0 &&
+					providersUsed.length > 0
+				) {
+					aiParts.push(
+						'Model: ' +
+							providersUsed.join( ', ' ) +
+							' ' +
+							modelsUsed.join( ', ' )
+					);
+				} else if ( modelsUsed.length > 0 ) {
+					aiParts.push( 'Model: ' + modelsUsed.join( ', ' ) );
+				} else {
+					aiParts.push( 'Model: ' + providersUsed.join( ', ' ) );
+				}
+			}
+			if ( aiParts.length > 0 ) {
+				messageText += /[.!?]\s*$/.test( messageText ) ? ' ' : '. ';
+				messageText += aiParts.join( '. ' );
+			}
 		}
 
 		resultsContainer.innerHTML =
