@@ -1047,7 +1047,7 @@
         },
         {
             "name": "plugin-check/phpcs-sniffs",
-            "version": "dev-1192-fatal-error-with-wordpress-70-beta-2-using-core",
+            "version": "dev-665-check-asks-users-to-editwrite-to-plugin-use-uploads-folder",
             "dist": {
                 "type": "path",
                 "url": "./phpcs-sniffs",
