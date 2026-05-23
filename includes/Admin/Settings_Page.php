@@ -249,13 +249,13 @@ final class Settings_Page {
 		$value    = isset( $settings['ai_severity_errors'] ) ? intval( $settings['ai_severity_errors'] ) : 7;
 		?>
 		<input
-			type="number"
-			id="<?php echo esc_attr( $args['label_for'] ); ?>"
-			name="<?php echo esc_attr( self::OPTION_NAME . '[ai_severity_errors]' ); ?>"
-			value="<?php echo esc_attr( $value ); ?>"
-			min="1"
-			max="10"
-			class="small-text"
+				type="number"
+				id="<?php echo esc_attr( $args['label_for'] ); ?>"
+				name="<?php echo esc_attr( self::OPTION_NAME . '[ai_severity_errors]' ); ?>"
+				value="<?php echo esc_attr( (string) $value ); ?>"
+				min="1"
+				max="10"
+				class="small-text"
 		/>
 		<p class="description">
 			<?php esc_html_e( 'Analyze errors with severity < this value (Default: 7)', 'plugin-check' ); ?>
@@ -275,13 +275,13 @@ final class Settings_Page {
 		$value    = isset( $settings['ai_severity_warnings'] ) ? intval( $settings['ai_severity_warnings'] ) : 6;
 		?>
 		<input
-			type="number"
-			id="<?php echo esc_attr( $args['label_for'] ); ?>"
-			name="<?php echo esc_attr( self::OPTION_NAME . '[ai_severity_warnings]' ); ?>"
-			value="<?php echo esc_attr( $value ); ?>"
-			min="1"
-			max="10"
-			class="small-text"
+				type="number"
+				id="<?php echo esc_attr( $args['label_for'] ); ?>"
+				name="<?php echo esc_attr( self::OPTION_NAME . '[ai_severity_warnings]' ); ?>"
+				value="<?php echo esc_attr( (string) $value ); ?>"
+				min="1"
+				max="10"
+				class="small-text"
 		/>
 		<p class="description">
 			<?php esc_html_e( 'Analyze warnings with severity < this value (Default: 6)', 'plugin-check' ); ?>
