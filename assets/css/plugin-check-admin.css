@@ -86,10 +86,9 @@
 	color: #0c5460;
 }
 
-.plugin-check__ai-analysis .dashicons {
-	font-size: 16px;
-	width: 16px;
-	height: 16px;
+.plugin-check__ai-analysis-icon {
+	font-size: 14px;
+	line-height: 1;
 }
 
 .plugin-check__ai-reasoning {

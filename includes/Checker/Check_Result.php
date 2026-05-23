@@ -161,6 +161,60 @@ final class Check_Result {
 	}
 
 	/**
+	 * Transforms existing messages.
+	 *
+	 * The callback receives the message data and location. Return an array with
+	 * updated data to keep the message, or false/null to remove it. The returned
+	 * array may include `error`, `file`, `line`, or `column` to move the message.
+	 *
+	 * @since 2.0.0
+	 *
+	 * @param callable $callback Callback to transform each message.
+	 */
+	public function transform_messages( callable $callback ) {
+		$collections = array(
+			true  => $this->errors,
+			false => $this->warnings,
+		);
+
+		$this->errors        = array();
+		$this->warnings      = array();
+		$this->error_count   = 0;
+		$this->warning_count = 0;
+
+		foreach ( $collections as $is_error => $collection ) {
+			foreach ( $collection as $file => $lines ) {
+				foreach ( $lines as $line => $columns ) {
+					foreach ( $columns as $column => $messages ) {
+						foreach ( $messages as $message ) {
+							$updated = $callback( $message, (bool) $is_error, $file, $line, $column );
+							if ( empty( $updated ) || ! is_array( $updated ) ) {
+								continue;
+							}
+
+							if ( empty( $updated['message'] ) ) {
+								continue;
+							}
+
+							$new_error  = array_key_exists( 'error', $updated ) ? (bool) $updated['error'] : (bool) $is_error;
+							$new_file   = array_key_exists( 'file', $updated ) ? (string) $updated['file'] : (string) $file;
+							$new_line   = array_key_exists( 'line', $updated ) ? (int) $updated['line'] : (int) $line;
+							$new_column = array_key_exists( 'column', $updated ) ? (int) $updated['column'] : (int) $column;
+
+							unset( $updated['error'], $updated['file'], $updated['line'], $updated['column'] );
+							$updated['file']   = $new_file;
+							$updated['line']   = $new_line;
+							$updated['column'] = $new_column;
+
+							$this->add_message( $new_error, $updated['message'], $updated );
+						}
+					}
+				}
+			}
+		}
+	}
+
+	/**
 	 * Returns all errors.
 	 *
 	 * @since 1.0.0

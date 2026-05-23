@@ -25,40 +25,6 @@ use WP_Error;
 trait AI_Analyzer {
 
 	/**
-	 * Maximum number of cases to send per AI batch request.
-	 *
-	 * @since 1.8.0
-	 * @var int
-	 */
-	const AI_BATCH_SIZE = 12;
-
-	/**
-	 * Maximum number of cases to analyze per check type.
-	 *
-	 * @since 1.8.0
-	 * @var int
-	 */
-	const AI_MAX_CASES_PER_CHECK = 24;
-
-	/**
-	 * Mapping of check code prefixes to their prompt template filenames.
-	 *
-	 * @since 1.8.0
-	 * @var array
-	 */
-	const AI_PROMPT_MAP = array(
-		'WordPress.Security.EscapeOutput'             => 'ai-review-late-escaping.md',
-		'PluginCheck.CodeAnalysis.EscapeOutput'        => 'ai-review-late-escaping.md',
-		'WordPress.Security.NonceVerification'         => 'ai-review-nonce-verification.md',
-		'WordPress.Security.ValidatedSanitizedInput'   => 'ai-review-sanitization.md',
-		'WordPress.DB.DirectDatabaseQuery'             => 'ai-review-direct-db-queries.md',
-		'WordPress.DB.PreparedSQL'                     => 'ai-review-direct-db-queries.md',
-		'PluginCheck.CodeAnalysis.Obfuscation'         => 'ai-review-code-obfuscation.md',
-		'PluginCheck.CodeAnalysis.SettingSanitization'  => 'ai-review-setting-sanitization.md',
-		'PluginCheck.CodeAnalysis.PluginUpdater'       => 'ai-review-plugin-updater.md',
-	);
-
-	/**
 	 * Checks if AI analysis is available via WordPress core AI client.
 	 *
 	 * @since 1.8.0
@@ -76,6 +42,50 @@ trait AI_Analyzer {
 		}
 
 		return true;
+	}
+
+	/**
+	 * Gets the maximum number of cases to send per AI batch request.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @return int Batch size.
+	 */
+	protected function get_ai_batch_size() {
+		return 12;
+	}
+
+	/**
+	 * Gets the maximum number of cases to analyze per check type.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @return int Maximum case count.
+	 */
+	protected function get_ai_max_cases_per_check() {
+		return 24;
+	}
+
+	/**
+	 * Gets the mapping of check code prefixes to their prompt template filenames.
+	 *
+	 * @since 1.8.0
+	 *
+	 * @return array Prompt map.
+	 */
+	protected function get_ai_prompt_map() {
+		return array(
+			'WordPress.Security.EscapeOutput'              => 'ai-review-late-escaping.md',
+			'PluginCheck.CodeAnalysis.EscapeOutput'        => 'ai-review-late-escaping.md',
+			'WordPress.Security.NonceVerification'         => 'ai-review-nonce-verification.md',
+			'WordPress.Security.ValidatedSanitizedInput'   => 'ai-review-sanitization.md',
+			'WordPress.DB.DirectDatabaseQuery'             => 'ai-review-direct-db-queries.md',
+			'WordPress.DB.PreparedSQL'                     => 'ai-review-direct-db-queries.md',
+			'PluginCheck.CodeAnalysis.Obfuscation'         => 'ai-review-code-obfuscation.md',
+			'PluginCheck.CodeAnalysis.SettingSanitization' => 'ai-review-setting-sanitization.md',
+			'PluginCheck.CodeAnalysis.PluginUpdater'       => 'ai-review-plugin-updater.md',
+			'trialware_locked_feature_candidate'           => 'ai-review-trialware.md',
+		);
 	}
 
 	/**
@@ -242,7 +252,7 @@ trait AI_Analyzer {
 							$counts[ $prompt_file ] = 0;
 						}
 
-						if ( $counts[ $prompt_file ] >= self::AI_MAX_CASES_PER_CHECK ) {
+						if ( $counts[ $prompt_file ] >= $this->get_ai_max_cases_per_check() ) {
 							continue;
 						}
 
@@ -271,7 +281,7 @@ trait AI_Analyzer {
 	/**
 	 * Analyzes a batch of issues with a specific prompt template.
 	 *
-	 * If the batch exceeds AI_BATCH_SIZE, it is split into sub-batches
+	 * If the batch exceeds the configured batch size, it is split into sub-batches
 	 * and each sub-batch is sent as a separate AI request.
 	 *
 	 * @since 1.8.0
@@ -289,7 +299,7 @@ trait AI_Analyzer {
 		}
 
 		// Split into sub-batches if needed.
-		$batches        = array_chunk( $cases, self::AI_BATCH_SIZE, true );
+		$batches        = array_chunk( $cases, $this->get_ai_batch_size(), true );
 		$all_cases      = array();
 		$total_tokens   = 0;
 		$input_tokens   = 0;
@@ -586,7 +596,7 @@ trait AI_Analyzer {
 	 * @return string Prompt template filename.
 	 */
 	protected function get_prompt_for_code( $code ) {
-		foreach ( self::AI_PROMPT_MAP as $prefix => $prompt_file ) {
+		foreach ( $this->get_ai_prompt_map() as $prefix => $prompt_file ) {
 			if ( 0 === strpos( $code, $prefix ) ) {
 				return $prompt_file;
 			}
