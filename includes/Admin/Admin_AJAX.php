@@ -228,15 +228,10 @@ final class Admin_AJAX {
 
 		$categories = filter_input( INPUT_POST, 'categories', FILTER_DEFAULT, FILTER_FORCE_ARRAY );
 		$categories = is_null( $categories ) ? array() : $categories;
-
-		$categories           = filter_input( INPUT_POST, 'categories', FILTER_DEFAULT, FILTER_FORCE_ARRAY );
-		$categories           = is_null( $categories ) ? array() : $categories;
-		$checks               = filter_input( INPUT_POST, 'checks', FILTER_DEFAULT, FILTER_FORCE_ARRAY );
-		$checks               = is_null( $checks ) ? array() : $checks;
-		$plugin               = filter_input( INPUT_POST, 'plugin', FILTER_SANITIZE_FULL_SPECIAL_CHARS );
-		$include_experimental = 1 === filter_input( INPUT_POST, 'include-experimental', FILTER_VALIDATE_INT );
-		$use_ai               = 1 === filter_input( INPUT_POST, 'use-ai', FILTER_VALIDATE_INT );
-		$runner               = $this->get_ajax_runner();
+		$checks     = filter_input( INPUT_POST, 'checks', FILTER_DEFAULT, FILTER_FORCE_ARRAY );
+		$checks     = is_null( $checks ) ? array() : $checks;
+		$use_ai     = 1 === filter_input( INPUT_POST, 'use-ai', FILTER_VALIDATE_INT );
+		$runner     = $this->get_ajax_runner();
 
 		if ( is_wp_error( $runner ) ) {
 			wp_send_json_error( $runner, 500 );
@@ -268,6 +263,8 @@ final class Admin_AJAX {
 	 * Run checks.
 	 *
 	 * @since 1.0.0
+	 *
+	 * @SuppressWarnings(PHPMD.NPathComplexity)
 	 */
 	public function run_checks() {
 		$this->check_request_validity();

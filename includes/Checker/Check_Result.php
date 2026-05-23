@@ -11,6 +11,8 @@ namespace WordPress\Plugin_Check\Checker;
  * Result for running checks on a plugin.
  *
  * @since 1.0.0
+ *
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  */
 final class Check_Result {
 

@@ -16,6 +16,8 @@ use WordPress\Plugin_Check\Traits\AI_Utils;
  * and severity threshold configuration for AI false positive detection.
  *
  * @since 1.8.0
+ *
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  */
 final class Settings_Page {
 

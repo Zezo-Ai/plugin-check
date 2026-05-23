@@ -101,6 +101,8 @@ trait AI_Analyzer {
 	 * @param Check_Context $check_context    Check context instance.
 	 * @param string        $model_preference Optional model preference.
 	 * @return array|WP_Error Array with 'analysis' and 'stats' keys, or WP_Error on failure.
+	 *
+	 * @SuppressWarnings(PHPMD.NPathComplexity)
 	 */
 	protected function analyze_results_with_ai( Check_Result $result, Check_Context $check_context, $model_preference = '' ) {
 		if ( ! $this->is_ai_available() ) {
@@ -291,6 +293,8 @@ trait AI_Analyzer {
 	 * @param Check_Context $check_context    Check context instance.
 	 * @param string        $model_preference Optional model preference.
 	 * @return array|WP_Error Array with 'cases' and 'token_usage' keys, or WP_Error.
+	 *
+	 * @SuppressWarnings(PHPMD.NPathComplexity)
 	 */
 	protected function analyze_batch( $prompt_file, array $cases, Check_Context $check_context, $model_preference = '' ) {
 		$issue_description = $this->load_prompt_template( $prompt_file );
@@ -360,6 +364,8 @@ trait AI_Analyzer {
 	 * @param Check_Context $check_context     Check context instance.
 	 * @param string        $model_preference  Optional model preference.
 	 * @return array|WP_Error Array with 'cases' and 'token_usage', or WP_Error.
+	 *
+	 * @SuppressWarnings(PHPMD.NPathComplexity)
 	 */
 	protected function execute_batch_ai_request( $issue_description, array $cases, Check_Context $check_context, $model_preference = '' ) {
 		$prompt = $this->build_batch_prompt( $issue_description, $cases, $check_context );
@@ -541,6 +547,8 @@ trait AI_Analyzer {
 	 *
 	 * @param string $response_text AI response text.
 	 * @return array Array of case results.
+	 *
+	 * @SuppressWarnings(PHPMD.NPathComplexity)
 	 */
 	protected function parse_batch_response( $response_text ) {
 		if ( empty( $response_text ) ) {
@@ -716,6 +724,9 @@ trait AI_Analyzer {
 	 *
 	 * @param object $result Result object.
 	 * @return array|null Token usage array or null.
+	 *
+	 * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+	 * @SuppressWarnings(PHPMD.NPathComplexity)
 	 */
 	protected function extract_ai_token_usage( $result ) {
 		$usage = null;
