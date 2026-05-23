@@ -113,6 +113,31 @@
 	color: #004085;
 	line-height: 1.5;
 }
+
+.plugin-check__false-positives {
+	margin: 1.5em 0;
+	border: 1px solid #dcdcde;
+	background: #fff;
+}
+
+.plugin-check__false-positives summary {
+	padding: 12px 14px;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.plugin-check__false-positive-results {
+	padding: 0 14px 14px;
+}
+
+#plugin-check__results .plugin-check__false-positive-results h4:first-child {
+	margin-top: 12px;
+}
+
+.plugin-check__false-positive-results table.plugin-check__results-table {
+	margin-bottom: 1em;
+}
+
 .plugin-check__options {
 	display: flex;
 }

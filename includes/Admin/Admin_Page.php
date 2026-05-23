@@ -391,6 +391,17 @@ final class Admin_Page {
 		);
 
 		ob_start();
+		require WP_PLUGIN_CHECK_PLUGIN_DIR_PATH . 'templates/results-false-positives.php';
+		$results_false_positives_template = ob_get_clean();
+		wp_print_inline_script_tag(
+			$results_false_positives_template,
+			array(
+				'id'   => 'tmpl-plugin-check-results-false-positives',
+				'type' => 'text/template',
+			)
+		);
+
+		ob_start();
 		require WP_PLUGIN_CHECK_PLUGIN_DIR_PATH . 'templates/results-complete.php';
 		$results_row_template = ob_get_clean();
 		wp_print_inline_script_tag(

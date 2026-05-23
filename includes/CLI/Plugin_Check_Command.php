@@ -173,7 +173,7 @@ final class Plugin_Check_Command {
 	 */
 	public function check( $args, $assoc_args ) {
 		// Get options based on the CLI arguments.
-			$options = $this->get_options(
+		$options = $this->get_options(
 			$assoc_args,
 			array(
 				'checks'                        => '',
@@ -399,6 +399,13 @@ final class Plugin_Check_Command {
 			return;
 		}
 
+		$false_positive_results = array();
+		if ( ! empty( $ai_analysis ) ) {
+			$split_results          = $this->split_false_positive_results( $all_results, $ai_analysis );
+			$all_results            = $split_results['actionable'];
+			$false_positive_results = $split_results['false_positives'];
+		}
+
 		// Group results by file.
 		$results_by_file = array();
 
@@ -412,7 +419,7 @@ final class Plugin_Check_Command {
 
 		// Display AI analysis summary if available.
 		if ( ! empty( $ai_analysis ) || ! empty( $ai_stats ) ) {
-			$this->display_ai_summary( $ai_analysis, $ai_stats );
+			$this->display_ai_summary( $ai_analysis, $ai_stats, $false_positive_results );
 		}
 	}
 
@@ -695,14 +702,79 @@ final class Plugin_Check_Command {
 	}
 
 	/**
+	 * Splits likely false positives out of the main check results.
+	 *
+	 * @since 2.0.0
+	 *
+	 * @param array $results     Check results.
+	 * @param array $ai_analysis AI analysis results.
+	 * @return array Results split into actionable and false positive groups.
+	 */
+	private function split_false_positive_results( array $results, array $ai_analysis ) {
+		$split_results = array(
+			'actionable'      => array(),
+			'false_positives' => array(),
+		);
+
+		foreach ( $results as $item ) {
+			$analysis = $this->find_ai_analysis_for_result( $item, $ai_analysis );
+
+			if ( ! empty( $analysis['is_false_positive'] ) ) {
+				if ( ! empty( $analysis['reasoning'] ) ) {
+					$item['reasoning'] = $analysis['reasoning'];
+				}
+				$split_results['false_positives'][] = $item;
+				continue;
+			}
+
+			$split_results['actionable'][] = $item;
+		}
+
+		return $split_results;
+	}
+
+	/**
+	 * Finds the AI analysis entry for a result item.
+	 *
+	 * @since 2.0.0
+	 *
+	 * @param array $item        Result item.
+	 * @param array $ai_analysis AI analysis results.
+	 * @return array|null AI analysis entry, or null if none is found.
+	 */
+	private function find_ai_analysis_for_result( array $item, array $ai_analysis ) {
+		foreach ( $ai_analysis as $analysis ) {
+			if ( ! is_array( $analysis ) ) {
+				continue;
+			}
+
+			if (
+				(string) ( $analysis['file'] ?? '' ) === (string) ( $item['file'] ?? '' ) &&
+				(int) ( $analysis['line'] ?? 0 ) === (int) ( $item['line'] ?? 0 ) &&
+				(int) ( $analysis['column'] ?? 0 ) === (int) ( $item['column'] ?? 0 ) &&
+				(string) ( $analysis['code'] ?? '' ) === (string) ( $item['code'] ?? '' )
+			) {
+				return $analysis;
+			}
+		}
+
+		return null;
+	}
+
+	/**
 	 * Displays AI analysis summary.
 	 *
 	 * @since 1.8.0
 	 *
-	 * @param array $ai_analysis AI analysis results.
-	 * @param array $ai_stats    AI statistics.
+	 * @param array $ai_analysis            AI analysis results.
+	 * @param array $ai_stats               AI statistics.
+	 * @param array $false_positive_results False positive results.
 	 */
-	private function display_ai_summary( array $ai_analysis, array $ai_stats ) {
+	private function display_ai_summary(
+		array $ai_analysis,
+		array $ai_stats,
+		array $false_positive_results = array()
+	) {
 		WP_CLI::line( '' );
 		WP_CLI::line( str_repeat( '─', 60 ) );
 		WP_CLI::line( '✨ ' . __( 'AI False Positive Analysis', 'plugin-check' ) );
@@ -740,18 +812,11 @@ final class Plugin_Check_Command {
 		}
 
 		// Show individual false positive details.
-		$fp_items = array();
-		foreach ( $ai_analysis as $key => $analysis ) {
-			if ( ! empty( $analysis['is_false_positive'] ) ) {
-				$fp_items[] = $analysis;
-			}
-		}
-
-		if ( ! empty( $fp_items ) ) {
+		if ( ! empty( $false_positive_results ) ) {
 			WP_CLI::line( '' );
 			WP_CLI::line( __( 'Likely false positives:', 'plugin-check' ) );
 
-			foreach ( $fp_items as $item ) {
+			foreach ( $false_positive_results as $item ) {
 				$location = isset( $item['file'] ) ? $item['file'] : '';
 				if ( isset( $item['line'] ) ) {
 					$location .= ':' . $item['line'];
@@ -759,9 +824,9 @@ final class Plugin_Check_Command {
 
 				WP_CLI::line(
 					sprintf(
-						'  ✨ %s — %s',
+						'  %s - %s',
 						$location,
-						isset( $item['reasoning'] ) ? $item['reasoning'] : ''
+						isset( $item['reasoning'] ) ? $item['reasoning'] : $item['message']
 					)
 				);
 			}
