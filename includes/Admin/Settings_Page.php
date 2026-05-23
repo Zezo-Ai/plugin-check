@@ -163,13 +163,15 @@ final class Settings_Page {
 			<div class="notice notice-warning inline">
 				<p>
 					<?php
-					printf(
+					$configured_connector_message = sprintf(
 						/* translators: %s: URL to WordPress AI settings. */
-						wp_kses(
-							__( 'No AI connectors are configured. Please <a href="%s">configure an AI connector</a> in WordPress settings first.', 'plugin-check' ),
-							array( 'a' => array( 'href' => array() ) )
-						),
+						__( 'No AI connectors are configured. Please <a href="%s">configure an AI connector</a> in WordPress settings first.', 'plugin-check' ),
 						esc_url( admin_url( 'options-general.php' ) )
+					);
+
+					echo wp_kses(
+						$configured_connector_message,
+						array( 'a' => array( 'href' => array() ) )
 					);
 					?>
 				</p>
@@ -201,10 +203,10 @@ final class Settings_Page {
 	 * @param array $args Field arguments.
 	 */
 	public function render_model_preference_field( $args ) {
-		$settings        = get_option( self::OPTION_NAME, array() );
-		$value           = isset( $settings['ai_model_preference'] ) ? $settings['ai_model_preference'] : '';
-		$grouped_models  = $this->get_available_model_preferences();
-		$has_models      = ! empty( $grouped_models );
+		$settings       = get_option( self::OPTION_NAME, array() );
+		$value          = isset( $settings['ai_model_preference'] ) ? $settings['ai_model_preference'] : '';
+		$grouped_models = $this->get_available_model_preferences();
+		$has_models     = ! empty( $grouped_models );
 		?>
 		<select
 			id="<?php echo esc_attr( $args['label_for'] ); ?>"
@@ -305,14 +307,14 @@ final class Settings_Page {
 		}
 
 		if ( isset( $input['ai_severity_errors'] ) ) {
-			$value                             = intval( $input['ai_severity_errors'] );
+			$value                           = intval( $input['ai_severity_errors'] );
 			$sanitized['ai_severity_errors'] = ( $value >= 1 && $value <= 10 ) ? $value : 7;
 		} else {
 			$sanitized['ai_severity_errors'] = 7;
 		}
 
 		if ( isset( $input['ai_severity_warnings'] ) ) {
-			$value                               = intval( $input['ai_severity_warnings'] );
+			$value                             = intval( $input['ai_severity_warnings'] );
 			$sanitized['ai_severity_warnings'] = ( $value >= 1 && $value <= 10 ) ? $value : 6;
 		} else {
 			$sanitized['ai_severity_warnings'] = 6;
@@ -384,4 +386,3 @@ final class Settings_Page {
 		<?php
 	}
 }
-
