@@ -46,7 +46,7 @@ Every pull request opened against this repository gets an automatic **"Open in W
 
 The preview boots a fresh WordPress, installs and activates the PR's build of Plugin Check, logs you in as `admin` / `password`, and lands on _Tools → Plugin Check_ so you can run a check straight away. This makes reviewing UI, admin behaviour, and check output dramatically faster, and lowers the bar for non-developer reviewers.
 
-The button is added by the [`WordPress/action-wp-playground-pr-preview`](https://github.com/WordPress/action-wp-playground-pr-preview) action, fed by a two-step workflow that lives in `.github/workflows/pr-playground-preview-build.yml` and `pr-playground-preview-publish.yml`. The build step produces a production zip of the plugin (Composer dependencies installed, dev files excluded via `.distignore`) and the publish step exposes it on a public URL and posts the button. This split keeps the workflow safe for PRs from forks: the build step runs with read-only permissions on the untrusted PR code, and only the publish step (running on `workflow_run`) gets write access.
+The button is added by the official [`WordPress/action-wp-playground-pr-preview`](https://github.com/WordPress/action-wp-playground-pr-preview) action via `.github/workflows/pr-playground-preview.yml`. That workflow builds a production zip of the plugin (Composer dependencies installed without `--dev`, dev files excluded via `.distignore`), uploads it as a GitHub Actions artifact, exposes it on a public download URL, and appends the **"Open in WordPress Playground"** button to the PR description with a blueprint that installs and activates that exact build.
 
 ## Contributing
 
