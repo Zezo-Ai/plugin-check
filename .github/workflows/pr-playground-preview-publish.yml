@@ -1,0 +1,134 @@
+name: PR Playground Preview - Publish
+
+# Step 2 of 2 for the WordPress Playground PR preview button.
+#
+# Triggered by workflow_run after `PR Playground Preview - Build` finishes
+# successfully. Runs in the base repository with write permissions, so it is
+# safe to do this even when the build was triggered by a fork PR — this job
+# never checks out the untrusted PR code, it only operates on the artifact
+# produced by the build workflow.
+#
+# What it does:
+# 1. Locate the artifact uploaded by the build workflow and parse the PR
+#    number + commit SHA back out of its filename.
+# 2. Expose the artifact as a public download URL by attaching it to a draft
+#    GitHub release (managed by WordPress/action-wp-playground-pr-preview).
+# 3. Build a Playground blueprint that installs Plugin Check from that URL
+#    and lands the reviewer on the Plugin Check admin screen.
+# 4. Append a "Open in WordPress Playground" button to the PR description.
+#
+# See: https://github.com/WordPress/action-wp-playground-pr-preview/tree/v2
+
+on:
+  workflow_run:
+    workflows: ["PR Playground Preview - Build"]
+    types: [completed]
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: read
+
+jobs:
+  publish-preview:
+    name: Publish Playground preview button
+    runs-on: ubuntu-latest
+    # Only react to successful builds that came from a pull_request event.
+    if: >
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success'
+    steps:
+      - name: Locate plugin zip artifact and parse PR metadata
+        id: pr-metadata
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
+              owner: context.repo.owner,
+              repo:  context.repo.repo,
+              run_id: ${{ github.event.workflow_run.id }},
+            });
+
+            const artifact = artifacts.data.artifacts.find(a =>
+              a.name.startsWith('plugin-check-zip-pr')
+            );
+
+            if (!artifact) {
+              core.setFailed('Could not find a plugin-check-zip-pr* artifact in the build run.');
+              return;
+            }
+
+            const match = artifact.name.match(/^plugin-check-zip-pr(\d+)-(.+)$/);
+            if (!match) {
+              core.setFailed(`Unexpected artifact name: ${artifact.name}`);
+              return;
+            }
+
+            const [, prNumber, commitSha] = match;
+            core.setOutput('pr-number',     prNumber);
+            core.setOutput('commit-sha',    commitSha);
+            core.setOutput('artifact-name', artifact.name);
+
+      - name: Expose built artifact as a public URL
+        id: expose
+        uses: WordPress/action-wp-playground-pr-preview/.github/actions/expose-artifact-on-public-url@v2
+        with:
+          artifact-name:          ${{ steps.pr-metadata.outputs.artifact-name }}
+          artifact-filename:      plugin-check.zip
+          pr-number:              ${{ steps.pr-metadata.outputs.pr-number }}
+          commit-sha:             ${{ steps.pr-metadata.outputs.commit-sha }}
+          artifact-source-run-id: ${{ github.event.workflow_run.id }}
+          artifacts-to-keep:      '2'
+
+      - name: Generate Playground blueprint
+        id: blueprint
+        env:
+          ARTIFACT_URL: ${{ steps.expose.outputs.artifact-url }}
+        run: |
+          node - <<'NODE' >> "$GITHUB_OUTPUT"
+          const url = process.env.ARTIFACT_URL;
+          if (!url) {
+            throw new Error('ARTIFACT_URL is required');
+          }
+
+          const blueprint = {
+            "$schema": "https://playground.wordpress.net/blueprint-schema.json",
+            landingPage: "/wp-admin/tools.php?page=plugin-check",
+            phpExtensionBundles: [ "kitchen-sink" ],
+            steps: [
+              {
+                step: "login",
+                username: "admin",
+                password: "password",
+              },
+              {
+                step: "installPlugin",
+                pluginZipFile: {
+                  resource: "url",
+                  url,
+                },
+                options: { activate: true },
+              },
+            ],
+          };
+
+          console.log(`blueprint=${JSON.stringify(blueprint)}`);
+          NODE
+
+      - name: Post Playground preview button on PR
+        uses: WordPress/action-wp-playground-pr-preview@v2
+        with:
+          mode:         append-to-description
+          pr-number:    ${{ steps.pr-metadata.outputs.pr-number }}
+          blueprint:    ${{ steps.blueprint.outputs.blueprint }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          description-template: |
+            ### 🧪 Test this PR in WordPress Playground
+
+            {{PLAYGROUND_BUTTON}}
+
+            One click and you get a fresh WordPress in your browser with **this PR's build of Plugin Check** installed and activated, landing on _Tools → Plugin Check_. No local setup required.
+
+            - Login: `admin` / `password`
+            - PR: #{{PR_NUMBER}} — `{{PR_HEAD_REF}}`
+            - Commit: `{{PR_HEAD_SHA}}`
