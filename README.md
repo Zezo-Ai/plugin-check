@@ -40,6 +40,14 @@ After having the plugin activated, you can analyze any other plugin installed on
 <img alt="WordPress plugin checker UI in WP Admin" src="https://github.com/WordPress/plugin-check/assets/3531426/19d0c1ce-8c37-4efd-b8c6-d252e6ce29c9">
 <em>Screenshot of the plugin checker's UI in WP Admin</em>
 
+## Reviewing a pull request in WordPress Playground
+
+Every pull request opened against this repository gets an automatic comment with a one-click link to **WordPress Playground**, running this PR's build of Plugin Check in your browser — no local setup required.
+
+The preview boots a fresh WordPress, installs and activates the PR's build of Plugin Check, logs you in as `admin` / `password`, and lands on _Tools → Plugin Check_ so you can run a check straight away. This makes reviewing UI, admin behaviour, and check output dramatically faster, and lowers the bar for non-developer reviewers.
+
+The link becomes active once the **Build dist branch** workflow finishes for the PR's head branch. For PRs from forks the dist branch is built on the fork and the preview link points there.
+
 ## Contributing
 
 To set up the repository locally, you will need to clone this GitHub repository (or a fork of it) and then install the relevant dependencies:

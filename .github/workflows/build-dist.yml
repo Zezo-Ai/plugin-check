@@ -1,0 +1,102 @@
+name: Build dist branch
+
+# Builds a self-contained, production-ready copy of the plugin on a parallel
+# branch (`dist/<source-branch>`) so that WordPress Playground can install the
+# plugin straight from that branch's zip on every push.
+#
+# The companion workflow (playground-preview.yml) consumes this dist branch to
+# post a Playground preview link on each pull request.
+
+on:
+  push:
+    branches:
+      - '**'
+  delete:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build dist/${{ github.ref_name }}
+    # Only run on real source branches — never recurse on the dist/* branches
+    # that this same workflow produces.
+    if: github.event_name == 'push' && !startsWith(github.ref_name, 'dist/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source branch
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          tools: composer
+
+      - name: Install production Composer dependencies
+        run: composer install --no-dev --optimize-autoloader --no-interaction --no-progress
+
+      - name: Generate Playground PR blueprint
+        env:
+          BRANCH_NAME: ${{ github.ref_name }}
+          REPO: ${{ github.repository }}
+        run: |
+          mkdir -p .wordpress-playground
+          # Branch names may contain slashes (e.g. feature/foo). They need to be
+          # URL-encoded for the raw.githubusercontent.com / codeload zip URL.
+          BRANCH_ENC=$(printf '%s' "$BRANCH_NAME" | jq -sRr @uri)
+          cat > .wordpress-playground/blueprint.json << EOF
+          {
+            "\$schema": "https://playground.wordpress.net/blueprint-schema.json",
+            "landingPage": "/wp-admin/tools.php?page=plugin-check",
+            "phpExtensionBundles": [ "kitchen-sink" ],
+            "steps": [
+              {
+                "step": "login",
+                "username": "admin",
+                "password": "password"
+              },
+              {
+                "step": "installPlugin",
+                "pluginZipFile": {
+                  "resource": "url",
+                  "url": "https://github.com/${REPO}/archive/refs/heads/dist/${BRANCH_ENC}.zip"
+                },
+                "options": { "activate": true }
+              }
+            ]
+          }
+          EOF
+
+      - name: Push to dist/${{ github.ref_name }}
+        env:
+          BRANCH_NAME: ${{ github.ref_name }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Force-add the production vendor/ tree and the generated blueprint
+          # even though both are normally git-ignored: Playground installs the
+          # plugin straight from this branch's zip, so it must contain
+          # everything needed to run.
+          git add -f vendor/ .wordpress-playground/
+
+          # If there is nothing to commit (rare, e.g. docs-only push) skip the
+          # commit but still update the dist branch tip so it stays in sync.
+          git diff --cached --quiet || git commit -m "Build: dist branch for ${BRANCH_NAME}"
+
+          git push origin "HEAD:dist/${BRANCH_NAME}" --force
+
+  delete-dist:
+    name: Delete dist/<branch> when source branch is deleted
+    if: github.event_name == 'delete' && github.event.ref_type == 'branch' && !startsWith(github.event.ref, 'dist/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (needed for git push credentials)
+        uses: actions/checkout@v4
+
+      - name: Delete dist branch
+        env:
+          BRANCH_NAME: ${{ github.event.ref }}
+        run: |
+          git push origin ":refs/heads/dist/${BRANCH_NAME}" || true
