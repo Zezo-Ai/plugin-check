@@ -1,0 +1,124 @@
+name: PR Playground Preview
+
+# Adds an official "Open in WordPress Playground" button to every pull request
+# so reviewers can boot this PR's build of Plugin Check in their browser with
+# a single click.
+#
+# How it works:
+# 1. Install Plugin Check's Composer dependencies (without --dev), so the
+#    resulting tree contains the vendor/autoload.php the plugin requires.
+# 2. Build a production zip honouring the existing .distignore.
+# 3. Upload the zip as a workflow artifact.
+# 4. Expose the artifact on a public download URL via the
+#    WordPress/action-wp-playground-pr-preview helper.
+# 5. Generate a blueprint that installs the plugin from that URL and lands on
+#    Tools → Plugin Check.
+# 6. Append the official "Open in WordPress Playground" button to the PR
+#    description.
+#
+# References:
+# - https://github.com/WordPress/action-wp-playground-pr-preview/tree/v2
+# - https://github.com/adamziel/preview-in-playground-button-plugin-example/pull/3
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - edited
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  playground-preview:
+    name: Build and post Playground preview button
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR head
+        uses: actions/checkout@v6
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          tools: composer
+          coverage: none
+
+      - name: Install production Composer dependencies
+        run: composer install --no-dev --optimize-autoloader --no-interaction --no-progress
+
+      - name: Build plugin zip honouring .distignore
+        env:
+          PLUGIN_SLUG: plugin-check
+        run: |
+          mkdir -p "build/${PLUGIN_SLUG}"
+          rsync -a --delete \
+            --exclude-from='.distignore' \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='build' \
+            ./ "build/${PLUGIN_SLUG}/"
+          cd build
+          zip -qr "${PLUGIN_SLUG}.zip" "${PLUGIN_SLUG}"
+          ls -lh "${PLUGIN_SLUG}.zip"
+
+      - name: Upload plugin zip artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: plugin-check-zip-pr${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
+          path: build/plugin-check.zip
+          if-no-files-found: error
+          retention-days: 5
+
+      - name: Expose built artifact as a public URL
+        id: expose
+        uses: WordPress/action-wp-playground-pr-preview/.github/actions/expose-artifact-on-public-url@v2
+        with:
+          artifact-name:     plugin-check-zip-pr${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
+          artifact-filename: plugin-check.zip
+          pr-number:         ${{ github.event.pull_request.number }}
+          commit-sha:        ${{ github.event.pull_request.head.sha }}
+          artifacts-to-keep: '2'
+
+      - name: Generate Playground blueprint
+        id: blueprint
+        env:
+          ARTIFACT_URL: ${{ steps.expose.outputs.artifact-url }}
+        run: |
+          node - <<'NODE' >> "$GITHUB_OUTPUT"
+          const url = process.env.ARTIFACT_URL;
+          if (!url) {
+            throw new Error('ARTIFACT_URL is required');
+          }
+          const blueprint = {
+            "$schema": "https://playground.wordpress.net/blueprint-schema.json",
+            landingPage: "/wp-admin/tools.php?page=plugin-check",
+            phpExtensionBundles: [ "kitchen-sink" ],
+            steps: [
+              {
+                step: "login",
+                username: "admin",
+                password: "password",
+              },
+              {
+                step: "installPlugin",
+                pluginZipFile: {
+                  resource: "url",
+                  url,
+                },
+                options: { activate: true },
+              },
+            ],
+          };
+          console.log(`blueprint=${JSON.stringify(blueprint)}`);
+          NODE
+
+      - name: Post Playground Preview Button
+        uses: WordPress/action-wp-playground-pr-preview@v2
+        with:
+          mode:         append-to-description
+          blueprint:    ${{ steps.blueprint.outputs.blueprint }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
