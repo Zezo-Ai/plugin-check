@@ -59,7 +59,7 @@ final class Check_Result {
 	/**
 	 * AI analysis results for false positives.
 	 *
-	 * @since 1.8.0
+	 * @since 1.9.0
 	 * @var array
 	 */
 	protected $ai_analysis = array();
@@ -67,7 +67,7 @@ final class Check_Result {
 	/**
 	 * AI statistics (tokens spent, false positives count, etc.).
 	 *
-	 * @since 1.8.0
+	 * @since 1.9.0
 	 * @var array
 	 */
 	protected $ai_stats = array();
@@ -169,7 +169,7 @@ final class Check_Result {
 	 * updated data to keep the message, or false/null to remove it. The returned
 	 * array may include `error`, `file`, `line`, or `column` to move the message.
 	 *
-	 * @since 2.0.0
+	 * @since 1.9.0
 	 *
 	 * @param callable $callback Callback to transform each message.
 	 */
@@ -263,7 +263,7 @@ final class Check_Result {
 	/**
 	 * Sets AI analysis results.
 	 *
-	 * @since 1.8.0
+	 * @since 1.9.0
 	 *
 	 * @param array $analysis AI analysis results.
 	 */
@@ -274,7 +274,7 @@ final class Check_Result {
 	/**
 	 * Returns AI analysis results.
 	 *
-	 * @since 1.8.0
+	 * @since 1.9.0
 	 *
 	 * @return array AI analysis results.
 	 */
@@ -285,7 +285,7 @@ final class Check_Result {
 	/**
 	 * Sets AI statistics.
 	 *
-	 * @since 1.8.0
+	 * @since 1.9.0
 	 *
 	 * @param array $stats AI statistics.
 	 */
@@ -296,7 +296,7 @@ final class Check_Result {
 	/**
 	 * Returns AI statistics.
 	 *
-	 * @since 1.8.0
+	 * @since 1.9.0
 	 *
 	 * @return array AI statistics.
 	 */

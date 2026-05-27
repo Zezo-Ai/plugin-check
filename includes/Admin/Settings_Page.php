@@ -15,7 +15,7 @@ use WordPress\Plugin_Check\Traits\AI_Utils;
  * Provides AI model selection (from WordPress 7.0 core AI connectors)
  * and severity threshold configuration for AI false positive detection.
  *
- * @since 1.8.0
+ * @since 1.9.0
  *
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  */
@@ -26,7 +26,7 @@ final class Settings_Page {
 	/**
 	 * Option group name.
 	 *
-	 * @since 1.8.0
+	 * @since 1.9.0
 	 * @var string
 	 */
 	const OPTION_GROUP = 'plugin_check_settings';
@@ -34,7 +34,7 @@ final class Settings_Page {
 	/**
 	 * Option name.
 	 *
-	 * @since 1.8.0
+	 * @since 1.9.0
 	 * @var string
 	 */
 	const OPTION_NAME = 'plugin_check_settings';
@@ -42,7 +42,7 @@ final class Settings_Page {
 	/**
 	 * Page slug.
 	 *
-	 * @since 1.8.0
+	 * @since 1.9.0
 	 * @var string
 	 */
 	const PAGE_SLUG = 'plugin-check-settings';
@@ -50,7 +50,7 @@ final class Settings_Page {
 	/**
 	 * Admin page hook suffix.
 	 *
-	 * @since 1.8.0
+	 * @since 1.9.0
 	 * @var string
 	 */
 	protected $hook_suffix = '';
@@ -58,7 +58,7 @@ final class Settings_Page {
 	/**
 	 * Registers WordPress hooks for the settings page.
 	 *
-	 * @since 1.8.0
+	 * @since 1.9.0
 	 */
 	public function add_hooks() {
 		add_action( 'admin_menu', array( $this, 'add_page' ) );
@@ -68,7 +68,7 @@ final class Settings_Page {
 	/**
 	 * Adds the settings page under the Settings menu.
 	 *
-	 * @since 1.8.0
+	 * @since 1.9.0
 	 */
 	public function add_page() {
 		$this->hook_suffix = add_submenu_page(
@@ -84,7 +84,7 @@ final class Settings_Page {
 	/**
 	 * Registers settings and settings fields.
 	 *
-	 * @since 1.8.0
+	 * @since 1.9.0
 	 */
 	public function register_settings() {
 		register_setting(
@@ -153,7 +153,7 @@ final class Settings_Page {
 	/**
 	 * Renders the AI settings section description.
 	 *
-	 * @since 1.8.0
+	 * @since 1.9.0
 	 */
 	public function render_ai_section_description() {
 		$has_connectors = ! $this->has_no_active_ai_connectors();
@@ -185,7 +185,7 @@ final class Settings_Page {
 	/**
 	 * Renders the severity section description.
 	 *
-	 * @since 1.8.0
+	 * @since 1.9.0
 	 */
 	public function render_severity_section_description() {
 		?>
@@ -200,7 +200,7 @@ final class Settings_Page {
 	 *
 	 * Dynamically populated from WordPress 7.0 AI connectors.
 	 *
-	 * @since 1.8.0
+	 * @since 1.9.0
 	 *
 	 * @param array $args Field arguments.
 	 */
@@ -242,7 +242,7 @@ final class Settings_Page {
 	/**
 	 * Renders the severity threshold field for errors.
 	 *
-	 * @since 1.8.0
+	 * @since 1.9.0
 	 *
 	 * @param array $args Field arguments.
 	 */
@@ -268,7 +268,7 @@ final class Settings_Page {
 	/**
 	 * Renders the severity threshold field for warnings.
 	 *
-	 * @since 1.8.0
+	 * @since 1.9.0
 	 *
 	 * @param array $args Field arguments.
 	 */
@@ -294,7 +294,7 @@ final class Settings_Page {
 	/**
 	 * Sanitizes settings input.
 	 *
-	 * @since 1.8.0
+	 * @since 1.9.0
 	 *
 	 * @param array $input Settings input.
 	 * @return array Sanitized settings.
@@ -328,7 +328,7 @@ final class Settings_Page {
 	/**
 	 * Gets the saved AI model preference.
 	 *
-	 * @since 1.8.0
+	 * @since 1.9.0
 	 *
 	 * @return string AI model preference (e.g., 'openai::gpt-4o') or empty for auto.
 	 */
@@ -340,7 +340,7 @@ final class Settings_Page {
 	/**
 	 * Gets the AI severity threshold for errors.
 	 *
-	 * @since 1.8.0
+	 * @since 1.9.0
 	 *
 	 * @return int AI severity threshold for errors.
 	 */
@@ -352,7 +352,7 @@ final class Settings_Page {
 	/**
 	 * Gets the AI severity threshold for warnings.
 	 *
-	 * @since 1.8.0
+	 * @since 1.9.0
 	 *
 	 * @return int AI severity threshold for warnings.
 	 */
@@ -364,7 +364,7 @@ final class Settings_Page {
 	/**
 	 * Renders the settings page.
 	 *
-	 * @since 1.8.0
+	 * @since 1.9.0
 	 */
 	public function render_page() {
 		if ( ! current_user_can( 'manage_options' ) ) {

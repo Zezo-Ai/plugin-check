@@ -143,11 +143,11 @@ final class Plugin_Check_Command {
 	 *   - update
 	 * ---
 	 *
-	 * [--use-ai]
+	 * [--ai]
 	 * : Enable AI-based analysis to detect false positives in check results.
 	 *
 	 * [--ai-model=<model>]
-	 * : AI model preference for analysis (e.g., 'openai::gpt-4o'). Requires --use-ai.
+	 * : AI model preference for analysis (e.g., 'openai::gpt-4o'). Requires --ai.
 	 *
 	 * ## EXAMPLES
 	 *
@@ -155,8 +155,8 @@ final class Plugin_Check_Command {
 	 *   wp plugin check akismet --checks=late_escaping
 	 *   wp plugin check akismet --format=json
 	 *   wp plugin check akismet --mode=update
-	 *   wp plugin check akismet --use-ai
-	 *   wp plugin check akismet --use-ai --ai-model=openai::gpt-4o
+	 *   wp plugin check akismet --ai
+	 *   wp plugin check akismet --ai --ai-model=openai::gpt-4o
 	 *
 	 * @subcommand check
 	 *
@@ -189,7 +189,7 @@ final class Plugin_Check_Command {
 				'slug'                          => '',
 				'ignore-codes'                  => '',
 				'mode'                          => 'new',
-				'use-ai'                        => false,
+				'ai'                            => false,
 				'ai-model'                      => '',
 			)
 		);
@@ -251,7 +251,7 @@ final class Plugin_Check_Command {
 			$runner->set_categories( $categories );
 			$runner->set_slug( $options['slug'] );
 			$runner->set_mode( $options['mode'] );
-			$runner->set_use_ai( $options['use-ai'] );
+			$runner->set_use_ai( $options['ai'] );
 			if ( ! empty( $options['ai-model'] ) ) {
 				$runner->set_ai_model_preference( $options['ai-model'] );
 			}
@@ -283,13 +283,13 @@ final class Plugin_Check_Command {
 
 		// Get AI analysis results if available.
 		$ai_analysis = array();
-		if ( $result && $options['use-ai'] ) {
+		if ( $result && $options['ai'] ) {
 			$ai_analysis = $result->get_ai_analysis();
 		}
 
 		// Get AI statistics if available.
 		$ai_stats = array();
-		if ( $result && $options['use-ai'] ) {
+		if ( $result && $options['ai'] ) {
 			$ai_stats = $result->get_ai_stats();
 		}
 
@@ -299,10 +299,10 @@ final class Plugin_Check_Command {
 			// Add AI statistics to the message if available.
 			if ( ! empty( $ai_stats ) && isset( $ai_stats['false_positives'] ) && $ai_stats['false_positives'] > 0 ) {
 				$ai_info = sprintf(
-					// translators: %1$d: Number of false positives, %2$s: Tokens spent (formatted).
+					// translators: %1$d: Number of possible false positives, %2$s: "possible false positive(s)" label.
 					__( ' AI detected %1$d %2$s', 'plugin-check' ),
 					$ai_stats['false_positives'],
-					_n( 'false positive', 'false positives', $ai_stats['false_positives'], 'plugin-check' )
+					_n( 'possible false positive', 'possible false positives', $ai_stats['false_positives'], 'plugin-check' )
 				);
 				if ( isset( $ai_stats['tokens_spent'] ) && $ai_stats['tokens_spent'] > 0 ) {
 					$ai_info .= sprintf(
@@ -704,7 +704,7 @@ final class Plugin_Check_Command {
 	/**
 	 * Splits likely false positives out of the main check results.
 	 *
-	 * @since 2.0.0
+	 * @since 1.9.0
 	 *
 	 * @param array $results     Check results.
 	 * @param array $ai_analysis AI analysis results.
@@ -736,7 +736,7 @@ final class Plugin_Check_Command {
 	/**
 	 * Finds the AI analysis entry for a result item.
 	 *
-	 * @since 2.0.0
+	 * @since 1.9.0
 	 *
 	 * @param array $item        Result item.
 	 * @param array $ai_analysis AI analysis results.
@@ -764,7 +764,7 @@ final class Plugin_Check_Command {
 	/**
 	 * Displays AI analysis summary.
 	 *
-	 * @since 1.8.0
+	 * @since 1.9.0
 	 *
 	 * @param array $ai_analysis            AI analysis results.
 	 * @param array $ai_stats               AI statistics.
@@ -777,7 +777,7 @@ final class Plugin_Check_Command {
 	) {
 		WP_CLI::line( '' );
 		WP_CLI::line( str_repeat( '─', 60 ) );
-		WP_CLI::line( '✨ ' . __( 'AI False Positive Analysis', 'plugin-check' ) );
+		WP_CLI::line( '✨ ' . __( 'AI Possible False Positive Analysis', 'plugin-check' ) );
 		WP_CLI::line( str_repeat( '─', 60 ) );
 
 		if ( ! empty( $ai_stats ) ) {
@@ -794,8 +794,8 @@ final class Plugin_Check_Command {
 			);
 			WP_CLI::line(
 				sprintf(
-					/* translators: %d: Number of false positives detected. */
-					__( 'False positives detected: %d', 'plugin-check' ),
+					/* translators: %d: Number of possible false positives detected. */
+					__( 'Possible false positives detected: %d', 'plugin-check' ),
 					$false_positives
 				)
 			);
@@ -814,7 +814,7 @@ final class Plugin_Check_Command {
 		// Show individual false positive details.
 		if ( ! empty( $false_positive_results ) ) {
 			WP_CLI::line( '' );
-			WP_CLI::line( __( 'Likely false positives:', 'plugin-check' ) );
+			WP_CLI::line( __( 'Possible false positives:', 'plugin-check' ) );
 
 			foreach ( $false_positive_results as $item ) {
 				$location = isset( $item['file'] ) ? $item['file'] : '';
