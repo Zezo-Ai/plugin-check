@@ -93,13 +93,19 @@ In any case, passing the checks in this tool likely helps to achieve a smooth pl
 * Enhancement - Add CTRF export support for check results.
 * Enhancement - Add an error count summary to the Plugin Check UI.
 * Enhancement - Improve Direct File Access detection for library-style files.
+* Enhancement - Adjust checks for update mode.
 * Fix - Relax Update URI header validation for WordPress.org plugin URLs.
 * Fix - Improve WordPress functions compatibility detection to avoid PHP serialization false positives.
 * Fix - Respect `wp_supports_ai()` and text-capable model filtering in the Plugin Namer.
 * Fix - Show Plugin Namer token usage in results.
 * Fix - Recognize EUPL as a GPL-compatible license.
+* Fix - Improve internationalization for emoji-prefixed labels.
+* Fix - Update PHPCS sniffer repository links.
 * Tweak - Update WP-CLI runtime checks documentation.
 * Chore - Add automated WordPress function compatibility data generation.
+* Chore - Add AI usage disclosure to the pull request template.
+* Chore - Add AI coding agent instructions.
+* Chore - Clean up wp-env development and test configuration warnings.
 * Chore - Show a WordPress Playground preview button on pull requests.
 * Chore - Update development and CI dependencies.
 
