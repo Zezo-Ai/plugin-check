@@ -704,7 +704,7 @@ final class Plugin_Check_Command {
 	/**
 	 * Splits likely false positives out of the main check results.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param array $results     Check results.
 	 * @param array $ai_analysis AI analysis results.
@@ -736,7 +736,7 @@ final class Plugin_Check_Command {
 	/**
 	 * Finds the AI analysis entry for a result item.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param array $item        Result item.
 	 * @param array $ai_analysis AI analysis results.
@@ -764,7 +764,7 @@ final class Plugin_Check_Command {
 	/**
 	 * Displays AI analysis summary.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param array $ai_analysis            AI analysis results.
 	 * @param array $ai_stats               AI statistics.

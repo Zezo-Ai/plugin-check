@@ -1114,7 +1114,7 @@
 	/**
 	 * Renders the possible false positives at the end of the results.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 */
 	function renderFalsePositiveResults() {
 		if (
@@ -1157,7 +1157,7 @@
 	/**
 	 * Renders a result collection into a specific container.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param {Object} containerErrors   Error results.
 	 * @param {Object} containerWarnings Warning results.
@@ -1203,7 +1203,7 @@
 	/**
 	 * Renders one file's results into a specific container.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param {string} file      File name.
 	 * @param {Object} errors    Error results.
@@ -1248,7 +1248,7 @@
 	/**
 	 * Clones a result tree.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param {Object} tree Result tree.
 	 * @return {Object} Cloned result tree.
@@ -1262,7 +1262,7 @@
 	/**
 	 * Counts all results in a result tree.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param {Object} tree Result tree.
 	 * @return {number} Result count.

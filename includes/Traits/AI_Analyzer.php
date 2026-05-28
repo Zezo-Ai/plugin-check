@@ -20,14 +20,14 @@ use WP_Error;
  * the prompts/ directory, and all cases in a batch are sent in a single AI
  * request for efficiency.
  *
- * @since 1.9.0
+ * @since 2.0.0
  */
 trait AI_Analyzer {
 
 	/**
 	 * Checks if AI analysis is available via WordPress core AI client.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @return bool True if AI client is available, false otherwise.
 	 */
@@ -47,7 +47,7 @@ trait AI_Analyzer {
 	/**
 	 * Gets the maximum number of cases to send per AI batch request.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @return int Batch size.
 	 */
@@ -58,7 +58,7 @@ trait AI_Analyzer {
 	/**
 	 * Gets the maximum number of cases to analyze per check type.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @return int Maximum case count.
 	 */
@@ -69,7 +69,7 @@ trait AI_Analyzer {
 	/**
 	 * Gets the mapping of check code prefixes to their prompt template filenames.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @return array Prompt map.
 	 */
@@ -94,7 +94,7 @@ trait AI_Analyzer {
 	 * with a check-specific prompt. Only issues with severity below the
 	 * configured threshold are analyzed.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param Check_Result  $result           Check result to analyze.
 	 * @param Check_Context $check_context    Check context instance.
@@ -200,7 +200,7 @@ trait AI_Analyzer {
 	 *
 	 * Only issues with severity below the configured threshold are included.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param array         $errors        Errors from Check_Result.
 	 * @param array         $warnings      Warnings from Check_Result.
@@ -227,7 +227,7 @@ trait AI_Analyzer {
 	/**
 	 * Collects issues from a single collection (errors or warnings).
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param array         $collection    The errors or warnings collection.
 	 * @param string        $type          'error' or 'warning'.
@@ -285,7 +285,7 @@ trait AI_Analyzer {
 	 * If the batch exceeds the configured batch size, it is split into sub-batches
 	 * and each sub-batch is sent as a separate AI request.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param string        $prompt_file      Prompt template filename.
 	 * @param array         $cases            Cases to analyze, keyed by case_id.
@@ -356,7 +356,7 @@ trait AI_Analyzer {
 	 * Builds a prompt following the internal scanner pattern:
 	 * system instructions + issue description + cases list + output format.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param string        $issue_description Issue description from prompt template.
 	 * @param array         $cases             Cases to analyze, keyed by case_id.
@@ -439,7 +439,7 @@ trait AI_Analyzer {
 	/**
 	 * Builds the batched prompt following the internal scanner pattern.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param string        $issue_description Issue description from prompt template.
 	 * @param array         $cases             Cases to analyze, keyed by case_id.
@@ -488,7 +488,7 @@ trait AI_Analyzer {
 	/**
 	 * Gets code context for a specific case.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param array         $issue_case    Case data with file, line, column.
 	 * @param Check_Context $check_context Check context instance.
@@ -513,7 +513,7 @@ trait AI_Analyzer {
 	/**
 	 * Gets code context around a specific line.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param string $file_content Full file content.
 	 * @param int    $line         Line number (1-based).
@@ -542,7 +542,7 @@ trait AI_Analyzer {
 	/**
 	 * Parses the batched AI response into individual case results.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param string $response_text AI response text.
 	 * @return array Array of case results.
@@ -597,7 +597,7 @@ trait AI_Analyzer {
 	/**
 	 * Determines the prompt template filename for a given check code.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param string $code The check code (e.g., 'WordPress.Security.EscapeOutput.OutputNotEscaped').
 	 * @return string Prompt template filename.
@@ -615,7 +615,7 @@ trait AI_Analyzer {
 	/**
 	 * Loads a prompt template from the prompts/ directory.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param string $filename Prompt template filename.
 	 * @return string|WP_Error Prompt content or WP_Error.
@@ -651,7 +651,7 @@ trait AI_Analyzer {
 	/**
 	 * Gets the AI severity threshold for a given type.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param string $type 'error' or 'warning'.
 	 * @return int Severity threshold.
@@ -666,7 +666,7 @@ trait AI_Analyzer {
 		/**
 		 * Filters the AI severity threshold.
 		 *
-		 * @since 1.9.0
+		 * @since 2.0.0
 		 *
 		 * @param int    $threshold Threshold from settings (7 for errors, 6 for warnings).
 		 * @param string $type      'error' or 'warning'.
@@ -677,7 +677,7 @@ trait AI_Analyzer {
 	/**
 	 * Applies a model preference to the prompt builder.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param object $builder          Prompt builder instance.
 	 * @param string $model_preference Model preference string.
@@ -719,7 +719,7 @@ trait AI_Analyzer {
 	/**
 	 * Extracts token usage from a result object.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param object $result Result object.
 	 * @return array|null Token usage array or null.
@@ -771,7 +771,7 @@ trait AI_Analyzer {
 	/**
 	 * Extracts the model used from an AI result object.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param object $result Result object.
 	 * @return string Model identifier or empty string.
@@ -805,7 +805,7 @@ trait AI_Analyzer {
 	/**
 	 * Extracts the provider used from an AI result object.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param object $result Result object.
 	 * @return string Provider identifier or empty string.
@@ -839,7 +839,7 @@ trait AI_Analyzer {
 	/**
 	 * Normalizes a configured model preference for display.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param string $model_preference Model preference.
 	 * @return string Model identifier or empty string.
@@ -863,7 +863,7 @@ trait AI_Analyzer {
 	/**
 	 * Normalizes a configured model preference provider for display.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param string $model_preference Model preference.
 	 * @return string Provider identifier or empty string.
@@ -887,7 +887,7 @@ trait AI_Analyzer {
 	/**
 	 * Returns an empty AI result structure.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @return array Empty result with zeroed stats.
 	 */
@@ -909,7 +909,7 @@ trait AI_Analyzer {
 	/**
 	 * Generates a unique key for an issue.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param string $file   File path.
 	 * @param int    $line   Line number.

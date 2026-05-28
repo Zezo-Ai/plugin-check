@@ -20,7 +20,7 @@ trait AI_Utils {
 	/**
 	 * Checks AI prerequisites: feature flag, function availability, and version.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @return true|WP_Error True if all prerequisites are met, WP_Error otherwise.
 	 */
@@ -50,7 +50,7 @@ trait AI_Utils {
 	/**
 	 * Checks that at least one AI connector is configured and active.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @return true|WP_Error True if a connector is available, WP_Error otherwise.
 	 */
@@ -127,7 +127,7 @@ trait AI_Utils {
 	/**
 	 * Applies a model preference to the prompt builder if supported.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param object $builder          Prompt builder instance.
 	 * @param string $model_preference Model preference.
@@ -158,7 +158,7 @@ trait AI_Utils {
 	/**
 	 * Normalizes a model preference string into a supported preference format.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param string $model_preference Model preference string.
 	 * @return string|array Normalized preference.
@@ -317,7 +317,7 @@ trait AI_Utils {
 	 * Checks supported capabilities for text_generation, then inspects input/output
 	 * modality options. Falls back to name-based inference when metadata is insufficient.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param object $model_meta Model metadata object.
 	 * @return bool True when the model supports text input and text output.
@@ -352,7 +352,7 @@ trait AI_Utils {
 	/**
 	 * Returns whether a supported-values matrix contains a text modality.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param mixed $values Supported values from a SupportedOption (array of combinations).
 	 * @return bool True when at least one item resolves to text.
@@ -385,7 +385,7 @@ trait AI_Utils {
 	/**
 	 * Returns whether a capabilities array contains text_generation.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param array $supported Capabilities from getSupportedCapabilities().
 	 * @return bool
@@ -405,7 +405,7 @@ trait AI_Utils {
 	/**
 	 * Returns input/output text-modality support derived from getSupportedOptions().
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param array $options Options from getSupportedOptions().
 	 * @return array
@@ -451,7 +451,7 @@ trait AI_Utils {
 	/**
 	 * Returns true when model name suggests audio-only (transcription / TTS / realtime).
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param object $model_meta Model metadata object.
 	 * @return bool

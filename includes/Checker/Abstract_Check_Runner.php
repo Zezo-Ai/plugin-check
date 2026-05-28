@@ -37,7 +37,7 @@ abstract class Abstract_Check_Runner implements Check_Runner {
 	/**
 	 * Whether to use AI analysis for false positive detection.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 * @var bool
 	 */
 	protected $use_ai = false;
@@ -45,7 +45,7 @@ abstract class Abstract_Check_Runner implements Check_Runner {
 	/**
 	 * AI model preference for analysis.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 * @var string
 	 */
 	protected $ai_model_preference = '';
@@ -316,7 +316,7 @@ abstract class Abstract_Check_Runner implements Check_Runner {
 	/**
 	 * Sets whether to use AI analysis for false positive detection.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param bool $use_ai True to enable AI analysis, false to disable.
 	 */
@@ -327,7 +327,7 @@ abstract class Abstract_Check_Runner implements Check_Runner {
 	/**
 	 * Sets the AI model preference for analysis.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @param string $model_preference Model preference (e.g., 'openai::gpt-4o').
 	 */
@@ -338,7 +338,7 @@ abstract class Abstract_Check_Runner implements Check_Runner {
 	/**
 	 * Determines if AI analysis should be used.
 	 *
-	 * @since 1.9.0
+	 * @since 2.0.0
 	 *
 	 * @return bool True if AI analysis should be used, false otherwise.
 	 */
