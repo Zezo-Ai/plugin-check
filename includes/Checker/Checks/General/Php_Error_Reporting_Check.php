@@ -104,6 +104,8 @@ class Php_Error_Reporting_Check extends Abstract_File_Check {
 	 * @param Check_Result $result The check result to amend.
 	 * @param string       $file   Absolute path to the file.
 	 * @param array        $ast    The parsed AST nodes.
+	 *
+	 * @SuppressWarnings(PHPMD.NPathComplexity)
 	 */
 	private function check_ast( Check_Result $result, string $file, array $ast ) {
 		$node_finder = new NodeFinder();
