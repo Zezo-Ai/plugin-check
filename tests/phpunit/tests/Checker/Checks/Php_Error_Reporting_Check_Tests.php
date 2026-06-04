@@ -18,13 +18,19 @@ class Php_Error_Reporting_Check_Tests extends WP_UnitTestCase {
 		$this->assertNotEmpty( $warnings );
 		$this->assertArrayHasKey( 'load.php', $warnings );
 
-		$this->assertEquals( 8, $check_result->get_warning_count() );
+		// Assert exact per-line coverage so the test fails if any specific pattern stops being detected.
+		$expected_lines = array( 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32 );
+		$this->assertCount( 11, $warnings['load.php'], 'Expected exactly 11 distinct lines to be flagged.' );
 
-		$first_line_warnings   = reset( $warnings['load.php'] );
-		$first_column_warnings = reset( $first_line_warnings );
-		$warning_data          = reset( $first_column_warnings );
+		foreach ( $expected_lines as $line ) {
+			$line_warnings = $warnings['load.php'][ $line ] ?? array();
+			$this->assertNotEmpty( $line_warnings, "Expected a warning on line {$line}, but none was found." );
 
-		$this->assertEquals( 'php_error_reporting_detected', $warning_data['code'] );
+			$first_column_warnings = reset( $line_warnings );
+			$warning_data          = reset( $first_column_warnings );
+
+			$this->assertEquals( 'php_error_reporting_detected', $warning_data['code'], "Line {$line} has the wrong warning code." );
+		}
 	}
 
 	public function test_run_without_errors() {
