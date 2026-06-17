@@ -252,8 +252,9 @@ class WP_Functions_Compatibility_Check extends Abstract_File_Check {
 			return array();
 		}
 
-		$tokens = token_get_all( $source );
-		$calls  = array();
+		$tokens            = token_get_all( $source );
+		$guarded_functions = $this->get_function_exists_guarded_names( $tokens );
+		$calls             = array();
 
 		foreach ( $tokens as $index => $token ) {
 			if ( ! is_array( $token ) || T_STRING !== $token[0] ) {
@@ -269,13 +270,70 @@ class WP_Functions_Compatibility_Check extends Abstract_File_Check {
 				continue;
 			}
 
+			$function_name = strtolower( $token[1] );
+
+			// Skip calls that are guarded by a function_exists() check for the same
+			// function anywhere in the file. This is a documented backward
+			// compatibility pattern, so the call is never reached on WordPress
+			// versions that lack the function.
+			if ( isset( $guarded_functions[ $function_name ] ) ) {
+				continue;
+			}
+
 			$calls[] = array(
-				'name' => strtolower( $token[1] ),
+				'name' => $function_name,
 				'line' => (int) $token[2],
 			);
 		}
 
 		return $calls;
+	}
+
+	/**
+	 * Collects function names guarded by a function_exists() call within the file.
+	 *
+	 * Only string literal arguments are considered, since a dynamic argument cannot
+	 * be resolved to a specific function name through tokenization.
+	 *
+	 * @since 2.0.0
+	 *
+	 * @param array $tokens Token stream.
+	 * @return array<string, true> Map of guarded function names, keyed by lowercase name.
+	 */
+	private function get_function_exists_guarded_names( array $tokens ): array {
+		$guarded = array();
+
+		foreach ( $tokens as $index => $token ) {
+			if ( ! is_array( $token ) || T_STRING !== $token[0] || 'function_exists' !== strtolower( $token[1] ) ) {
+				continue;
+			}
+
+			$open_index = $this->get_next_significant_token_index( $tokens, $index );
+			if ( null === $open_index || '(' !== $tokens[ $open_index ] ) {
+				continue;
+			}
+
+			if ( ! $this->is_global_function_call( $tokens, $index ) ) {
+				continue;
+			}
+
+			$argument_index = $this->get_next_significant_token_index( $tokens, $open_index );
+			if ( null === $argument_index ) {
+				continue;
+			}
+
+			$argument_token = $tokens[ $argument_index ];
+			if ( ! is_array( $argument_token ) || T_CONSTANT_ENCAPSED_STRING !== $argument_token[0] ) {
+				continue;
+			}
+
+			$guarded_name = strtolower( ltrim( trim( $argument_token[1], '\'"' ), '\\' ) );
+			if ( '' !== $guarded_name ) {
+				$guarded[ $guarded_name ] = true;
+			}
+		}
+
+		return $guarded;
 	}
 
 	/**
