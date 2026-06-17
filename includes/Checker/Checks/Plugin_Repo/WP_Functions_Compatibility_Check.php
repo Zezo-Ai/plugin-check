@@ -308,32 +308,48 @@ class WP_Functions_Compatibility_Check extends Abstract_File_Check {
 				continue;
 			}
 
-			$open_index = $this->get_next_significant_token_index( $tokens, $index );
-			if ( null === $open_index || '(' !== $tokens[ $open_index ] ) {
-				continue;
-			}
-
-			if ( ! $this->is_global_function_call( $tokens, $index ) ) {
-				continue;
-			}
-
-			$argument_index = $this->get_next_significant_token_index( $tokens, $open_index );
-			if ( null === $argument_index ) {
-				continue;
-			}
-
-			$argument_token = $tokens[ $argument_index ];
-			if ( ! is_array( $argument_token ) || T_CONSTANT_ENCAPSED_STRING !== $argument_token[0] ) {
-				continue;
-			}
-
-			$guarded_name = strtolower( ltrim( trim( $argument_token[1], '\'"' ), '\\' ) );
-			if ( '' !== $guarded_name ) {
+			$guarded_name = $this->resolve_function_exists_argument( $tokens, $index );
+			if ( null !== $guarded_name ) {
 				$guarded[ $guarded_name ] = true;
 			}
 		}
 
 		return $guarded;
+	}
+
+	/**
+	 * Resolves the string literal argument of a function_exists() call to a function name.
+	 *
+	 * @since 2.0.0
+	 *
+	 * @param array $tokens Token stream.
+	 * @param int   $index  Index of the function_exists T_STRING token.
+	 * @return string|null Lowercase function name, or null when the call is not a
+	 *                     global function_exists() with a single string literal argument.
+	 */
+	private function resolve_function_exists_argument( array $tokens, int $index ): ?string {
+		$open_index = $this->get_next_significant_token_index( $tokens, $index );
+		if ( null === $open_index || '(' !== $tokens[ $open_index ] ) {
+			return null;
+		}
+
+		if ( ! $this->is_global_function_call( $tokens, $index ) ) {
+			return null;
+		}
+
+		$argument_index = $this->get_next_significant_token_index( $tokens, $open_index );
+		if ( null === $argument_index ) {
+			return null;
+		}
+
+		$argument_token = $tokens[ $argument_index ];
+		if ( ! is_array( $argument_token ) || T_CONSTANT_ENCAPSED_STRING !== $argument_token[0] ) {
+			return null;
+		}
+
+		$guarded_name = strtolower( ltrim( trim( $argument_token[1], '\'"' ), '\\' ) );
+
+		return '' !== $guarded_name ? $guarded_name : null;
 	}
 
 	/**
