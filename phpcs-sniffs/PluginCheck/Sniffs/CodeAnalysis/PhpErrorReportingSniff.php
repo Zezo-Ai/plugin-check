@@ -8,7 +8,7 @@
  * WP_DEBUG, WP_DEBUG_LOG, WP_DEBUG_DISPLAY, SCRIPT_DEBUG in production.
  *
  * @package plugin-check
- * @since 1.9.0
+ * @since 2.1.0
  */
 
 namespace PluginCheckCS\PluginCheck\Sniffs\CodeAnalysis;
@@ -22,14 +22,14 @@ use PHPCSUtils\Utils\PassedParameters;
 /**
  * Flags PHP error reporting changes and debug constant overrides.
  *
- * @since 1.9.0
+ * @since 2.1.0
  */
 final class PhpErrorReportingSniff implements Sniff {
 
 	/**
 	 * WordPress debug constants that must never be redefined by a plugin.
 	 *
-	 * @since 1.9.0
+	 * @since 2.1.0
 	 * @var string[]
 	 */
 	private const DEBUG_CONSTANTS = array(
@@ -42,7 +42,7 @@ final class PhpErrorReportingSniff implements Sniff {
 	/**
 	 * INI directives that control error reporting.
 	 *
-	 * @since 1.9.0
+	 * @since 2.1.0
 	 * @var string[]
 	 */
 	private const ERROR_INI_DIRECTIVES = array(
@@ -53,7 +53,7 @@ final class PhpErrorReportingSniff implements Sniff {
 	/**
 	 * Functions to inspect for the error reporting pattern.
 	 *
-	 * @since 1.9.0
+	 * @since 2.1.0
 	 * @var string[]
 	 */
 	private const TARGET_FUNCTIONS = array(
@@ -66,7 +66,7 @@ final class PhpErrorReportingSniff implements Sniff {
 	/**
 	 * Returns the array of tokens this sniff listens for.
 	 *
-	 * @since 1.9.0
+	 * @since 2.1.0
 	 *
 	 * @return array<int>
 	 */
@@ -80,7 +80,7 @@ final class PhpErrorReportingSniff implements Sniff {
 	/**
 	 * Processes a matched token.
 	 *
-	 * @since 1.9.0
+	 * @since 2.1.0
 	 *
 	 * @param File $phpcsFile The file being scanned.
 	 * @param int  $stackPtr  The position of the current token.
@@ -112,7 +112,7 @@ final class PhpErrorReportingSniff implements Sniff {
 	/**
 	 * Inspects a function call and reports a violation if the pattern matches.
 	 *
-	 * @since 1.9.0
+	 * @since 2.1.0
 	 *
 	 * @param File   $phpcsFile The file being scanned.
 	 * @param int    $stackPtr  Position of the function name token.
@@ -178,7 +178,7 @@ final class PhpErrorReportingSniff implements Sniff {
 	 * Handles both single (`const WP_DEBUG = true;`) and comma-separated
 	 * (`const A = 1, WP_DEBUG = true;`) declarations.
 	 *
-	 * @since 1.9.0
+	 * @since 2.1.0
 	 *
 	 * @param File  $phpcsFile The file being scanned.
 	 * @param int   $stackPtr  Position of the T_CONST token.
@@ -208,7 +208,7 @@ final class PhpErrorReportingSniff implements Sniff {
 	 *
 	 * The check layer translates this to its own user-facing message and severity.
 	 *
-	 * @since 1.9.0
+	 * @since 2.1.0
 	 *
 	 * @param File   $phpcsFile The file being scanned.
 	 * @param int    $stackPtr  Position of the matched token.

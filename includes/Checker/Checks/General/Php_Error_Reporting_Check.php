@@ -18,7 +18,7 @@ use WordPress\Plugin_Check\Traits\Stable_Check;
  * Delegates detection to the PhpErrorReportingSniff and translates its
  * per-pattern error codes into a single user-facing warning.
  *
- * @since 1.9.0
+ * @since 2.1.0
  */
 class Php_Error_Reporting_Check extends Abstract_PHP_CodeSniffer_Check {
 
@@ -29,7 +29,7 @@ class Php_Error_Reporting_Check extends Abstract_PHP_CodeSniffer_Check {
 	 *
 	 * Every check must have at least one category.
 	 *
-	 * @since 1.9.0
+	 * @since 2.1.0
 	 *
 	 * @return array The categories for the check.
 	 */
@@ -42,7 +42,7 @@ class Php_Error_Reporting_Check extends Abstract_PHP_CodeSniffer_Check {
 	/**
 	 * Returns an associative array of arguments to pass to PHPCS.
 	 *
-	 * @since 1.9.0
+	 * @since 2.1.0
 	 *
 	 * @param Check_Result $result The check result to amend, including the plugin context to check.
 	 * @return array An associative array of PHPCS CLI arguments.
@@ -60,7 +60,7 @@ class Php_Error_Reporting_Check extends Abstract_PHP_CodeSniffer_Check {
 	 *
 	 * Every check must have a short description explaining what the check does.
 	 *
-	 * @since 1.9.0
+	 * @since 2.1.0
 	 *
 	 * @return string Description.
 	 */
@@ -73,7 +73,7 @@ class Php_Error_Reporting_Check extends Abstract_PHP_CodeSniffer_Check {
 	 *
 	 * Every check must have a URL with further information about the check.
 	 *
-	 * @since 1.9.0
+	 * @since 2.1.0
 	 *
 	 * @return string The documentation URL.
 	 */
@@ -88,7 +88,7 @@ class Php_Error_Reporting_Check extends Abstract_PHP_CodeSniffer_Check {
 	 * warning code (`php_error_reporting_detected`) so the check exposes one
 	 * stable, user-facing message regardless of which pattern was detected.
 	 *
-	 * @since 1.9.0
+	 * @since 2.1.0
 	 *
 	 * @param Check_Result $result   The check result to amend, including the plugin context to check.
 	 * @param bool         $error    Whether it is an error or notice.
