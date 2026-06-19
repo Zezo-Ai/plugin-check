@@ -13,23 +13,36 @@ class PHP_Error_Reporting_Check_Tests extends WP_UnitTestCase {
 
 		$check->run( $check_result );
 
-		$warnings = $check_result->get_warnings();
+		$errors = $check_result->get_errors();
 
-		$this->assertNotEmpty( $warnings );
-		$this->assertArrayHasKey( 'load.php', $warnings );
+		$this->assertNotEmpty( $errors );
+		$this->assertArrayHasKey( 'load.php', $errors );
 
 		// Assert exact per-line coverage so the test fails if any specific pattern stops being detected.
-		$expected_lines = array( 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32 );
-		$this->assertCount( 11, $warnings['load.php'], 'Expected exactly 11 distinct lines to be flagged.' );
+		$expected = array(
+			12 => 'PluginCheck.CodeAnalysis.PHPErrorReporting.DirectErrorReportingCall',
+			14 => 'PluginCheck.CodeAnalysis.PHPErrorReporting.DirectErrorReportingCall',
+			16 => 'PluginCheck.CodeAnalysis.PHPErrorReporting.IniDirectiveDisplay_errors',
+			18 => 'PluginCheck.CodeAnalysis.PHPErrorReporting.IniDirectiveError_reporting',
+			20 => 'PluginCheck.CodeAnalysis.PHPErrorReporting.IniDirectiveDisplay_errors',
+			22 => 'PluginCheck.CodeAnalysis.PHPErrorReporting.IniDirectiveError_reporting',
+			24 => 'PluginCheck.CodeAnalysis.PHPErrorReporting.DefineWP_DEBUG',
+			26 => 'PluginCheck.CodeAnalysis.PHPErrorReporting.DefineWP_DEBUG_LOG',
+			28 => 'PluginCheck.CodeAnalysis.PHPErrorReporting.DefineWP_DEBUG_DISPLAY',
+			30 => 'PluginCheck.CodeAnalysis.PHPErrorReporting.DefineSCRIPT_DEBUG',
+			32 => 'PluginCheck.CodeAnalysis.PHPErrorReporting.ConstWP_DEBUG',
+		);
+		$this->assertCount( 11, $errors['load.php'], 'Expected exactly 11 distinct lines to be flagged.' );
 
-		foreach ( $expected_lines as $line ) {
-			$line_warnings = $warnings['load.php'][ $line ] ?? array();
-			$this->assertNotEmpty( $line_warnings, "Expected a warning on line {$line}, but none was found." );
+		foreach ( $expected as $line => $expected_code ) {
+			$line_errors = $errors['load.php'][ $line ] ?? array();
+			$this->assertNotEmpty( $line_errors, "Expected an error on line {$line}, but none was found." );
 
-			$first_column_warnings = reset( $line_warnings );
-			$warning_data          = reset( $first_column_warnings );
+			$first_column_errors = reset( $line_errors );
+			$error_data          = reset( $first_column_errors );
 
-			$this->assertEquals( 'php_error_reporting_detected', $warning_data['code'], "Line {$line} has the wrong warning code." );
+			$this->assertEquals( $expected_code, $error_data['code'], "Line {$line} has the wrong error code." );
+			$this->assertEquals( 8, $error_data['severity'], "Line {$line} has the wrong severity." );
 		}
 	}
 

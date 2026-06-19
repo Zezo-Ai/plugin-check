@@ -84,9 +84,9 @@ class PHP_Error_Reporting_Check extends Abstract_PHP_CodeSniffer_Check {
 	/**
 	 * Amends the given result with a message for the specified file.
 	 *
-	 * Translates each PHPErrorReportingSniff error code into a single unified
-	 * warning code (`php_error_reporting_detected`) so the check exposes one
-	 * stable, user-facing message regardless of which pattern was detected.
+	 * Keeps the sniff's native error code so it is easy to identify which
+	 * pattern was detected, and overrides only the severity and documentation
+	 * URL, following the same pattern as Setting_Sanitization_Check.
 	 *
 	 * @since 2.1.0
 	 *
@@ -102,24 +102,8 @@ class PHP_Error_Reporting_Check extends Abstract_PHP_CodeSniffer_Check {
 	 */
 	protected function add_result_message_for_file( Check_Result $result, $error, $message, $code, $file, $line = 0, $column = 0, string $docs = '', $severity = 5 ) {
 		if ( 0 === strpos( $code, 'PluginCheck.CodeAnalysis.PHPErrorReporting.' ) ) {
-			$warning_message = esc_html__( 'Plugins must not modify PHP error reporting settings or define WordPress debug constants (WP_DEBUG, WP_DEBUG_LOG, WP_DEBUG_DISPLAY, SCRIPT_DEBUG). Doing so can leak sensitive information and disrupt the standard debugging workflow. These configurations belong in php.ini or wp-config.php, not in plugin code.', 'plugin-check' );
-
 			$docs     = $this->get_documentation_url();
-			$code     = 'php_error_reporting_detected';
 			$severity = 8;
-
-			parent::add_result_message_for_file(
-				$result,
-				false,
-				$warning_message,
-				$code,
-				$file,
-				$line,
-				$column,
-				$docs,
-				$severity
-			);
-			return;
 		}
 
 		parent::add_result_message_for_file(
