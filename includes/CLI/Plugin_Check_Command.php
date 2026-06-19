@@ -795,7 +795,7 @@ final class Plugin_Check_Command {
 			WP_CLI::line(
 				sprintf(
 					/* translators: %d: Number of possible false positives detected. */
-					_n( 'Possible false positive detected: %d','Possible false positives detected: %d', $false_positives, 'plugin-check' ),
+					_n( 'Possible false positive detected: %d', 'Possible false positives detected: %d', $false_positives, 'plugin-check' ),
 					$false_positives
 				)
 			);
