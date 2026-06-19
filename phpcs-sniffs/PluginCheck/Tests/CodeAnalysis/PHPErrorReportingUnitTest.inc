@@ -1,6 +1,6 @@
 <?php
 /**
- * Test file for PhpErrorReportingSniff.
+ * Test file for PHPErrorReportingSniff.
  *
  * Each BAD line corresponds to one entry in getErrorList().
  * GOOD lines confirm the sniff ignores allowed patterns.
@@ -42,7 +42,7 @@ const WP_DEBUG = true;
 // BAD: multi-const declaration with WP_DEBUG after a comma - line 43.
 const SOME_OTHER = 1, WP_DEBUG = true;
 
-// BAD: ini_set with non-string first argument must not be matched - line 46.
+// GOOD: ini_set with non-string first argument must not be matched.
 ini_set( some_function(), 'error_reporting' );
 
 // GOOD: memory_limit is not an error reporting directive.

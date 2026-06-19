@@ -1,6 +1,6 @@
 <?php
 /**
- * Unit tests for PhpErrorReportingSniff.
+ * Unit tests for PHPErrorReportingSniff.
  *
  * @package PluginCheck
  */
@@ -8,11 +8,11 @@
 namespace PluginCheckCS\PluginCheck\Tests\CodeAnalysis;
 
 use PHP_CodeSniffer\Sniffs\Sniff;
-use PluginCheckCS\PluginCheck\Sniffs\CodeAnalysis\PhpErrorReportingSniff;
+use PluginCheckCS\PluginCheck\Sniffs\CodeAnalysis\PHPErrorReportingSniff;
 use PluginCheckCS\PluginCheck\Tests\AbstractSniffUnitTest;
 
 /**
- * Unit tests for PhpErrorReportingSniff.
+ * Unit tests for PHPErrorReportingSniff.
  *
  * Exercises the full set of patterns the check must detect:
  *   - direct error_reporting() calls
@@ -20,7 +20,7 @@ use PluginCheckCS\PluginCheck\Tests\AbstractSniffUnitTest;
  *   - define() of WP_DEBUG, WP_DEBUG_LOG, WP_DEBUG_DISPLAY, SCRIPT_DEBUG
  *   - const declarations of the same debug constants
  */
-final class PhpErrorReportingUnitTest extends AbstractSniffUnitTest {
+final class PHPErrorReportingUnitTest extends AbstractSniffUnitTest {
 
 	/**
 	 * Returns the lines where errors should occur.
@@ -59,7 +59,7 @@ final class PhpErrorReportingUnitTest extends AbstractSniffUnitTest {
 	 * @return string
 	 */
 	protected function get_sniff_fqcn() {
-		return PhpErrorReportingSniff::class;
+		return PHPErrorReportingSniff::class;
 	}
 
 	/**

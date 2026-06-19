@@ -1,6 +1,6 @@
 <?php
 /**
- * PhpErrorReportingSniff
+ * PHPErrorReportingSniff
  *
  * Detects runtime changes to PHP error reporting configuration and
  * WordPress debug constants. A plugin must never call error_reporting(),
@@ -24,7 +24,7 @@ use PHPCSUtils\Utils\PassedParameters;
  *
  * @since 2.1.0
  */
-final class PhpErrorReportingSniff implements Sniff {
+final class PHPErrorReportingSniff implements Sniff {
 
 	/**
 	 * WordPress debug constants that must never be redefined by a plugin.
@@ -197,7 +197,8 @@ final class PhpErrorReportingSniff implements Sniff {
 				$this->report(
 					$phpcsFile,
 					$i,
-					MessageHelper::stringToErrorcode( 'Const' . $tokens[ $i ]['content'] )
+					MessageHelper::stringToErrorcode( 'Const' . $tokens[ $i ]['content'] ),
+					true
 				);
 			}
 		}
@@ -210,16 +211,16 @@ final class PhpErrorReportingSniff implements Sniff {
 	 *
 	 * @since 2.1.0
 	 *
-	 * @param File   $phpcsFile The file being scanned.
-	 * @param int    $stackPtr  Position of the matched token.
-	 * @param string $code      Error code suffix (sniff-specific).
+	 * @param File   $phpcsFile       The file being scanned.
+	 * @param int    $stackPtr        Position of the matched token.
+	 * @param string $code            Error code suffix (sniff-specific).
+	 * @param bool   $is_const_report Whether this is a constant declaration report.
 	 *
 	 * @return void
 	 */
-	private function report( File $phpcsFile, $stackPtr, $code ) {
-		$tokens   = $phpcsFile->getTokens();
-		$is_const = ( T_CONST === $tokens[ $stackPtr ]['code'] );
-		$message  = $is_const
+	private function report( File $phpcsFile, $stackPtr, $code, $is_const_report = false ) {
+		$tokens  = $phpcsFile->getTokens();
+		$message = $is_const_report
 			? 'Detected production-time debug constant definition: %s.'
 			: 'Detected production-time change to PHP error reporting: %s().';
 

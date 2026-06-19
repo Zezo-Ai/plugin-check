@@ -2,12 +2,12 @@
 
 use WordPress\Plugin_Check\Checker\Check_Context;
 use WordPress\Plugin_Check\Checker\Check_Result;
-use WordPress\Plugin_Check\Checker\Checks\General\Php_Error_Reporting_Check;
+use WordPress\Plugin_Check\Checker\Checks\General\PHP_Error_Reporting_Check;
 
-class Php_Error_Reporting_Check_Tests extends WP_UnitTestCase {
+class PHP_Error_Reporting_Check_Tests extends WP_UnitTestCase {
 
 	public function test_run_with_errors() {
-		$check        = new Php_Error_Reporting_Check();
+		$check        = new PHP_Error_Reporting_Check();
 		$context      = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-php-error-reporting-with-errors/load.php' );
 		$check_result = new Check_Result( $context );
 
@@ -34,7 +34,7 @@ class Php_Error_Reporting_Check_Tests extends WP_UnitTestCase {
 	}
 
 	public function test_run_without_errors() {
-		$check        = new Php_Error_Reporting_Check();
+		$check        = new PHP_Error_Reporting_Check();
 		$context      = new Check_Context( UNIT_TESTS_PLUGIN_DIR . 'test-plugin-php-error-reporting-without-errors/load.php' );
 		$check_result = new Check_Result( $context );
 
