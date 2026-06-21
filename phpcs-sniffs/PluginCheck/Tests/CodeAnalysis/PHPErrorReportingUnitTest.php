@@ -28,6 +28,15 @@ final class PHPErrorReportingUnitTest extends AbstractSniffUnitTest {
 	 * @return array <int line number> => <int number of errors>
 	 */
 	public function getErrorList() {
+		return array();
+	}
+
+	/**
+	 * Returns the lines where warnings should occur.
+	 *
+	 * @return array <int line number> => <int number of warnings>
+	 */
+	public function getWarningList() {
 		return array(
 			10 => 1,
 			13 => 1,
@@ -42,15 +51,6 @@ final class PHPErrorReportingUnitTest extends AbstractSniffUnitTest {
 			40 => 1,
 			43 => 1,
 		);
-	}
-
-	/**
-	 * Returns the lines where warnings should occur.
-	 *
-	 * @return array <int line number> => <int number of warnings>
-	 */
-	public function getWarningList() {
-		return array();
 	}
 
 	/**

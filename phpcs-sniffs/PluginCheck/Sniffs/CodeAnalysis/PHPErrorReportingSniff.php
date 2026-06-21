@@ -205,7 +205,7 @@ final class PHPErrorReportingSniff implements Sniff {
 	}
 
 	/**
-	 * Emits a single, stable error for any detected pattern.
+	 * Emits a single, stable warning for any detected pattern.
 	 *
 	 * The check layer translates this to its own user-facing message and severity.
 	 *
@@ -228,7 +228,7 @@ final class PHPErrorReportingSniff implements Sniff {
 			$phpcsFile,
 			$message,
 			$stackPtr,
-			true,
+			false,
 			$code,
 			array( $tokens[ $stackPtr ]['content'] )
 		);
